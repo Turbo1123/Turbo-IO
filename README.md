@@ -1,12 +1,18 @@
 # Turbo IO · 雷鸟 iO / RayNeo iO 非官方 SDK
 
+> **先看项目定位：这是给开发者用的非官方 SDK，不是给小白下载安装就能用的成品 App。**
+>
+> 仓库中的 iOS App 是 **SDK 的示例客户端与研究调试工具**，用于演示和验证眼镜连接、语音、录音、通知及 Agent 接入，方便开发者二次开发。使用者需要自行编译、签名、配置 API，并具备基本的开发与调试能力。
+>
+> **不提供现成 IPA、代签名或开箱即用服务。不熟悉开发、只想直接使用眼镜功能的用户，请使用雷鸟官方 App。** 部分功能仍在研究和验收，欢迎开发者一起完善。
+
 > **仅供学习、研究与非商业使用，未经授权不得商用或收费分发。** 当前原创内容采用 [PolyForm Noncommercial 1.0.0](LICENSE)，不再以 MIT 提供新版本。未经授权的商用可能侵犯相关权利，权利人保留依法追究法律责任的权利。第三方组件仍遵循各自许可，详见[许可说明](docs/LICENSING.md)。
 
-面向雷鸟 iO（RayNeo iO）AI 眼镜的非官方 SDK 研究项目与自有 iOS 客户端：眼镜语音 → 自己的 ASR/模型，录音 → 本地归档与手动转写，Codex → 电脑任务与结果通知。
+面向雷鸟 iO（RayNeo iO）AI 眼镜的非官方 SDK 研究项目，附带 iOS 示例客户端：眼镜语音 → 自己的 ASR/模型，录音 → 本地归档与手动转写，Codex → 电脑任务与结果通知。
 
 **发布源码与明确列出的构建依赖，不发布 IPA、预签名 App 或开发者服务密钥。用户自行配置、签名与编译。** 现阶段是研究驱动的开发版，不是所有设备/固件都已验收的通用 SDK。
 
-Unofficial RayNeo iO smart glasses SDK research and iOS companion: voice AI, recordings, custom notifications, Codex integration and a read-only web display observer.
+An unofficial RayNeo iO smart glasses SDK for developers, with a sample iOS client—not a ready-to-install consumer app. Build, sign and configure your own services to explore voice AI, recordings, custom notifications, Codex integration and a read-only web display observer.
 
 **连接前务必先在雷鸟官方 App 内解绑，再到手机蓝牙设置中“忽略此设备”，然后重新进入配对模式连接 Turbo IO。** 详见下方“连接前必读”。Android 版本待开发；非越狱 iPhone 已由用户实机验收通过。
 
