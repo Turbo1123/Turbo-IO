@@ -30,6 +30,14 @@ Unofficial RayNeo iO smart glasses SDK research and iOS companion: voice AI, rec
 
 下图分别为对话与菜单样式；“观察接口失联”表示拍摄时没有连接手机，不影响查看演示布局。启动与 USB 配置见[配置文档](docs/CONFIGURATION.md)。
 
+只看样式预览不需要手机、iproxy 或服务密钥：
+
+```sh
+node display-observer/server.mjs --no-proxy
+```
+
+打开 `http://127.0.0.1:8790/`，选择“首页样式 / 对话样式 / 菜单样式 / 通知样式”。实时跟随才需要手机的临时观察接口与 USB 转发。
+
 ![雷鸟 iO Web 对话预览：绿色镜片模板，演示文字，非实时画面](docs/screenshots/web-chat.png)
 
 ![RayNeo iO Web 菜单预览：每页一个应用图标，当前为录音](docs/screenshots/web-menu.png)
