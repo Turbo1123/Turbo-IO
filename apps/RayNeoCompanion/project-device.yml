@@ -1,0 +1,171 @@
+name: RayNeoCompanion
+options:
+  bundleIdPrefix: io.turboio
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+packages:
+  ZIPFoundation:
+    path: ../../third-party/ZIPFoundation
+  RayNeoProtocol:
+    path: ../../rayneo-protocol
+  RayNeoDisplay:
+    path: ../../rayneo-display
+  RayNeoSession:
+    path: ../../rayneo-session
+  RayNeoArchive:
+    path: ../../rayneo-archive
+  RayNeoAudioContainer:
+    path: ../../rayneo-audio-container
+targets:
+  RayNeoCompanion:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+      - ../../core-probe/Sources/VoiceToolCallAccumulator.swift
+      - ../../core-probe/Sources/CloudASRHostSettings.swift
+    dependencies:
+      - package: ZIPFoundation
+      - package: RayNeoProtocol
+      - package: RayNeoDisplay
+      - package: RayNeoSession
+      - package: RayNeoArchive
+      - package: RayNeoAudioContainer
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.turboio.companion
+        PRODUCT_NAME: RayNeoCompanion
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Turbo IO
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        MARKETING_VERSION: "0.2.0"
+        CURRENT_PROJECT_VERSION: "2"
+    info:
+      path: Generated/Companion-Info.plist
+      properties:
+        NSRemindersUsageDescription: 读取你选择的系统提醒事项并复制为Turbo IO本机待办。不会修改或删除系统提醒事项。
+        NSRemindersFullAccessUsageDescription: 读取你选择的系统提醒事项并复制为Turbo IO本机待办。虽然系统授权为完全访问，Turbo IO仅执行读取。
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: EPUB and Text Books
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [org.idpf.epub-container, public.plain-text]
+        LSSupportsOpeningDocumentsInPlace: true
+        NSLocalNetworkUsageDescription: 连接你指定的电脑Codex桥接服务，发送任务并获取结果。
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+  RayNeoCompanionUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: RayNeoCompanion
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.turboio.companion.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: RayNeoCompanion
+  RayNeoCompanionTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: RayNeoCompanion
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.turboio.companion.tests
+        GENERATE_INFOPLIST_FILE: YES
+  RayNeoCompanionDevice:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+      - ../../core-probe/Sources
+      - path: ../../core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio
+        includes: ["**/*.c"]
+      - path: ../../core-probe/Vendor/py-webrtcvad-2.0.10/LICENSE
+        buildPhase: resources
+      - path: ../../core-probe/Vendor/opus-1.5.2/COPYING
+        buildPhase: resources
+    dependencies:
+      - package: RayNeoSession
+      - package: RayNeoArchive
+      - package: RayNeoAudioContainer
+      - package: ZIPFoundation
+      - package: RayNeoProtocol
+      - package: RayNeoDisplay
+      - framework: ../../core-probe/Frameworks/RayneoNet.framework
+        embed: true
+      - framework: ../../core-probe/Frameworks/CocoaAsyncSocket.framework
+        embed: true
+      - framework: ../../core-probe/Frameworks/OpenSSL.framework
+        embed: true
+      - framework: ../../core-probe/Frameworks/RayneoLog.framework
+        embed: true
+      - framework: ../../core-probe/Frameworks/SwiftProtobuf.framework
+        embed: true
+      - framework: ../../core-probe/Frameworks/CocoaLumberjack.framework
+        embed: true
+      - framework: ../../core-probe/Frameworks/SSZipArchive.framework
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.turboio.companion
+        PRODUCT_NAME: RayNeoCompanion
+        PRODUCT_MODULE_NAME: RayNeoCompanion
+        SUPPORTED_PLATFORMS: iphoneos
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) COMPANION_DEVICE"
+        SWIFT_OBJC_BRIDGING_HEADER: ../../core-probe/Sources/ProbeBridge.h
+        SWIFT_INCLUDE_PATHS: "$(inherited) $(SRCROOT)/../../core-probe/RecoveredInterface/build"
+        HEADER_SEARCH_PATHS: "$(inherited) $(SRCROOT)/../../core-probe/Vendor/opus-1.5.2/include $(SRCROOT)/../../core-probe/Vendor/py-webrtcvad-2.0.10/cbits"
+        GCC_PREPROCESSOR_DEFINITIONS: "$(inherited) WEBRTC_POSIX=1"
+        OTHER_LDFLAGS: "$(inherited) $(SRCROOT)/../../core-probe/Vendor/opus-ios/libopus.a"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/Frameworks"
+        TARGETED_DEVICE_FAMILY: "1"
+        MARKETING_VERSION: "0.2.0"
+        CURRENT_PROJECT_VERSION: "2"
+    info:
+      path: Generated/CompanionDevice-Info.plist
+      properties:
+        CFBundleDisplayName: Turbo IO
+        NSLocalNetworkUsageDescription: 连接你指定的电脑Codex桥接服务，发送任务并获取结果。
+        NSRemindersUsageDescription: 读取你选择的系统提醒事项并复制为Turbo IO本机待办。不会修改或删除系统提醒事项。
+        NSRemindersFullAccessUsageDescription: 读取你选择的系统提醒事项并复制为Turbo IO本机待办。虽然系统授权为完全访问，Turbo IO仅执行读取。
+        UILaunchScreen: {}
+        NSBluetoothAlwaysUsageDescription: 连接你自己的眼镜，接收唤醒和语音并发送回答。
+        NSBluetoothPeripheralUsageDescription: 连接你自己的 RayNeo 眼镜。
+        UISupportedExternalAccessoryProtocols: [com.rayneo.venus.dev, com.rayneo.venus.pub, cn.rayneo.mercury]
+        UIBackgroundModes: [bluetooth-central, external-accessory]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: EPUB and Text Books
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [org.idpf.epub-container, public.plain-text]
+        LSSupportsOpeningDocumentsInPlace: true
+schemes:
+  RayNeoCompanionDevice:
+    build:
+      targets:
+        RayNeoCompanionDevice: all
+    run:
+      config: Debug
+  RayNeoCompanion:
+    build:
+      targets:
+        RayNeoCompanion: all
+    run:
+      config: Debug
+    test:
+      targets: [RayNeoCompanionTests, RayNeoCompanionUITests]

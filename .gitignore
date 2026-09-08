@@ -1,0 +1,15 @@
+.DS_Store
+.env
+.env.*
+**/.build/
+**/build*/
+**/artifacts/
+**/node_modules/
+**/*.xcodeproj/
+**/Generated/
+*.ipa
+*.apk
+*.p12
+*.pem
+*.key
+*.mobileprovision

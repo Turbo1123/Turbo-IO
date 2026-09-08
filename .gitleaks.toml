@@ -1,0 +1,9 @@
+title = "Turbo IO source release checks"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Exact UserDefaults storage key names, not credentials"
+regexTarget = "secret"
+regexes = ['''^companion\.(v1\.recordings|continuousASR\.v1)$''']

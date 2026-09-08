@@ -1,0 +1,476 @@
+{
+  "purpose": "Explicit third-party build dependencies; not covered by the project MIT license",
+  "files": [
+    {
+      "path": "core-probe/Frameworks/RayneoNet.framework/Info.plist",
+      "bytes": 789,
+      "sha256": "4e168b2e0084301338144881ab92270c4200caadea77d9291c5a666cd6a94f5e"
+    },
+    {
+      "path": "core-probe/Frameworks/RayneoNet.framework/RayneoNet",
+      "bytes": 3163984,
+      "sha256": "31d77c23f5aeaea2619bba572f85ae9d43ee04ef5b0a3f1291291f2084ef576b"
+    },
+    {
+      "path": "core-probe/Frameworks/RayneoNet.framework/_CodeSignature/CodeResources",
+      "bytes": 1798,
+      "sha256": "c7faccd32f5e616c65e6faf5354e07ebff767b76f621f61cabd1cff61560b424"
+    },
+    {
+      "path": "core-probe/Frameworks/CocoaAsyncSocket.framework/CocoaAsyncSocket",
+      "bytes": 356320,
+      "sha256": "f6abe0c2e7d211607278303060a2b844a1ba13c3acb3cc3b44d7a876f252d1dd"
+    },
+    {
+      "path": "core-probe/Frameworks/CocoaAsyncSocket.framework/Info.plist",
+      "bytes": 804,
+      "sha256": "15005dbe7fa4c72d7a0d5115a28ee676c2a4fbcb53f40cae8cb0fe1cfdb2abe4"
+    },
+    {
+      "path": "core-probe/Frameworks/CocoaAsyncSocket.framework/_CodeSignature/CodeResources",
+      "bytes": 1798,
+      "sha256": "e81373ec12569116742b46471a283cf407c9c4fcbe72d38b6113ec6fde84f10b"
+    },
+    {
+      "path": "core-probe/Frameworks/OpenSSL.framework/Info.plist",
+      "bytes": 770,
+      "sha256": "f4af916edd7db505ae84d071d70dca1aa77700377b9df4ffc9795397b50ba272"
+    },
+    {
+      "path": "core-probe/Frameworks/OpenSSL.framework/OpenSSL",
+      "bytes": 4438992,
+      "sha256": "cacd7cc3859bbf3ed82dca7bd9bba060a50e1b3a21ac7bf28594109dc86c9bf3"
+    },
+    {
+      "path": "core-probe/Frameworks/OpenSSL.framework/PrivacyInfo.xcprivacy",
+      "bytes": 373,
+      "sha256": "5a9b8fc0cddb10201bb47cc2804b3f004c7251476622d25bfc4eb54ed46e1084"
+    },
+    {
+      "path": "core-probe/Frameworks/OpenSSL.framework/_CodeSignature/CodeResources",
+      "bytes": 2106,
+      "sha256": "f2a2b4758edf8a602996dcaf11c5f8317a11afe19411a9206c20ca1664c96a2a"
+    },
+    {
+      "path": "core-probe/Frameworks/RayneoLog.framework/Info.plist",
+      "bytes": 788,
+      "sha256": "fca538636b79496c0a142dac3d2715359beb1b3540224e1b07cc304b33a3ceab"
+    },
+    {
+      "path": "core-probe/Frameworks/RayneoLog.framework/RayneoLog",
+      "bytes": 533408,
+      "sha256": "8014ce47ddab8b53f3122a93231e06348de0a820c94da4da1ebb3eda65275a8b"
+    },
+    {
+      "path": "core-probe/Frameworks/RayneoLog.framework/_CodeSignature/CodeResources",
+      "bytes": 1798,
+      "sha256": "a6c64550418c53c2e96e50a3777d76f5e071b543b49eea1dddb4b2de6aa5e547"
+    },
+    {
+      "path": "core-probe/Frameworks/SwiftProtobuf.framework/Info.plist",
+      "bytes": 797,
+      "sha256": "f7857f34f6186a42ab2519c12e1b37f7e6336f9eede13029411e57c8ee332c45"
+    },
+    {
+      "path": "core-probe/Frameworks/SwiftProtobuf.framework/SwiftProtobuf",
+      "bytes": 3393152,
+      "sha256": "176ce955da59ca544572a38014029d9a8279ad176c0500bdecc73fe1caf187fe"
+    },
+    {
+      "path": "core-probe/Frameworks/SwiftProtobuf.framework/SwiftProtobuf.bundle/Info.plist",
+      "bytes": 772,
+      "sha256": "90b833ce6c8b8cf12fa861b924d44a71c47e0b2c1a0a3fd65388f7c22b381bb4"
+    },
+    {
+      "path": "core-probe/Frameworks/SwiftProtobuf.framework/SwiftProtobuf.bundle/PrivacyInfo.xcprivacy",
+      "bytes": 373,
+      "sha256": "a07418e5fe128e224cd37964bc21c503b7aa2f575e7b4927468478ad873214fe"
+    },
+    {
+      "path": "core-probe/Frameworks/SwiftProtobuf.framework/_CodeSignature/CodeResources",
+      "bytes": 2468,
+      "sha256": "8c739119e1732d5a4b8ae14d0fe36c2d25f18c69020968d31479511ce6b3d5ba"
+    },
+    {
+      "path": "core-probe/Frameworks/CocoaLumberjack.framework/CocoaLumberjack",
+      "bytes": 459552,
+      "sha256": "aba780a0b855212cd5b989295c21aa9bfd38df3f92cd35284bd7cd644826df4d"
+    },
+    {
+      "path": "core-probe/Frameworks/CocoaLumberjack.framework/CocoaLumberjackPrivacy.bundle/Info.plist",
+      "bytes": 791,
+      "sha256": "b572a6e427cfcc4ad59544471abf3fb194ccfa369ff41b69256899765f7480e4"
+    },
+    {
+      "path": "core-probe/Frameworks/CocoaLumberjack.framework/CocoaLumberjackPrivacy.bundle/PrivacyInfo.xcprivacy",
+      "bytes": 793,
+      "sha256": "132cec00260de184d85685aac9d53a42947aa9872da74647c457714e6b5fe7b6"
+    },
+    {
+      "path": "core-probe/Frameworks/CocoaLumberjack.framework/Info.plist",
+      "bytes": 802,
+      "sha256": "96fdfd77f3256a395643243b56abf2af437315666ecf95f9d5c48f4d126babd1"
+    },
+    {
+      "path": "core-probe/Frameworks/CocoaLumberjack.framework/_CodeSignature/CodeResources",
+      "bytes": 2504,
+      "sha256": "c862fa9d8076bd0fce7bf32ddd44831ba4cdb10137c0a3bb2322af4ea93ea6d6"
+    },
+    {
+      "path": "core-probe/Frameworks/SSZipArchive.framework/Info.plist",
+      "bytes": 794,
+      "sha256": "1519d2b61c80a0328982ef99c590b4a760c8afd3e83c336d7ec865848d4424b3"
+    },
+    {
+      "path": "core-probe/Frameworks/SSZipArchive.framework/SSZipArchive",
+      "bytes": 236400,
+      "sha256": "21d7e8ba2be18cee228a9c15aa7b9dd95f3740d303404969998e44aac6a252a6"
+    },
+    {
+      "path": "core-probe/Frameworks/SSZipArchive.framework/_CodeSignature/CodeResources",
+      "bytes": 1798,
+      "sha256": "a365528d43ce6a7370614d4fa47fcd1d6e09596018b8fddf08ce0ba91a0cabcf"
+    },
+    {
+      "path": "core-probe/Vendor/opus-1.5.2/include/meson.build",
+      "bytes": 226,
+      "sha256": "9c14127570dd2598ef506fb7f75e8f1963457bbc93f2f1088ea0045a6d39167a"
+    },
+    {
+      "path": "core-probe/Vendor/opus-1.5.2/include/opus.h",
+      "bytes": 54623,
+      "sha256": "0d5e90fe5d2651ce616b238a81b33d393949b99ef9528efdbd653c0097abbbd4"
+    },
+    {
+      "path": "core-probe/Vendor/opus-1.5.2/include/opus_custom.h",
+      "bytes": 14847,
+      "sha256": "f80f26efecee7485faaf95735dbac148767af316d70a2c7bd1da666b71c6ce4f"
+    },
+    {
+      "path": "core-probe/Vendor/opus-1.5.2/include/opus_defines.h",
+      "bytes": 36680,
+      "sha256": "8918f65309058be1921e59e9ef9cd4081497ce8a487e55cb45c5547046447d9b"
+    },
+    {
+      "path": "core-probe/Vendor/opus-1.5.2/include/opus_multistream.h",
+      "bytes": 33540,
+      "sha256": "49b727edb7306f94980713bb6c2777fa1fb52de00005cd77c5aff3b935435c22"
+    },
+    {
+      "path": "core-probe/Vendor/opus-1.5.2/include/opus_projection.h",
+      "bytes": 28240,
+      "sha256": "a53752449f55b5f60679eab8fda96835102251aeefccf7c54256460d02747216"
+    },
+    {
+      "path": "core-probe/Vendor/opus-1.5.2/include/opus_types.h",
+      "bytes": 5157,
+      "sha256": "19cb301ea1eedbcbdbb5049363de061893bf11c20e505a657b69ce6ffa5b11fa"
+    },
+    {
+      "path": "core-probe/Vendor/opus-1.5.2/COPYING",
+      "bytes": 1945,
+      "sha256": "01e1167d54a096d123cf6dfbbeb19587278845c6481d2d66d545669846079551"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/pywebrtcvad.c",
+      "bytes": 4109,
+      "sha256": "cfe874e2468895119b6e981c54e6c49672dfdf07481e38fd9adf65bb87ba18eb"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/complex_bit_reverse.c",
+      "bytes": 4389,
+      "sha256": "a395a1116542798cff9ce23a21324a1a62a5566271c16fd5a70c5eb8b9332da7"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/complex_fft.c",
+      "bytes": 10060,
+      "sha256": "5d474376f47e189bbae4d8e86b69f29c884dbe7098e848c616154905c3da9174"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/complex_fft_tables.h",
+      "bytes": 9145,
+      "sha256": "6f09aa73cf3d1350820813e5e288317804a626536857411c064864ba9dc73d2e"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/cross_correlation.c",
+      "bytes": 1271,
+      "sha256": "688cd17f99cfbdc495d2d5bfb0f64898019731f234627cd0d6c948a9e6cbb0df"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/division_operations.c",
+      "bytes": 3527,
+      "sha256": "aa2cbdbfc5f031019a8b0790adc7d009efc655495f5af934e2b324c2a292cf38"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/downsample_fast.c",
+      "bytes": 1707,
+      "sha256": "cc1a0e9e5eab31af1413fd4b1a86b72338064e6afa405ee14e55a57b14aa49b6"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/energy.c",
+      "bytes": 1093,
+      "sha256": "ec556ad769cace5ef7d945d7d9bff53261b5e533190a8bded93c0eb79b89a1bd"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/get_scaling_square.c",
+      "bytes": 1332,
+      "sha256": "90d248ebfbbc3e1125a74c6e52a6bad2f16779ee911a0c49060775056ed7f81f"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/include/real_fft.h",
+      "bytes": 4236,
+      "sha256": "4a6dd7d7561eb79dbb055629be65f37d148daa01786c0622b1f63851ebab8440"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/include/signal_processing_library.h",
+      "bytes": 62007,
+      "sha256": "27c7e0e79141bdff8cb20bcbdfd122b4862e3490ab143c383a247d6ea0450d9c"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/include/spl_inl.h",
+      "bytes": 3963,
+      "sha256": "10f649503d8f9e03bbd465817b1e7d4523443a7e0c4ab173652afb428980aabf"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/min_max_operations.c",
+      "bytes": 5718,
+      "sha256": "77fbd20cab5d575f5e13d7e2b45ed8770ef812b4f7283a4bbce4c172805e4755"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/real_fft.c",
+      "bytes": 3163,
+      "sha256": "29e51650da7470269e10c98cba73f871e1039aaed1d5e0f27f87289c632f7d76"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/resample_48khz.c",
+      "bytes": 5841,
+      "sha256": "070839683fa248efb3afa047555263d561a0c449154f6feacb5b9ce7fdc79114"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/resample_by_2_internal.c",
+      "bytes": 20171,
+      "sha256": "f4e0791e3ea6c8b4596acb651f6cc81c4478fdddcb39b76e51165b74bc382d95"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/resample_by_2_internal.h",
+      "bytes": 1759,
+      "sha256": "5e60bf5f577f23bae8419f9805b5b9aa51a5bf330cb82c46230c5a94c609edac"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/resample_fractional.c",
+      "bytes": 7955,
+      "sha256": "90f2ce0dc88ca9b22e28137939ab34a8d82e28c1170d71a834101da25e91594e"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/spl_init.c",
+      "bytes": 4954,
+      "sha256": "f6d0200312f98cbc465a573ee301363be9a19f5322998dd93a1010ba43caec23"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/signal_processing/vector_scaling_operations.c",
+      "bytes": 5083,
+      "sha256": "f6603d8473c3faedd8c773350149d9f93923c8904951d35b176c07780301ff77"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/vad/include/webrtc_vad.h",
+      "bytes": 3181,
+      "sha256": "cc6a81cf97507549e560d21b309285bdb74b37633a866751d147ae017d53d0d8"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/vad/vad_core.c",
+      "bytes": 26393,
+      "sha256": "b1c8b71e05c58b00a66635ccd9ef83b4dc61596bfc719d0e9395a0f606152d10"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/vad/vad_core.h",
+      "bytes": 3824,
+      "sha256": "30b1b4b441084c3e3f84d1c6eb3c7bf3c780b2acd49f30642d3b57f937ec4543"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/vad/vad_filterbank.c",
+      "bytes": 14169,
+      "sha256": "d0471daebd7dd9537138d942b76965772d082d605847629b923589b00a94affb"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/vad/vad_filterbank.h",
+      "bytes": 1862,
+      "sha256": "2a1d7bba6f515d2d19ff1cf73cca4905537735cc5a54450fca13309bb98ba557"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/vad/vad_gmm.c",
+      "bytes": 3196,
+      "sha256": "ff0219e874114f795e506533c232194953f928b26f5204dddc850478ec05f8e1"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/vad/vad_gmm.h",
+      "bytes": 1442,
+      "sha256": "495df4dc1bcc00dd0d4c900a674ceae295b69cb2814edc3ba7735df37e191cc5"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/vad/vad_sp.c",
+      "bytes": 5961,
+      "sha256": "6e45221f0168934c1fd8304f0eeec2a34be00c037bd7033592b6ab9bc81d7aa8"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/vad/vad_sp.h",
+      "bytes": 2102,
+      "sha256": "077fb095c8e2d0e7907bf7d7526c9837e130ad668d75a8af4ee3bb0d9eef8886"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio/vad/webrtc_vad.c",
+      "bytes": 3243,
+      "sha256": "75e251d12b2618fcda1abcb99796c397f91ab7b9bcaac4a125e14caeff58e9cf"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/system_wrappers/interface/cpu_features_wrapper.h",
+      "bytes": 1504,
+      "sha256": "018665c58489cfebb3cbc0a78591ca91b090901dcd7419afc213f40798709778"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/typedefs.h",
+      "bytes": 4811,
+      "sha256": "45b9c3858ad2ddd66703b65b7174e57ef391f3b591f69b9132b08da76399f5ad"
+    },
+    {
+      "path": "core-probe/Vendor/py-webrtcvad-2.0.10/LICENSE",
+      "bytes": 2715,
+      "sha256": "c652961f6c92f978ebe4acea6b8b68d4d2d777bd0a1df130c9deffca12d482cd"
+    },
+    {
+      "path": "core-probe/Vendor/opus-ios/libopus.a",
+      "bytes": 611712,
+      "sha256": "71c6ebcf1b30c0190711e18a176d4fa2a0b23a7ce9ccd3f59aace0fae43da41c",
+      "note": "Opus 1.5.2, arm64 iOS16, Release, intrinsics disabled, source paths mapped to /src/opus"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/CZLib/module.modulemap",
+      "bytes": 356,
+      "sha256": "1d6577e0f4ac0ce32cd158f426e0a337a777e8e1722bd51330514b98877a200f"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/CZLib/shim.h",
+      "bytes": 795,
+      "sha256": "1d3b804c8ff494bbd1305ddd5e3290e24397694b1d241bc43efa98cce4e66cb2"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Archive+BackingConfiguration.swift",
+      "bytes": 6396,
+      "sha256": "d9ebf96a0080d2b79207f85bcd3e46812baa94e35d35ea66114153fd4dc5f49d"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Archive+Deprecated.swift",
+      "bytes": 739,
+      "sha256": "1824adfa6e318fcdcc5c43431633ed42c4de845f3d8575807b24bc626addc63e"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Archive+Helpers.swift",
+      "bytes": 17351,
+      "sha256": "2b660b56fcdc8a57de59b6ae0527894dfe2cd895a5037795f827763ea56be6c8"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Archive+MemoryFile.swift",
+      "bytes": 6151,
+      "sha256": "c480fa8e999604787bebfba3ae5eb9e0dea0b8bced7063c93f853f252d4828a7"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Archive+Progress.swift",
+      "bytes": 2334,
+      "sha256": "c8b26546f4183d127bb5fca7612cb87b18253d4a1788cbc0dd222280e7e1b9bf"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Archive+Reading.swift",
+      "bytes": 6726,
+      "sha256": "14f4c1c9ffbe45fb4618625be15105507010110680e7e4a90c9061e222ec8b03"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Archive+ReadingDeprecated.swift",
+      "bytes": 1129,
+      "sha256": "a5036f209dc6609c17adf64cdd1682cd6fc319f405e709a147cea087172a6dfe"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Archive+Writing.swift",
+      "bytes": 19248,
+      "sha256": "6081d702339396741e85e0b430f66b5f3c4443e2e13164e69758857429fd5996"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Archive+WritingDeprecated.swift",
+      "bytes": 2477,
+      "sha256": "2f2046af246e02648db773e3e36133a96e7ab4a72942f39a87e6e29ddf51310b"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Archive+ZIP64.swift",
+      "bytes": 7698,
+      "sha256": "21465808aa72245ecf5e1c69231d187a133d0a86f180148828de86431fce424a"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Archive.swift",
+      "bytes": 18790,
+      "sha256": "a36fb6c28dc61665003d0de996eeeccf3ddd829c1c5a3ff0a375ec86a302e912"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Data+Compression.swift",
+      "bytes": 18324,
+      "sha256": "88c2b802cc903d48987cd3808cd9212226e889948c76f0790a01572bdaab1d2d"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Data+CompressionDeprecated.swift",
+      "bytes": 1410,
+      "sha256": "b76157d54942ae30f9e6b3a460222725602e6f60cdf8f51020d511e04674347a"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Data+Serialization.swift",
+      "bytes": 4751,
+      "sha256": "0582aa3a7f58bf20b214eabfd6f7c41b78684780b5dbea663e09025d829bbd82"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Date+ZIP.swift",
+      "bytes": 3197,
+      "sha256": "88edc8e6b839309df32f03b5a387cff4ba3f5151be4cf154b33810d7e235d02f"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Entry+Serialization.swift",
+      "bytes": 10500,
+      "sha256": "31b5f2a1b9e91b9f4dd0ee3dedefaa3f3b0efafb96e6d3815a6b3c2dbd34c87f"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Entry+ZIP64.swift",
+      "bytes": 6379,
+      "sha256": "ec1664c6ad88acb387344fe8faf3159641476feb99c75a5d47e1a11bc81636dd"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Entry.swift",
+      "bytes": 17563,
+      "sha256": "d6f5570877afa147db0235479d4bdf18c7489af79fcbb20f022d0eee2bc42212"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/FileManager+ZIP.swift",
+      "bytes": 18826,
+      "sha256": "e299de3ad3615a315ee033169fbbb965bab8f0256f36b7acd101f71ce9b947e4"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/FileManager+ZIPDeprecated.swift",
+      "bytes": 603,
+      "sha256": "dbc4082819be0af06e942396152d584e010740b798da2ead51117e3094fbcd4e"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/Resources/PrivacyInfo.xcprivacy",
+      "bytes": 599,
+      "sha256": "9a2f930cedb8d58309a581b9bf9bf3673685ec02ae2197d9f1c56828b718dffd"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Sources/ZIPFoundation/URL+ZIP.swift",
+      "bytes": 929,
+      "sha256": "89f4a8cb15a21ac1cb55d0c5f251546d254abe8a7f4aab0645a4470e57052206"
+    },
+    {
+      "path": "third-party/ZIPFoundation/LICENSE",
+      "bytes": 1105,
+      "sha256": "93a5b6f4c4fcfbca71aaf17f5758d249cf205d5d1c237becc37f14e43af09f6b"
+    },
+    {
+      "path": "third-party/ZIPFoundation/Package.swift",
+      "bytes": 805,
+      "sha256": "bf81723767e319ba2ebae7979d2f5db1f3638d8ceb986494972402b07fb913db"
+    }
+  ]
+}

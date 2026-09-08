@@ -1,0 +1,98 @@
+# Source-only local app. No vendor frameworks, private keys or device transport.
+name: RayNeoCompanion
+options:
+  bundleIdPrefix: io.turboio
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+packages:
+  ZIPFoundation:
+    path: ../../third-party/ZIPFoundation
+  RayNeoProtocol:
+    path: ../../rayneo-protocol
+  RayNeoDisplay:
+    path: ../../rayneo-display
+  RayNeoSession:
+    path: ../../rayneo-session
+  RayNeoArchive:
+    path: ../../rayneo-archive
+  RayNeoAudioContainer:
+    path: ../../rayneo-audio-container
+targets:
+  RayNeoCompanion:
+    type: application
+    platform: iOS
+    sources:
+      - Sources
+      - ../../core-probe/Sources/VoiceToolCallAccumulator.swift
+      - ../../core-probe/Sources/CloudASRHostSettings.swift
+    dependencies:
+      - package: ZIPFoundation
+      - package: RayNeoProtocol
+      - package: RayNeoDisplay
+      - package: RayNeoSession
+      - package: RayNeoArchive
+      - package: RayNeoAudioContainer
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.turboio.companion
+        PRODUCT_NAME: RayNeoCompanion
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Turbo IO
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        MARKETING_VERSION: "0.2.0"
+        CURRENT_PROJECT_VERSION: "2"
+    info:
+      path: Generated/Companion-Info.plist
+      properties:
+        NSRemindersUsageDescription: 读取你选择的系统提醒事项并复制为Turbo IO本机待办。不会修改或删除系统提醒事项。
+        NSRemindersFullAccessUsageDescription: 读取你选择的系统提醒事项并复制为Turbo IO本机待办。虽然系统授权为完全访问，Turbo IO仅执行读取。
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: EPUB and Text Books
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes: [org.idpf.epub-container, public.plain-text]
+        LSSupportsOpeningDocumentsInPlace: true
+        NSLocalNetworkUsageDescription: 连接你指定的电脑Codex桥接服务，发送任务并获取结果。
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+  RayNeoCompanionUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: RayNeoCompanion
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.turboio.companion.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: RayNeoCompanion
+  RayNeoCompanionTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: RayNeoCompanion
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.turboio.companion.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  RayNeoCompanion:
+    build:
+      targets:
+        RayNeoCompanion: all
+    run:
+      config: Debug
+    test:
+      targets: [RayNeoCompanionTests, RayNeoCompanionUITests]
