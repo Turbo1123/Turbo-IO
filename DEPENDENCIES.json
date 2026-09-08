@@ -1,5 +1,5 @@
 {
-  "purpose": "Explicit third-party build dependencies; not covered by the project MIT license",
+  "purpose": "Explicit third-party build dependencies; not covered by the project license",
   "files": [
     {
       "path": "core-probe/Frameworks/RayneoNet.framework/Info.plist",

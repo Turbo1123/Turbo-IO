@@ -1,5 +1,7 @@
 # Turbo IO · 雷鸟 iO / RayNeo iO 非官方 SDK
 
+> **仅供学习、研究与非商业使用，未经授权不得商用或收费分发。** 当前原创内容采用 [PolyForm Noncommercial 1.0.0](LICENSE)，不再以 MIT 提供新版本。未经授权的商用可能侵犯相关权利，权利人保留依法追究法律责任的权利。历史 MIT 版本已授出的权利不受本次变更追溯影响，第三方组件仍遵循各自许可，详见[许可与历史版本说明](docs/LICENSING.md)。
+
 面向雷鸟 iO（RayNeo iO）AI 眼镜的非官方 SDK 研究项目与自有 iOS 客户端：眼镜语音 → 自己的 ASR/模型，录音 → 本地归档与手动转写，Codex → 电脑任务与结果通知。
 
 **发布源码与明确列出的构建依赖，不发布 IPA、预签名 App 或开发者服务密钥。用户自行配置、签名与编译。** 现阶段是研究驱动的开发版，不是所有设备/固件都已验收的通用 SDK。
@@ -84,6 +86,18 @@ node display-observer/server.mjs --no-proxy
 未完成或仍有问题的功能会继续标注，不把成功回执当作镜片验收。欢迎提交脱敏日志、复现步骤和 PR；请勿上传自己的 Key、录音、聊天、设备标识或他人的私人数据。
 
 ## 快速开始
+
+### 用 Codex / Claude Code 技能引导安装
+
+已安装 Node.js 和相应编程助手的用户，可以用一行命令安装 `turbo-io` 技能（用户级，同时面向 Codex 与 Claude Code）：
+
+```sh
+DISABLE_TELEMETRY=1 npx --yes skills@1.5.24 add Turbo1123/Turbo-IO --skill turbo-io -g -a codex claude-code --copy
+```
+
+在安装器中确认目标后，新开助手会话，让它执行：**“使用 turbo-io 技能，帮我以非商业学习用途安装并启动 Turbo IO，先跑不需要眼镜的 Web 预览。”** Claude Code 可输入 `/turbo-io`，Codex 可在技能选择器中选中或显式提及技能。
+
+技能会检查环境、获取源码、启动预览，再按需指导 iOS 编译、服务配置与 Codex bridge。**一行安装的是技能，不是已签名 iPhone App**：真机仍需自己的 Xcode 签名、配对和服务 Key。支持 Claude Code 使用技能，不等于已经实现眼镜的 Claude Code 后端适配。[完整说明与手动安装](docs/AGENT_SKILL.md)。
 
 ### 连接前必读：先解绑，再忽略蓝牙设备
 
@@ -186,6 +200,6 @@ xcrun swift test --package-path rayneo-session
 
 自己的Key保存在自己的iOS钥匙串；云对话会上传音频/识别文字，录音转写由用户手动触发。音频/Markdown留在自己的App容器，不覆盖原件，不自动上传NAS。Hash/CRC不是加密，也不构成全程端到端加密承诺。
 
-本项目自行编写的代码采用 [MIT](LICENSE)。第三方组件及厂商通信库不因随工程使用而改为MIT，具体归属见 [第三方说明](THIRD_PARTY_NOTICES.md)。本工程与设备厂商无官方隶属关系。
+当前有权授权的原创内容采用 [PolyForm Noncommercial 1.0.0](LICENSE)，用于非商业学习研究；未经授权不得商用或收费分发。历史 MIT 权利不追溯撤销，详见[许可说明](docs/LICENSING.md)。第三方组件及厂商通信库不因随工程使用而变更许可，具体归属见 [第三方说明](THIRD_PARTY_NOTICES.md)。本工程与设备厂商无官方隶属关系。
 
 发布不包含个人录音、聊天、凭据、绑定数据库、原始日志、私有临时隧道配置、IPA或预签名App。详见[源码发布说明](docs/SOURCE_RELEASE.md)。

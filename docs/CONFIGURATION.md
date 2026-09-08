@@ -44,7 +44,7 @@ xcodebuild -project apps/RayNeoCompanion/RayNeoCompanion.xcodeproj \
 | `core-probe/RecoveredInterface/RayneoNet.swift` | 恢复的声明源码；启动脚本用本机工具链生成仅声明的 swiftmodule，不编译/链接占位实现 |
 | `core-probe/Vendor/opus-ios/libopus.a` 与 opus-1.5.2/include | Opus 解码依赖 |
 | `core-probe/Vendor/py-webrtcvad-2.0.10/cbits` | 本地 VAD C 源码与头文件 |
-| 各第三方 COPYING / LICENSE | 原归属与许可，不受本项目 MIT 覆盖 |
+| 各第三方 COPYING / LICENSE | 原归属与许可，不受本项目非商业许可覆盖 |
 
 不要从不明来源随意下载同名库，不要假定别的版本 ABI 相同。缺依赖时启动脚本列出准确缺项并退出，不用空文件伪造成功。
 

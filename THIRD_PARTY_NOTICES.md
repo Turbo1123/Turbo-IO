@@ -1,6 +1,6 @@
 # Third-party components
 
-The root MIT license applies to original Turbo IO code, not to third-party components, vendor binaries, extracted interfaces or their trademarks.
+The root PolyForm Noncommercial 1.0.0 license covers original Turbo IO material the project has authority to license, not third-party components, vendor binaries, extracted interfaces or their trademarks. Previously granted MIT permissions remain unaffected; see docs/LICENSING.md. Do not replace any upstream license with the root license.
 
 - ZIPFoundation 0.9.20 is included as local source with its upstream LICENSE and privacy resource. The copied Swift 5.9 package manifest omits upstream test-only targets/fixtures; runtime sources are unchanged. Research builds may still resolve the pinned upstream package.
 - Device builds use Opus 1.5.2 and WebRTC VAD sources from py-webrtcvad 2.0.10. Retain upstream COPYING/LICENSE files when supplying these dependencies.

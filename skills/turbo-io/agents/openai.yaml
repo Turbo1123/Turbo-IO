@@ -1,0 +1,4 @@
+interface:
+  display_name: "Turbo IO · 雷鸟 iO"
+  short_description: "安装和启动雷鸟 iO 非官方客户端，检查依赖并配置语音与电脑桥接"
+  default_prompt: "使用 $turbo-io 帮我安装并启动 Turbo IO，先检查环境并跑通不需要眼镜的 Web 预览。"
