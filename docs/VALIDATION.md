@@ -6,7 +6,7 @@
 
 - 真机目标 `RayNeoCompanionDevice`：全新 DerivedData、仅使用随源码附带的依赖，未签名编译通过。不是安装/镜片验收。
 - 模拟器 App 单元测试：214 项通过、0 失败；包含显式 ASR Host、非法地址拒绝、密钥服务隔离与通知名称迁移。
-- 模拟器 UI 冒烟：自定义通知测试页、系统提醒事项导入/去重，共 2 项通过；不代替真机通知送达或系统授权验收。
+- 模拟器 UI 冒烟：自定义通知测试页、系统提醒事项导入/去重，日志显示 2 个用例通过、0 失败。Xcode beta 在用例结束后的报告收尾阶段停滞，本轮中止了收尾进程，未取得完整 xcresult；不记作完整 UI runner 绿色，也不代替真机通知送达或系统授权验收。
 - Node bridge / 显示观察测试：23 项通过、0 失败。
 - 独立 Swift 包测试：protocol 94、session 82、session-runtime 35、display 121、archive 39、audio-container 21、transport-ios 53，共 445 项通过。
 - 厂商 framework、Opus、VAD、ZIPFoundation：逐文件 SHA-256 记录于 `DEPENDENCIES.json`。
