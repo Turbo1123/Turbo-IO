@@ -42,6 +42,7 @@ import UIKit
         voice.onConnectionChange = { [weak self] device in
             guard let self else { return }
             self.store?.notifications.connectionChanged()
+            self.store?.headControlTest.connectionChanged()
             self.store?.alwaysOn.connectionChanged()
             self.pendingSettings.removeAll(); self.settings = [:]; self.battery = nil; self.brightness = nil
             if self.recordingID != nil { self.recordingStatus = device == self.captureDevice ? "连接恢复；等待同一录音状态/数据，不自动宣布补传完成" : "连接中断；原始录音保留，等待同一眼镜恢复" }
@@ -119,7 +120,9 @@ import UIKit
                 store?.qweather.receive(device:device,wire:wire)
                 launcher(wire)
             case 20: try teleprompterReceive(device,wire)
-            case 21: store?.notifications.receive(device: device, wire: wire)
+            case 21:
+                store?.notifications.receive(device: device, wire: wire)
+                store?.headControlTest.receive(device: device, wire: wire)
             default: break
             }
         } catch {

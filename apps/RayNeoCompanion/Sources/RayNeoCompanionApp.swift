@@ -18,6 +18,7 @@ struct RayNeoCompanionApp: App {
                 .environmentObject(store.recordingASR)
                 .environmentObject(store.features)
                 .environmentObject(store.notifications)
+                .environmentObject(store.headControlTest)
                 .environmentObject(store.automaticWeather)
                 .environmentObject(store.qweather)
                 .tint(Palette.green)
