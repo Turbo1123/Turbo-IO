@@ -37,6 +37,8 @@ struct ToolsView: View {
                 Card {
                     NavigationLink { NotificationCenterView() } label: { FeatureRow(icon: "bell.badge", title: "通知中心", subtitle: "来源开关与自定义发送测试", status: "真机") }.buttonStyle(.plain).accessibilityIdentifier("notification-tool")
                     Divider().overlay(Palette.line)
+                    NavigationLink { HeadControlNotificationTestView() } label: { FeatureRow(icon: "person.crop.circle.badge.checkmark", title: "头控通知测试", subtitle: "待办建议卡 · 点头/摇头仅回传本机", status: "真机") }.buttonStyle(.plain).accessibilityIdentifier("head-control-test-entry")
+                    Divider().overlay(Palette.line)
                     NavigationLink { GlassesSettingsView() } label: { FeatureRow(icon: "cloud", title: "天气与设备设置", subtitle: "自定义数据、读取状态与设置", status: "真机") }.buttonStyle(.plain).accessibilityIdentifier("device-settings-tool")
                     Divider().overlay(Palette.line)
                     NavigationLink { GlassesSettingsView() } label: { FeatureRow(icon: "slider.vertical.3", title: "头控与旋钮", subtitle: "已有协议值域的控制子集", status: "真机") }.buttonStyle(.plain)

@@ -159,6 +159,15 @@ final class CompanionStore: ObservableObject {
             guard let self else { throw DeviceFeatureError.disconnected }
             try self.voice.sendBusiness(index, payload: data)
         })
+    lazy var headControlTest = HeadControlNotificationTest(
+        device: { [weak self] in guard let self, self.voice.ready else { return nil }; return self.voice.deviceID },
+        available: { [weak self] in
+            guard let self else { return false }
+            return self.features.canControl && self.features.recordingID == nil && self.features.teleprompterID == nil
+        }, transport: { [weak self] index, data in
+            guard let self else { throw DeviceFeatureError.disconnected }
+            try self.voice.sendBusiness(index, payload: data)
+        })
     lazy var features = CompanionDeviceFeatures(voice: voice, store: self,
         root: customRecordingRoot?.deletingLastPathComponent().appendingPathComponent("GlassesRecordingInboxV1")
         ?? FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("GlassesRecordingInboxV1"))
