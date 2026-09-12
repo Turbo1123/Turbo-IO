@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleIdentifier</key><string>io.turboio.research.preview</string>
+<key>CFBundleName</key><string>研究 UI 预览</string>
+<key>CFBundleExecutable</key><string>ResearchPreview</string>
+<key>CFBundleVersion</key><string>1</string>
+<key>CFBundleShortVersionString</key><string>1.0</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>LSRequiresIPhoneOS</key><true/>
+<key>MinimumOSVersion</key><string>16.0</string>
+<key>UIDeviceFamily</key><array><integer>1</integer><integer>2</integer></array>
+<key>UILaunchScreen</key><dict/>
+<key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string></array>
+</dict></plist>

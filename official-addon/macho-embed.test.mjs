@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {inspectMachO,addEmbeddedLoad} from './macho-embed.mjs';
+function fixture(crypt=0){const b=Buffer.alloc(4096);b.writeUInt32LE(0xfeedfacf);b.writeUInt32LE(0x100000c,4);b.writeUInt32LE(2,12);b.writeUInt32LE(3,16);b.writeUInt32LE(200,20);let p=32;b.writeUInt32LE(0x19,p);b.writeUInt32LE(152,p+4);b.writeUInt32LE(1,p+64);b.writeBigUInt64LE(128n,p+72+40);b.writeUInt32LE(1024,p+72+48);p+=152;b.writeUInt32LE(0x1b,p);b.writeUInt32LE(24,p+4);Buffer.from('eeea85e54114313cb65173c90a6b5d3c','hex').copy(b,p+8);p+=24;b.writeUInt32LE(0x2c,p);b.writeUInt32LE(24,p+4);b.writeUInt32LE(crypt,p+16);b.fill(0xaa,1024);return b;}
+test('embedded load preserves input, code bytes and UUID',()=>{const before=fixture(),snapshot=Buffer.from(before),patched=addEmbeddedLoad(before);assert.deepEqual(before,snapshot);assert.deepEqual(patched.subarray(1024),before.subarray(1024));assert.equal(inspectMachO(patched).uuid,inspectMachO(before).uuid);assert.equal(inspectMachO(patched).count,4);assert.match(inspectMachO(patched).dependencies[0],/^@executable_path\/Frameworks\//);});
+test('encrypted images are rejected rather than patched',()=>assert.throws(()=>addEmbeddedLoad(fixture(1)),/Encrypted/));
+test('duplicate reference rejected',()=>assert.throws(()=>addEmbeddedLoad(addEmbeddedLoad(fixture())),/already/));
+test('occupied and insufficient padding rejected',()=>{const b=fixture();b[240]=1;assert.throws(()=>addEmbeddedLoad(b),/not empty/);const c=fixture();c.writeUInt32LE(240,32+72+48);assert.throws(()=>addEmbeddedLoad(c),/padding/);});
+test('malformed and foreign binaries rejected',()=>{assert.throws(()=>inspectMachO(Buffer.alloc(10)));const b=fixture();b.writeUInt32LE(7,36);assert.throws(()=>inspectMachO(b),/length/);const c=fixture();c.writeUInt32LE(0x1000007,4);assert.throws(()=>inspectMachO(c),/arm64/);});
+test('dylib cannot be mistaken for the app executable',()=>{const b=fixture();b.writeUInt32LE(6,12);assert.throws(()=>addEmbeddedLoad(b),/executable/);});

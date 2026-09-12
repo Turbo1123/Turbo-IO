@@ -1,0 +1,3 @@
+#import "Profile.h"
+#include <assert.h>
+int main(void){@autoreleasepool{assert([TIOProfilePrompt(@{}) isEqual:@""]);assert(!TIOValidatedProfile(@{@"name":@12}));assert(!TIOValidatedProfile(@{@"unknown":@"x"}));assert(!TIOValidatedProfile(@{@"name":[@"x" stringByPaddingToLength:81 withString:@"x" startingAtIndex:0]}));NSDictionary *p=@{@"name":@"示例用户",@"identity":@"开发者",@"preferences":@"先结论\n再解释"};NSString *text=TIOProfilePrompt(p);assert([text containsString:@"示例用户"]&&[text containsString:@"开发者"]&&[text containsString:@"先结论\n再解释"]);assert(![text containsString:@"Turbo"]);NSLog(@"PASS: neutral profile, explicit user fields, size/type guards; no persisted user data touched");}return 0;}
