@@ -27,6 +27,7 @@ targets:
     platform: iOS
     sources:
       - Sources
+      - Resources
       - ../../core-probe/Sources/VoiceToolCallAccumulator.swift
       - ../../core-probe/Sources/CloudASRHostSettings.swift
     dependencies:
@@ -40,8 +41,9 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.turboio.companion
         PRODUCT_NAME: RayNeoCompanion
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: Turbo IO
+        INFOPLIST_KEY_CFBundleDisplayName: Norman IO
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
@@ -54,8 +56,8 @@ targets:
     info:
       path: Generated/Companion-Info.plist
       properties:
-        NSRemindersUsageDescription: 读取你选择的系统提醒事项并复制为Turbo IO本机待办。不会修改或删除系统提醒事项。
-        NSRemindersFullAccessUsageDescription: 读取你选择的系统提醒事项并复制为Turbo IO本机待办。虽然系统授权为完全访问，Turbo IO仅执行读取。
+        NSRemindersUsageDescription: 读取你选择的系统提醒事项并复制为Norman IO本机待办。不会修改或删除系统提醒事项。
+        NSRemindersFullAccessUsageDescription: 读取你选择的系统提醒事项并复制为Norman IO本机待办。虽然系统授权为完全访问，Norman IO仅执行读取。
         CFBundleDocumentTypes:
           - CFBundleTypeName: EPUB and Text Books
             CFBundleTypeRole: Viewer
@@ -91,6 +93,7 @@ targets:
     platform: iOS
     sources:
       - Sources
+      - Resources
       - ../../core-probe/Sources
       - path: ../../core-probe/Vendor/py-webrtcvad-2.0.10/cbits/webrtc/common_audio
         includes: ["**/*.c"]
@@ -124,6 +127,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: io.turboio.companion
         PRODUCT_NAME: RayNeoCompanion
         PRODUCT_MODULE_NAME: RayNeoCompanion
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SUPPORTED_PLATFORMS: iphoneos
         SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) COMPANION_DEVICE"
         SWIFT_OBJC_BRIDGING_HEADER: ../../core-probe/Sources/ProbeBridge.h
@@ -138,10 +142,10 @@ targets:
     info:
       path: Generated/CompanionDevice-Info.plist
       properties:
-        CFBundleDisplayName: Turbo IO
+        CFBundleDisplayName: Norman IO
         NSLocalNetworkUsageDescription: 连接你指定的电脑Codex桥接服务，发送任务并获取结果。
-        NSRemindersUsageDescription: 读取你选择的系统提醒事项并复制为Turbo IO本机待办。不会修改或删除系统提醒事项。
-        NSRemindersFullAccessUsageDescription: 读取你选择的系统提醒事项并复制为Turbo IO本机待办。虽然系统授权为完全访问，Turbo IO仅执行读取。
+        NSRemindersUsageDescription: 读取你选择的系统提醒事项并复制为Norman IO本机待办。不会修改或删除系统提醒事项。
+        NSRemindersFullAccessUsageDescription: 读取你选择的系统提醒事项并复制为Norman IO本机待办。虽然系统授权为完全访问，Norman IO仅执行读取。
         UILaunchScreen: {}
         NSBluetoothAlwaysUsageDescription: 连接你自己的眼镜，接收唤醒和语音并发送回答。
         NSBluetoothPeripheralUsageDescription: 连接你自己的 RayNeo 眼镜。

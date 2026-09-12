@@ -28,6 +28,7 @@ targets:
     platform: iOS
     sources:
       - Sources
+      - Resources
       - ../../core-probe/Sources/VoiceToolCallAccumulator.swift
       - ../../core-probe/Sources/CloudASRHostSettings.swift
     dependencies:
@@ -41,8 +42,9 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.turboio.companion
         PRODUCT_NAME: RayNeoCompanion
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: Turbo IO
+        INFOPLIST_KEY_CFBundleDisplayName: Norman IO
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES

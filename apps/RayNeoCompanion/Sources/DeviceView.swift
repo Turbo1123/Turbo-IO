@@ -9,9 +9,13 @@ struct DeviceView: View {
     @State private var showConnection = false
 
     var body: some View {
-        Screen(title: "我的眼镜", eyebrow: "Turbo IO · 你的本地智能眼镜助手", headerIcon: "gearshape", headerAction: { showSettings = true }) {
+        Screen(title: "我的眼镜", eyebrow: "Norman IO · 你的本地智能眼镜助手", headerIcon: "gearshape", headerAction: { showSettings = true }) {
             VStack(alignment: .leading, spacing: 7) {
                 HStack {
+                    Image("NormanIOMark").resizable().scaledToFit()
+                        .frame(width: 42, height: 42)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .accessibilityHidden(true)
                     Text("RayNeo iO").font(.system(size: 25, weight: .semibold))
                     Spacer()
                     if store.demoMode { Badge(text: "演示界面", active: true) }
