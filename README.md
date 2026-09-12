@@ -11,6 +11,19 @@
 
 V2 还增加了**程序内可编辑的个人资料与提示词**，默认不含任何人的身份；模型 Key、搜索 Key 和知识库连接由使用者自己配置。
 
+### V2 兼容的官方 App 版本
+
+**当前仅适配 iOS「雷鸟 AI 眼镜」1.0.2（Build 67）。** 这是官方 App 的版本，不是 Turbo IO 的版本或眼镜固件版本。
+
+| 检查项 | 当前适配目标 |
+| --- | --- |
+| 官方 App | iOS 1.0.2（Build 67） |
+| Bundle ID | `com.rayneo.venus.pub` |
+| 主程序 | `Runner`，thin arm64；还需匹配指定 UUID，见 [V2 兼容性门槛](official-addon/README.md#1-兼容性门槛) |
+| 其他官方版本 / Android | 尚未适配，不保证可用 |
+
+合并前请核对源 App 的 `Info.plist`：`CFBundleShortVersionString` 应为 `1.0.2`，`CFBundleVersion` 应为 `67`。**版本号相同也不代表二进制一定兼容；合并工具还会校验主程序 UUID。** 官方升级后需要重新适配，不要改版本号或跳过检查强行合并。此限制针对 V2 官方 App 扩展，不是 V1 独立 SDK 的官方 App 安装要求。
+
 **我们不提供官方 IPA、砸壳文件、修改版 IPA、预签名 App、密钥或签名证书。** 发布自己的扩展源码、测试及本地合并/签名工具；用户在自己电脑生成安装包，工具不会上传。普通加密 IPA、未知版本不能直接合并。当前支持版本、局限和构建步骤见 V2 文档。
 
 知识库手机→Mac→镜片、APNs 和其他 Agent 仍有未验收/未实现部分，不会用 V1 的成功记录冒充 V2 已完成。请看 [V2 验证表](official-addon/docs/VALIDATION.md)。下面的独立配对与 Web 观察说明均属于 V1，不是 V2 的通用能力承诺。

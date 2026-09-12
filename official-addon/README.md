@@ -60,7 +60,10 @@ xcrun simctl launch booted io.turboio.research.preview
 
 ### 1. 兼容性门槛
 
+**适配对象：iOS「雷鸟 AI 眼镜」1.0.2（Build 67）。其他官方版本及 Android 尚未适配。** 这里的版本指官方 App，不是眼镜固件，也不是 Turbo IO V2 的版本号。
+
 - 当前只接受官方 iOS **1.0.2 / build 67**、Bundle ID `com.rayneo.venus.pub`、Runner UUID `eeea85e54114313cb65173c90a6b5d3c`。
+- 合并前核对源 App 的 `Info.plist`：`CFBundleShortVersionString = 1.0.2`、`CFBundleVersion = 67`。相同版本号仍需匹配上述 UUID；官方升级后需要重新适配，不要修改版本号或跳过检查强行合并。
 - 输入为合法可用、未加密、thin arm64 的 `Runner.app`，可以是用户自行准备的 IPA 中的 `Payload/Runner.app`。工具不处理加密绕过；遇到加密镜像、未知版本、已嵌入扩展、不足的头部空间、未审查的应用扩展/多架构镜像/符号链接会拒绝。
 - UUID 用于版本/ABI 适配，不是完整来源安全鉴定；仅使用自己信任的应用源。
 - 需要自己的有效开发签名证书、匹配 Bundle ID 和设备的描述文件、已信任电脑且允许开发运行的 iPhone。
