@@ -51,6 +51,9 @@ final class CoreMessageReceiver: RNMessageDelegate {
             } else { reportBusinessLoss() }
         }
         if business == 13, !alwaysOn, let metadata {
+            if metadata.messageType == 1, let summary = try? BusinessEnvelopeMetadata.wakeDiagnostic(payload) {
+                emit("唤醒诊断 " + summary)
+            }
             let deviceID = handle.deviceID()
             let isAudio = metadata.messageType == 3
             // Bound retained audio even if the UI queue stalls. Never log bytes.

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct WeatherstackView: View {
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var features: CompanionDeviceFeatures
     @EnvironmentObject private var voice: CompanionVoiceRuntime
     @EnvironmentObject private var automatic: AutomaticWeather
@@ -15,85 +16,85 @@ struct WeatherstackView: View {
 
     var body: some View {
         Form {
-            Section("认证连接后自动同步") {
-                Text("旧版配置已由和风仪表盘天气接管，不再由连接事件自动触发此服务。此页查询和重试为手动操作。")
+            Section(L10n.text("Sync Automatically After Authenticated Connection", locale: locale)) {
+                Text(L10n.text("QWeather dashboard weather has replaced the legacy automatic configuration. Connection events no longer trigger this service. Queries and retries on this page are manual.", locale: locale))
                     .font(.caption).foregroundStyle(.secondary)
-                Toggle("连接 / 重连后同步首页天气", isOn: Binding(
+                Toggle(L10n.text("Sync Home Weather After Connecting / Reconnecting", locale: locale), isOn: Binding(
                     get: { automatic.configuration.enabled },
                     set: { automatic.configure(city: automatic.configuration.city, enabled: $0) }))
                     .accessibilityIdentifier("weather-auto-enabled")
-                Text("已选城市：\(automatic.configuration.city)").font(.caption)
+                Text(L10n.format("Selected city: %@", locale: locale, String(describing: automatic.configuration.city))).font(.caption)
                 Text(automatic.status).font(.caption).accessibilityIdentifier("weather-auto-status")
-                Text("只在认证连接后获取并下发；新鲜结果可用于重连。不会改看板布局；录音、对话或提词中会延后。需天气专用 Key 和已核对的图标映射。")
+                Text(L10n.text("Fetches and sends only after an authenticated connection. Fresh results can be reused on reconnect. The dashboard layout stays unchanged. Updates wait during recording, conversation, or teleprompter use. Requires a weather-specific key and verified icon mapping.", locale: locale))
                     .font(.caption).foregroundStyle(.secondary)
-                Button("重试自动同步") { automatic.retry() }.disabled(automatic.busy)
+                Button(L10n.text("Retry Automatic Sync", locale: locale)) { automatic.retry() }.disabled(automatic.busy)
                     .accessibilityIdentifier("weather-auto-retry")
                 if let result = automatic.snapshot {
-                    Text("自动查询：\(result.city) \(result.lensTemperature)°C · \(result.description) · 天气码 \(result.providerCode)").font(.caption)
+                    Text(L10n.format("Automatic query: %@ %@°C · %@ · Weather code %@", locale: locale, String(describing: result.city), String(describing: result.lensTemperature), String(describing: result.description), String(describing: result.providerCode))).font(.caption)
                 }
             }
-            Section("Weatherstack · 实时天气") {
-                Text("查询仅发送你填写的城市给 Weatherstack，可能消耗额度。不获取手机定位，不传聊天、录音或眼镜身份。")
+            Section(L10n.text("Weatherstack · Live Weather", locale: locale)) {
+                Text(L10n.text("Queries send only the city you enter to Weatherstack and may use your quota. Does not access phone location or send chats, recordings, or glasses identity.", locale: locale))
                     .font(.caption).foregroundStyle(.secondary)
-                SecureField(weather.hasKey ? "新 Key（留空保留原 Key）" : "Weatherstack API Key",text:$key)
+                SecureField(weather.hasKey ? L10n.text("New key (leave blank to keep the existing key)", locale: locale) : "Weatherstack API Key",text:$key)
                     .textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("weather-key")
                 HStack {
-                    Button("安全保存 Key") { weather.saveKey(key); key = ""; automatic.retry() }.disabled(key.isEmpty || weather.busy)
+                    Button(L10n.text("Save Key Securely", locale: locale)) { weather.saveKey(key); key = ""; automatic.retry() }.disabled(key.isEmpty || weather.busy)
                     Spacer()
-                    Button("移除 Key",role:.destructive) { weather.removeKey(); automatic.retry() }.disabled(!weather.hasKey || weather.busy)
+                    Button(L10n.text("Remove Key", locale: locale),role:.destructive) { weather.removeKey(); automatic.retry() }.disabled(!weather.hasKey || weather.busy)
                 }
-                TextField("城市及国家",text:$city).autocorrectionDisabled().accessibilityIdentifier("weather-city")
-                Button("保存为自动同步城市") {
+                TextField(L10n.text("City and Country", locale: locale),text:$city).autocorrectionDisabled().accessibilityIdentifier("weather-city")
+                Button(L10n.text("Save as Automatic Sync City", locale: locale)) {
                     automatic.configure(city:city, enabled:automatic.configuration.enabled)
                 }.accessibilityIdentifier("weather-auto-city-save")
-                Button(weather.busy ? "查询中…" : "查询并预览（不发送）") { confirmQuery = true }
+                Button(weather.busy ? L10n.text("Fetching…", locale: locale) : L10n.text("Fetch and Preview Without Sending", locale: locale)) { confirmQuery = true }
                     .disabled(weather.busy || !weather.hasKey || city.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty)
                     .accessibilityIdentifier("weather-query")
-                Button("查看你提供的 2019 示例") { weather.previewSample() }
+                Button(L10n.text("View Your Provided 2019 Example", locale: locale)) { weather.previewSample() }
                     .disabled(weather.busy).accessibilityIdentifier("weather-sample")
                 Text(weather.message).font(.caption).accessibilityIdentifier("weather-status")
             }
             if let result = automatic.snapshot, !result.isSample {
-                Section("核对自动天气图标") {
-                    Text("为 Weatherstack 天气码 \(result.providerCode) 保存已验证的固件图标；天气类型变化后，未核对的新代码会暂停下发。")
+                Section(L10n.text("Verify Automatic Weather Icon", locale: locale)) {
+                    Text(L10n.format("Save the verified firmware icon for Weatherstack code %@. If the weather type changes, updates pause until the new code is verified.", locale: locale, String(describing: result.providerCode)))
                         .font(.caption)
-                    TextField("固件图标编号", text:$rawIcon).keyboardType(.numberPad)
-                    Toggle("已核对该图标映射", isOn:$acknowledgedIcon)
-                    Button("保存图标映射并重试") {
+                    TextField(L10n.text("Firmware Icon ID", locale: locale), text:$rawIcon).keyboardType(.numberPad)
+                    Toggle(L10n.text("I Have Verified This Icon Mapping", locale: locale), isOn:$acknowledgedIcon)
+                    Button(L10n.text("Save Icon Mapping and Retry", locale: locale)) {
                         guard acknowledgedIcon, let icon = validIcon else { return }
                         automatic.confirmIcon(providerCode:result.providerCode, firmwareCode:icon)
                     }.disabled(!acknowledgedIcon || validIcon == nil || automatic.busy)
                 }
             }
             if let snapshot = weather.snapshot {
-                Section(snapshot.isSample ? "历史示例 · 不可发送" : "查询结果 · 尚未同步") {
-                    LabeledContent(snapshot.city,value:String(format:"%g °C",snapshot.celsius))
+                Section(snapshot.isSample ? L10n.text("Historical Example · Cannot Be Sent", locale: locale) : L10n.text("Query Results · Not Synced Yet", locale: locale)) {
+                    LabeledContent(snapshot.city,value:snapshot.celsius.formatted(.number.locale(locale)) + " °C")
                         .accessibilityIdentifier("weather-preview")
                     Text(snapshot.description)
-                    Text("当地时间：\(snapshot.sourceLocalTime.isEmpty ? "缺失" : snapshot.sourceLocalTime)").font(.caption)
-                    Text("Weatherstack 代码：\(snapshot.providerCode)（不是眼镜图标编号）").font(.caption)
+                    Text(L10n.format("Local time: %@", locale: locale, String(describing: snapshot.sourceLocalTime.isEmpty ? L10n.text("Missing", locale: locale) : snapshot.sourceLocalTime))).font(.caption)
+                    Text(L10n.format("Weatherstack code: %@ (not a glasses icon ID)", locale: locale, String(describing: snapshot.providerCode))).font(.caption)
                     if snapshot.usedLegacyTemperatureKey {
-                        Text("兼容样本的 temparature 拼写，正式 temperature 字段优先。").font(.caption2)
+                        Text(L10n.text("Supports the sample's “temparature” spelling; the standard “temperature” field takes precedence.", locale: locale)).font(.caption2)
                     }
-                    Text("首页协议只承载地点、整数温度和固件图标；风速、空气质量、月相等字段暂不下发。").font(.caption)
+                    Text(L10n.text("The home screen protocol carries only the location, integer temperature, and firmware icon. Wind speed, air quality, moon phase, and other fields are not currently sent.", locale: locale)).font(.caption)
                 }
-                Section("同步首页天气") {
-                    TextField("已验证的固件原始图标编号",text:$rawIcon).keyboardType(.numberPad)
-                    Toggle("我已核对这个固件图标码",isOn:$acknowledgedIcon)
-                    Text("供应商代码没有已验证的自动映射，不用 122 猜眼镜图标。温度四舍五入为整数；不会替换现有看板布局。").font(.caption)
-                    Button("同步查询结果到眼镜") { confirmSend = true }
+                Section(L10n.text("Sync Home Screen Weather", locale: locale)) {
+                    TextField(L10n.text("Verified raw firmware icon ID", locale: locale),text:$rawIcon).keyboardType(.numberPad)
+                    Toggle(L10n.text("I Have Verified This Firmware Icon Code", locale: locale),isOn:$acknowledgedIcon)
+                    Text(L10n.text("No verified automatic mapping exists for provider codes. Do not guess the glasses icon using 122. Temperatures are rounded to integers. The current dashboard layout stays unchanged.", locale: locale)).font(.caption)
+                    Button(L10n.text("Sync Query Results to Glasses", locale: locale)) { confirmSend = true }
                         .disabled(!voice.ready || !snapshot.canSend(at:Date()) || !acknowledgedIcon || validIcon == nil || weather.busy)
                         .accessibilityIdentifier("weather-send")
                     Text(features.status).font(.caption)
                     if let error = features.error { Text(error).font(.caption).foregroundStyle(Palette.amber) }
                 }
             }
-        }.navigationTitle("Weatherstack 天气")
-        .confirmationDialog("将填写的城市发送到 Weatherstack 查询一次？可能消耗套餐额度。",isPresented:$confirmQuery) {
-            Button("查询一次") { lookup = Task { await weather.refresh(city:city) } }
+        }.navigationTitle(L10n.text("Weatherstack Weather", locale: locale))
+        .confirmationDialog(L10n.text("Send the entered city to Weatherstack for one query? This may use your plan's quota.", locale: locale),isPresented:$confirmQuery) {
+            Button(L10n.text("Fetch Once", locale: locale)) { lookup = Task { await weather.refresh(city:city) } }
         }
-        .confirmationDialog("将预览中的温度和指定固件图标发送到眼镜首页？",isPresented:$confirmSend) {
-            Button("确认同步") {
+        .confirmationDialog(L10n.text("Send the previewed temperature and specified firmware icon to the glasses home screen?", locale: locale),isPresented:$confirmSend) {
+            Button(L10n.text("Confirm Sync", locale: locale)) {
                 guard let snapshot = weather.snapshot, acknowledgedIcon, let icon = validIcon else { return }
                 features.sendWeatherstack(snapshot,icon:icon)
             }

@@ -1,44 +1,45 @@
 import SwiftUI
 
 struct RecordingRecoveryView: View {
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var features: CompanionDeviceFeatures
     @State private var selected: String?
     @State private var raw: URL?
     var body: some View {
         List {
-            Section("只处理Turbo IO本机文件") {
-                Text("用于 App 重启后的接收文件找回。不会连接眼镜、开录、申请离线补传或删除原件。已封装的旧任务，或保留结束记录且覆盖无空洞的任务，才可尝试恢复。")
+            Section(L10n.text("Only Handles Turbo IO's Local Files", locale: locale)) {
+                Text(L10n.text("Finds received files after an app restart. Does not connect to the glasses, start recording, request offline retransmission, or delete originals. Recovery can be attempted only for older packaged tasks or tasks with a retained end record and no gaps in received coverage.", locale: locale))
                     .font(.caption)
-                Button("扫描本机接收目录") { Task { await features.loadRecoveryEntries() } }
+                Button(L10n.text("Scan Local Reception Directory", locale: locale)) { Task { await features.loadRecoveryEntries() } }
                     .disabled(features.recoveryBusy || features.recordingID != nil).accessibilityIdentifier("recovery-scan")
                 Text(features.recoveryStatus).font(.caption).accessibilityIdentifier("recovery-status")
                 if features.recoveryBusy { ProgressView() }
             }
             if features.recoveryEntries.isEmpty {
-                Text("没有可列出的本机接收记录").foregroundStyle(.secondary).accessibilityIdentifier("recovery-empty")
+                Text(L10n.text("No Local Reception Records to List", locale: locale)).foregroundStyle(.secondary).accessibilityIdentifier("recovery-empty")
             }
             ForEach(features.recoveryEntries) { entry in
-                Section("本机接收：" + entry.createdAt.formatted(date:.abbreviated,time:.shortened)) {
+                Section(L10n.text("Received locally: ", locale: locale) + entry.createdAt.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(locale))) {
                     Text(entry.status).font(.subheadline)
-                    Text("已记录 \(ByteCountFormatter.string(fromByteCount:Int64(entry.receivedBytes),countStyle:.file)) · 本机编号 \(entry.id.prefix(8))").font(.caption)
-                    Button("重新校验、解码并归档") { selected = entry.id }
+                    Text(L10n.format("Recorded %@ · Local ID %@", locale: locale, String(describing: ByteCountFormatter.string(fromByteCount:Int64(entry.receivedBytes),countStyle:.file)), String(describing: entry.id.prefix(8)))).font(.caption)
+                    Button(L10n.text("Reverify, Decode, and Archive", locale: locale)) { selected = entry.id }
                         .disabled(!entry.mayRecover || features.recoveryBusy || features.recordingID != nil)
-                    Button("准备分享原始 rawopus（未验完整）") {
+                    Button(L10n.text("Prepare to Share Raw rawopus (Completeness Unverified)", locale: locale)) {
                         Task { raw = await features.recoveryRawFile(entry.id) }
                     }.disabled(features.recoveryBusy || features.recordingID != nil)
                 }
             }
             if let raw {
-                Section("原始数据，不是可播放录音证明") {
-                    Text("该 rawopus 可能不完整，仅用于备份/研究。没有音频修复或 ASR。打开分享面板不代表远端收到。").font(.caption)
-                    ShareLink(item:raw) { Label("分享选中的原始文件",systemImage:"square.and.arrow.up") }
+                Section(L10n.text("Raw Data; Does Not Prove Playable Audio", locale: locale)) {
+                    Text(L10n.text("This rawopus file may be incomplete and is for backup or research only. No audio repair or ASR is performed. Opening the share sheet does not prove remote receipt.", locale: locale)).font(.caption)
+                    ShareLink(item:raw) { Label(L10n.text("Share Selected Raw File", locale: locale),systemImage:"square.and.arrow.up") }
                 }
             }
-        }.navigationTitle("本机接收恢复")
+        }.navigationTitle(L10n.text("Local Reception Recovery", locale: locale))
         .task { await features.loadRecoveryEntries() }
         .onDisappear { raw = nil }
-        .confirmationDialog("仅恢复这一条本机文件：重新校验、解码并归档，不上传或删除。",isPresented:Binding(get:{ selected != nil },set:{ if !$0 { selected = nil } })) {
-            Button("尝试本地恢复") {
+        .confirmationDialog(L10n.text("Recover only this local file by reverifying, decoding, and archiving it. Nothing is uploaded or deleted.", locale: locale),isPresented:Binding(get:{ selected != nil },set:{ if !$0 { selected = nil } })) {
+            Button(L10n.text("Attempt Local Recovery", locale: locale)) {
                 if let id = selected { Task { await features.recoverRecording(id) } }
                 selected = nil
             }

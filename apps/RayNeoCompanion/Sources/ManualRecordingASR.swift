@@ -260,6 +260,7 @@ final class FileASRDiagnostic {
 }
 
 struct ManualRecordingASRView: View {
+    @Environment(\.locale) private var locale
     let id: UUID, title: String
     @EnvironmentObject private var asr: ManualRecordingASR
     @EnvironmentObject private var archive: LocalArchiveController
@@ -268,24 +269,24 @@ struct ManualRecordingASRView: View {
     @State private var rightChannelOnly = false
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("录音转文字").font(.headline)
-            Text("只有确认后才把这份本机音频发送给阿里云 ASR。按音频时长流式发送，可能计费；无需 DeepSeek，不自动总结。成功后新增文字修订，不覆盖原音频或旧稿。")
+            Text(L10n.text("Transcribe Recording", locale: locale)).font(.headline)
+            Text(L10n.text("This local audio is sent to Alibaba Cloud ASR only after you confirm. Streaming follows the audio duration and may incur charges. DeepSeek is not required, and no summary is generated automatically. Success adds a text revision without overwriting the original audio or earlier drafts.", locale: locale))
                 .font(.caption).foregroundStyle(Palette.muted)
-            Text("转写期间请保持 App 在前台；长时间后台完成尚未验收。").font(.caption2).foregroundStyle(Palette.muted)
-            Text("默认合并全部声道，再转为16kHz单声道；保留原始录音，不覆盖音频。").font(.caption2).foregroundStyle(Palette.muted)
-            Toggle("仅下次保存 ASR 诊断", isOn: $captureDiagnostic).disabled(asr.busy).accessibilityIdentifier("manual-asr-diagnostic")
-            if captureDiagnostic { Text("将额外保存本次发送音频和服务端响应（可能含转录正文），仅存本机；不记录请求头或密钥。").font(.caption2) }
+            Text(L10n.text("Keep the app in the foreground during transcription. Long-running background completion has not been verified.", locale: locale)).font(.caption2).foregroundStyle(Palette.muted)
+            Text(L10n.text("By default, all channels are mixed and converted to 16 kHz mono. The original recording is retained and is not overwritten.", locale: locale)).font(.caption2).foregroundStyle(Palette.muted)
+            Toggle(L10n.text("Save ASR Diagnostics for the Next Run Only", locale: locale), isOn: $captureDiagnostic).disabled(asr.busy).accessibilityIdentifier("manual-asr-diagnostic")
+            if captureDiagnostic { Text(L10n.text("Also saves this run's sent audio and server responses, which may contain the transcript, locally. Request headers and keys are not recorded.", locale: locale)).font(.caption2) }
             if captureDiagnostic {
-                Toggle("诊断：仅本次使用右声道", isOn: $rightChannelOnly).disabled(asr.busy).accessibilityIdentifier("manual-asr-right-channel")
+                Toggle(L10n.text("Diagnostics: Use Only the Right Channel This Time", locale: locale), isOn: $rightChannelOnly).disabled(asr.busy).accessibilityIdentifier("manual-asr-right-channel")
             }
-            Button("手动开始 ASR 转写") { confirmation = true }.disabled(asr.busy || archive.isBusy).accessibilityIdentifier("manual-recording-asr")
+            Button(L10n.text("Start ASR Transcription Manually", locale: locale)) { confirmation = true }.disabled(asr.busy || archive.isBusy).accessibilityIdentifier("manual-recording-asr")
             if asr.recordingID == id {
-                Text(asr.status).font(.caption)
-                if asr.busy { ProgressView(value: asr.progress); Button("取消转写") { asr.cancel() } }
+                Text(L10n.appStatus(asr.status, locale: locale)).font(.caption)
+                if asr.busy { ProgressView(value: asr.progress); Button(L10n.text("Cancel Transcription", locale: locale)) { asr.cancel() } }
                 if !asr.resultText.isEmpty { Text(asr.resultText).font(.caption).textSelection(.enabled).privacySensitive() }
-            } else if asr.busy { Text("另一份录音正在转写。完成后再试。").font(.caption) }
-        }.confirmationDialog("将这份录音发送到阿里云 ASR？可能计费，识别结果需要人工核对。", isPresented: $confirmation) {
-            Button("确认上传并转文字") {
+            } else if asr.busy { Text(L10n.text("Another recording is being transcribed. Try again when it finishes.", locale: locale)).font(.caption) }
+        }.confirmationDialog(L10n.text("Send this recording to Alibaba Cloud ASR? Charges may apply, and the recognized text needs human review.", locale: locale), isPresented: $confirmation) {
+            Button(L10n.text("Confirm Upload and Transcribe", locale: locale)) {
                 let capture = captureDiagnostic, right = captureDiagnostic && rightChannelOnly
                 captureDiagnostic = false; rightChannelOnly = false
                 asr.start(id: id, title: title, archive: archive, captureDiagnostic: capture, rightChannelOnly: right)

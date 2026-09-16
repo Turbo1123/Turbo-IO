@@ -3,20 +3,21 @@ import UniformTypeIdentifiers
 import UIKit
 
 struct BookShelfView: View {
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var library: BookLibrary
     @State private var importing = false
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                Text("把书变成提词稿").font(.title2.bold()).foregroundStyle(Palette.ink)
-                Text("TXT · EPUB · 章节阅读 · 匀速滚动\n只在本机提取文字，不上传，不启动麦克风。").font(.subheadline).foregroundStyle(Palette.muted)
-                PrimaryButton(title: library.busy ? "正在读取…" : "从文件导入书籍", icon: "square.and.arrow.down", enabled: !library.busy) { importing = true }
+                Text(L10n.text("Turn a Book into a Teleprompter Script", locale: locale)).font(.title2.bold()).foregroundStyle(Palette.ink)
+                Text(L10n.text("TXT · EPUB · Chapter reading · Constant-speed scrolling\nText is extracted locally. Nothing is uploaded, and the microphone stays off.", locale: locale)).font(.subheadline).foregroundStyle(Palette.muted)
+                PrimaryButton(title: library.busy ? L10n.text("Reading…", locale: locale) : L10n.text("Import Book from Files", locale: locale), icon: "square.and.arrow.down", enabled: !library.busy) { importing = true }
                     .accessibilityIdentifier("import-book")
                 if library.allowsTestFixture {
-                    Button("导入合成验收书籍") { Task { await library.importTestFixture() } }.disabled(library.busy).accessibilityIdentifier("book-import-fixture")
+                    Button(L10n.text("Import Synthetic Verification Book", locale: locale)) { Task { await library.importTestFixture() } }.disabled(library.busy).accessibilityIdentifier("book-import-fixture")
                 }
                 if library.books.isEmpty {
-                    Card { EmptyState(icon: "books.vertical", title: "你的随身书架", detail: "在这里选文件，或在第三方 App 分享菜单选择“用Turbo IO打开”。支持无 DRM 的文字 EPUB；不保留图片与复杂排版。") }
+                    Card { EmptyState(icon: "books.vertical", title: L10n.text("Your Portable Bookshelf", locale: locale), detail: L10n.text("Choose a file here or select “Open in Turbo IO” from another app's share menu. Supports text EPUBs without DRM. Images and complex layouts are not retained.", locale: locale)) }
                 }
                 ForEach(library.books) { book in
                     NavigationLink { BookReaderView(book: book) } label: {
@@ -25,7 +26,7 @@ struct BookShelfView: View {
                                 Image(systemName: "book.closed").font(.title).foregroundStyle(Palette.green)
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text(book.title).font(.headline).foregroundStyle(Palette.ink).lineLimit(2)
-                                    Text("\(book.sourceExtension.uppercased()) · \(book.chapters.count) 个阅读分段").font(.caption).foregroundStyle(Palette.muted)
+                                    Text(L10n.format("%@ · %@ reading segments", locale: locale, String(describing: book.sourceExtension.uppercased()), String(describing: book.chapters.count))).font(.caption).foregroundStyle(Palette.muted)
                                 }
                                 Spacer(); Image(systemName: "chevron.right").foregroundStyle(Palette.muted)
                             }
@@ -33,23 +34,24 @@ struct BookShelfView: View {
                     }.buttonStyle(.plain)
                         .accessibilityIdentifier("book-row-\(book.id.uuidString)")
                 }
-                Text("手机匀速预览已接入。眼镜传稿、滚动参数与旋钮进度同步仍需接线和真机验收；不会把手机像素速度当成镜片速度。")
+                Text(L10n.text("Constant-speed phone previews are integrated. Script transfer, scrolling parameters, and dial progress sync with the glasses still need integration and hardware verification. Phone pixel speed is not treated as glasses scrolling speed.", locale: locale))
                     .font(.caption).foregroundStyle(Palette.muted)
             }.padding(24)
-        }.background(Palette.background).navigationTitle("书籍提词").navigationBarTitleDisplayMode(.inline)
+        }.background(Palette.background).navigationTitle(L10n.text("Book Teleprompter", locale: locale)).navigationBarTitleDisplayMode(.inline)
             .toolbar(.visible, for: .navigationBar)
             .preference(key: CompanionTabBarHiddenPreference.self, value: true)
             .task { await library.load() }
             .fileImporter(isPresented: $importing, allowedContentTypes: [.plainText, UTType(filenameExtension: "epub") ?? .data]) { result in
-                switch result { case .success(let url): Task { await library.importFile(url) }; case .failure: library.error = "未能打开所选文件。" }
+                switch result { case .success(let url): Task { await library.importFile(url) }; case .failure: library.error = L10n.text("Unable to open the selected file.", locale: locale) }
             }
-            .alert("书籍导入", isPresented: Binding(get: { library.error != nil }, set: { if !$0 { library.error = nil } })) {
-                Button("知道了", role: .cancel) {}
+            .alert(L10n.text("Book Import", locale: locale), isPresented: Binding(get: { library.error != nil }, set: { if !$0 { library.error = nil } })) {
+                Button(L10n.text("Got It", locale: locale), role: .cancel) {}
             } message: { Text(library.error ?? "") }
     }
 }
 
 struct BookReaderView: View {
+    @Environment(\.locale) private var locale
     let book: ReadingBook
     @EnvironmentObject private var library: BookLibrary
     @EnvironmentObject private var store: CompanionStore
@@ -72,26 +74,26 @@ struct BookReaderView: View {
     }
     var body: some View {
         VStack(spacing: 15) {
-            Picker("章节", selection: $chapter) {
+            Picker(L10n.text("Chapter", locale: locale), selection: $chapter) {
                 ForEach(book.chapters) { item in Text(item.title).tag(item.id) }
             }.lineLimit(1).accessibilityIdentifier("book-chapter")
-            HStack { Badge(text: "手机预览"); Spacer(); Text(String(format: "%.1f%%", progress * 100)).font(.caption.monospacedDigit()).accessibilityIdentifier("book-progress") }
+            HStack { Badge(text: L10n.text("Phone Preview", locale: locale)); Spacer(); Text((progress * 100).formatted(.number.precision(.fractionLength(1)).locale(locale)) + "%").font(.caption.monospacedDigit()).accessibilityIdentifier("book-progress") }
             UniformReadingText(text: book.chapters[chapter].text, fontSize: fontSize, speed: speed,
                                playing: $playing, progress: $progress, jumpID: jump, jumpProgress: initialPosition)
                 .clipShape(RoundedRectangle(cornerRadius: 20)).frame(maxHeight: .infinity)
                 .accessibilityIdentifier("book-reading-text")
             HStack {
-                Button { seek(max(0, progress - 0.1)) } label: { Image(systemName: "backward.end").frame(width: 50, height: 44) }.accessibilityLabel("向前翻阅")
-                PrimaryButton(title: playing ? "暂停" : "匀速播放", icon: playing ? "pause.fill" : "play.fill") {
+                Button { seek(max(0, progress - 0.1)) } label: { Image(systemName: "backward.end").frame(width: 50, height: 44) }.accessibilityLabel(L10n.text("Browse Backward", locale: locale))
+                PrimaryButton(title: playing ? L10n.text("Pause", locale: locale) : L10n.text("Play at Constant Speed", locale: locale), icon: playing ? "pause.fill" : "play.fill") {
                     if progress >= 0.999 { seek(0) }
                     playing.toggle()
                 }.accessibilityIdentifier("book-play")
-                Button { seek(min(1, progress + 0.1)) } label: { Image(systemName: "forward.end").frame(width: 50, height: 44) }.accessibilityLabel("向后翻阅")
+                Button { seek(min(1, progress + 0.1)) } label: { Image(systemName: "forward.end").frame(width: 50, height: 44) }.accessibilityLabel(L10n.text("Browse Forward", locale: locale))
             }
-            HStack { Text("慢"); Slider(value: $speed, in: 8...80, step: 2); Text("快"); Text("\(Int(speed)) pt/s").font(.caption.monospacedDigit()) }
-            HStack { Text("字号").font(.caption); Slider(value: $fontSize, in: 18...40, step: 1); Text("\(Int(fontSize))").font(.caption) }
-            Text("拖动即暂停 · 切章不自动播放 · 离页/锁屏暂停\n速度仅指手机滚动；到本段结尾自动停止。").font(.system(size: 10)).foregroundStyle(Palette.muted)
-            Button(savedDraft ? "已复制到提词草稿" : "将当前分段用作提词稿") { confirmDraft = true }.font(.subheadline)
+            HStack { Text(L10n.text("Slow", locale: locale)); Slider(value: $speed, in: 8...80, step: 2); Text(L10n.text("Fast", locale: locale)); Text("\(Int(speed)) pt/s").font(.caption.monospacedDigit()) }
+            HStack { Text(L10n.text("Text Size", locale: locale)).font(.caption); Slider(value: $fontSize, in: 18...40, step: 1); Text("\(Int(fontSize))").font(.caption) }
+            Text(L10n.text("Dragging pauses playback · Changing chapters does not autoplay · Leaving the page or locking pauses playback\nSpeed applies only to phone scrolling. Playback stops at the end of this segment.", locale: locale)).font(.system(size: 10)).foregroundStyle(Palette.muted)
+            Button(savedDraft ? L10n.text("Copied to Teleprompter Draft", locale: locale) : L10n.text("Use Current Segment as Teleprompter Script", locale: locale)) { confirmDraft = true }.font(.subheadline)
                 .accessibilityIdentifier("book-use-draft")
         }.padding(.horizontal, 22).padding(.bottom, 18).background(Palette.background)
             .navigationTitle(book.title).navigationBarTitleDisplayMode(.inline).toolbar(.visible, for: .navigationBar)
@@ -102,8 +104,8 @@ struct BookReaderView: View {
             .onChange(of: speed) { _ in if !playing { save() } }
             .onChange(of: scenePhase) { value in if value != .active { playing = false; save() } }
             .onDisappear { playing = false; save() }
-            .confirmationDialog("会替换本机当前提词草稿，不会修改原书或发送到眼镜。", isPresented: $confirmDraft) {
-                Button("替换本机草稿") { store.savePrompter(book.chapters[chapter].text); savedDraft = true }
+            .confirmationDialog(L10n.text("Replaces the current local teleprompter draft. Does not change the original book or send anything to the glasses.", locale: locale), isPresented: $confirmDraft) {
+                Button(L10n.text("Replace Local Draft", locale: locale)) { store.savePrompter(book.chapters[chapter].text); savedDraft = true }
             }
     }
     private func seek(_ value: Double) { playing = false; progress = value; initialPosition = value; jump = UUID(); save() }

@@ -10,8 +10,9 @@ enum CodexBridgeError: LocalizedError {
         case .missingKey: return "请先保存此桥接地址的独立令牌。"
         case .offline: return "桥接未连接，请检查电脑服务与网络。"
         case .invalidResponse: return "桥接响应无效或版本不匹配。"
+        case .rejected("unauthorized"): return "桥接令牌验证失败（unauthorized）。请重新保存当前地址的 Codex 专用令牌。"
         case .rejected(let code): return "桥接未接受请求（\(code)）。没有自动重试。"
-        case .unknownDelivery: return "上次提交结果未知。请点核对上次提交，不要重复创建任务。"
+        case .unknownDelivery: return "上次提交结果未知。请先核对；若地址填错，可放弃旧提交后重新配置。"
         }
     }
 }
@@ -146,14 +147,17 @@ struct CodexToolDescriptor: Identifiable {
         hasUnknownDelivery = defaults.data(forKey: "companion.codex.v1.pending") != nil
     }
     func save(endpoint input: String, token: String, voiceTools: Bool) throws {
-        guard !busy, !hasUnknownDelivery else { throw CodexBridgeError.unknownDelivery }
+        guard !busy else { throw CodexBridgeError.unknownDelivery }
         let normalized = try CodexEndpoint.normalize(input, allowLoopback: CodexEndpoint.simulatorLoopback)
+        // Repair credentials without rerouting or discarding an unresolved request.
+        guard !hasUnknownDelivery || normalized == endpoint else { throw CodexBridgeError.unknownDelivery }
         if !token.isEmpty { try CodexTokenVault.save(token, endpoint: normalized) }
         guard key(normalized) != nil else { throw CodexBridgeError.missingKey }
         if normalized != endpoint { selectedTaskID = nil; defaults.removeObject(forKey: prefix + "selected") }
         generation = UUID(); state = nil; endpoint = normalized; voiceToolsEnabled = voiceTools
         defaults.set(endpoint, forKey: prefix + "endpoint"); defaults.set(voiceTools, forKey: prefix + "voiceTools")
-        status = "配置已保存；尚未联网。语音工具\(voiceTools ? "已允许" : "已关闭")"
+        status = hasUnknownDelivery ? "配置已保存；原请求已保留，请点“核对上次提交”。"
+            : "配置已保存；尚未联网。语音工具\(voiceTools ? "已允许" : "已关闭")"
     }
     func select(_ id: String?) {
         guard !busy, !hasUnknownDelivery, id == nil || state?.tasks.contains(where: { $0.id == id }) == true else { return }
@@ -192,14 +196,30 @@ struct CodexToolDescriptor: Identifiable {
             selectedTaskID = id; defaults.set(id, forKey: prefix + "selected")
             defaults.removeObject(forKey: prefix + "pending"); hasUnknownDelivery = false
             status = "已提交，实际执行结果请看任务状态"; await refresh(); return id
-        } catch { status = "提交结果待核对，不会自动重复发送"; throw error }
+        } catch {
+            switch error {
+            case CodexBridgeError.rejected("unauthorized"):
+                status = error.localizedDescription + " 原请求已保留，保存后请点“核对上次提交”。"
+            default: status = "提交结果待核对，不会自动重复发送"
+            }
+            throw error
+        }
     }
     func retryPending() async {
         guard !busy, let pending = defaults.data(forKey: prefix + "pending"),
               let object = (try? JSONSerialization.jsonObject(with: pending)) as? [String: Any],
               object["endpoint"] as? String == endpoint, let path = object["path"] as? String,
               let body = object["body"] as? [String: Any], let data = try? JSONSerialization.data(withJSONObject: body), let token = key(endpoint) else { return }
-        do { _ = try await deliver(path, data: data, token: token) } catch { status = "仍未确认上次提交；保留原请求编号，未新建重复任务" }
+        // deliver keeps the pending request and the actionable failure status.
+        _ = try? await deliver(path, data: data, token: token)
+    }
+    /// Only the explicit native confirmation invokes this; it never resends or stops work.
+    func abandonPending() throws {
+        guard !busy else { throw CodexBridgeError.rejected("bridge_busy") }
+        guard hasUnknownDelivery else { return }
+        defaults.removeObject(forKey: prefix + "pending")
+        hasUnknownDelivery = false
+        status = "已放弃本机待核对记录；未重发或停止电脑任务。现在可以重新保存桥接配置。"
     }
     func message(_ text: String, requestID: String = UUID().uuidString) async throws -> String {
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, text.utf8.count <= 8192 else { throw CodexBridgeError.rejected("invalid_text") }

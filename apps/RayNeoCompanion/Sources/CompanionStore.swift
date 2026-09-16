@@ -131,6 +131,15 @@ final class CompanionStore: ObservableObject {
             if self.notifications.canTest && !self.notifications.masterApplied { self.notifications.applyMaster() }
             return self.notifications.canTest && self.notifications.masterApplied
         }, deliver: { [weak self] title, content in self?.notifications.send(title: title, content: content) })
+    lazy var hermesPush = HermesPush(defaults: defaults,
+        endpoint: { [weak self] in self?.voice.hermesEndpoint ?? "" },
+        snapshot: { [weak self] in self?.voice.hermesTask },
+        hasUnfinishedTask: { [weak self] in self?.voice.hermesTaskUnresolved ?? false },
+        canDeliver: { [weak self] in
+            guard let self else { return false }
+            if self.notifications.canTest && !self.notifications.masterApplied { self.notifications.applyMaster() }
+            return self.notifications.canTest && self.notifications.masterApplied
+        }, deliver: { [weak self] title, content in self?.notifications.send(title: title, content: content) })
     let recordingASR = ManualRecordingASR()
     lazy var qweather = QWeatherDashboard(defaults:defaults,
         device: { [weak self] in guard let self, self.voice.ready else { return nil }; return self.voice.deviceID },

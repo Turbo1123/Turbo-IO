@@ -263,6 +263,7 @@ enum AlwaysOnWire {
 }
 
 struct AlwaysOnLocalProbeView: View {
+    @Environment(\.locale) private var locale
     @ObservedObject var probe: AlwaysOnLocalProbe
     @State private var consent = false
     @State private var confirmPhysicalStop = false
@@ -270,38 +271,38 @@ struct AlwaysOnLocalProbeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 Card {
-                    Text("全天智记 · 本地短测").font(.headline)
-                    Text("独立 A1–A8 协议验证，不是已完成的全天录音。第25秒请求停止，最迟第30秒结束本轮尾包接收。位置、日历、云转写均不启用。")
+                    Text(L10n.text("All-Day Notes · Short Local Test", locale: locale)).font(.headline)
+                    Text(L10n.text("Independent A1–A8 protocol verification, not completed all-day recording. Requests stop at 25 seconds and ends receipt of trailing packets by 30 seconds. Location, calendar, and cloud transcription stay off.", locale: locale))
                         .font(.caption).foregroundStyle(Palette.muted)
                     Text(probe.status).accessibilityIdentifier("always-on-status")
-                    Text("当前阶段剩余 \(probe.remaining) 秒\n收到 \(probe.receivedPackets) 包 / \(probe.receivedAudioBytes) 字节\n保存 \(probe.packetCount) 包 / \(probe.audioBytes) 字节（尾包 \(probe.tailPackets)）\n丢弃 \(probe.droppedPackets) 包 / \(probe.droppedAudioBytes) 字节")
+                    Text(L10n.format("Current phase: %@ seconds remaining\nReceived %@ packets / %@ bytes\nSaved %@ packets / %@ bytes (tail packets %@)\nDiscarded %@ packets / %@ bytes", locale: locale, String(describing: probe.remaining), String(describing: probe.receivedPackets), String(describing: probe.receivedAudioBytes), String(describing: probe.packetCount), String(describing: probe.audioBytes), String(describing: probe.tailPackets), String(describing: probe.droppedPackets), String(describing: probe.droppedAudioBytes)))
                         .font(.caption).accessibilityIdentifier("always-on-counters")
                     if let error = probe.error { Text(error).foregroundStyle(Palette.amber) }
-                    Toggle("同意本次仅音频保存到本机", isOn: $consent).disabled(probe.occupied).accessibilityIdentifier("always-on-consent")
-                    Button("开始 30 秒本地测试") { probe.start(); consent = false }
+                    Toggle(L10n.text("Allow This Audio-Only Run to Be Saved Locally", locale: locale), isOn: $consent).disabled(probe.occupied).accessibilityIdentifier("always-on-consent")
+                    Button(L10n.text("Start 30-Second Local Test", locale: locale)) { probe.start(); consent = false }
                         .disabled(!consent || !probe.canStart).accessibilityIdentifier("always-on-start")
-                    Button("停止 / 重发关闭", role: .destructive) { probe.stop() }
+                    Button(L10n.text("Stop / Resend Off Command", locale: locale), role: .destructive) { probe.stop() }
                         .disabled(!probe.occupied).accessibilityIdentifier("always-on-stop")
                     if probe.canConfirmPhysicalStop {
-                        Button("我已确认眼镜关闭") { confirmPhysicalStop = true }
+                        Button(L10n.text("I Confirmed the Glasses Feature Is Off", locale: locale)) { confirmPhysicalStop = true }
                             .accessibilityIdentifier("always-on-confirm-off")
-                        Text("只在目视确认眼镜全天智记已关闭后使用；开关成功回执不等于 OFF 状态，人工确认单独记录。")
+                        Text(L10n.text("Use only after visually confirming All-Day Notes is off on the glasses. A successful switch acknowledgment is not proof of OFF status. Manual confirmation is recorded separately.", locale: locale))
                             .font(.caption).foregroundStyle(Palette.amber)
                     }
-                    Text("开始前请告知周围人并使用测试语句。会暂停 AI 语音待命；结束后不会自动恢复云收音。断连或强退不能保证远端立即停止，请保持眼镜与手机连接并观察。")
+                    Text(L10n.text("Inform people nearby and use test phrases before starting. AI voice standby will pause and cloud audio capture will not resume automatically afterward. Disconnection or force quit cannot guarantee an immediate remote stop. Keep the glasses connected to your phone and observe them.", locale: locale))
                         .font(.caption).foregroundStyle(Palette.muted)
                 }
-                if let path = probe.directory { Text("本机原包：\(path.lastPathComponent)\n未验证格式前不伪装为可播放录音；不查询或删除眼镜旧缓存。").font(.caption) }
+                if let path = probe.directory { Text(L10n.format("Local raw packets: %@\nNot presented as playable audio until the format is verified. Does not query or delete old caches on the glasses.", locale: locale, String(describing: path.lastPathComponent))).font(.caption) }
                 Card {
-                    Text("协议事件（无音频正文）").font(.headline)
+                    Text(L10n.text("Protocol Events (No Audio Content)", locale: locale)).font(.headline)
                     ForEach(Array(probe.events.enumerated()), id: \.offset) { _, event in Text(event).font(.system(.caption, design: .monospaced)) }
                 }
             }.padding(22)
-        }.background(Palette.background).navigationTitle("全天智记").navigationBarTitleDisplayMode(.inline)
+        }.background(Palette.background).navigationTitle(L10n.text("All-Day Notes", locale: locale)).navigationBarTitleDisplayMode(.inline)
             .toolbar(.visible, for: .navigationBar).preference(key: CompanionTabBarHiddenPreference.self, value: true)
-            .confirmationDialog("确认已查看眼镜，全天智记已关闭？这会记录人工确认，不标记为协议验证通过。", isPresented: $confirmPhysicalStop) {
-                Button("确认眼镜已关闭") { probe.confirmPhysicalStop() }
-                Button("取消", role: .cancel) {}
+            .confirmationDialog(L10n.text("Have you checked the glasses and confirmed All-Day Notes is off? This records manual confirmation, not a protocol verification pass.", locale: locale), isPresented: $confirmPhysicalStop) {
+                Button(L10n.text("Confirm Glasses Feature Is Off", locale: locale)) { probe.confirmPhysicalStop() }
+                Button(L10n.text("Cancel", locale: locale), role: .cancel) {}
             }
     }
 }

@@ -4,6 +4,7 @@ import UIKit
 import RayNeoArchive
 
 struct ArchiveView: View {
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var store: CompanionStore
     @EnvironmentObject private var archive: LocalArchiveController
     @State private var showImporter = false
@@ -13,14 +14,14 @@ struct ArchiveView: View {
         archive.recordings.filter { filter == "全部" || (filter == "待文字" ? $0.transcripts.isEmpty : !$0.transcripts.isEmpty) }
     }
     var body: some View {
-        Screen(title: "录音归档", eyebrow: "本地录音管理", headerIcon: "square.and.arrow.up", headerAction: { showWorkflow = true }) {
+        Screen(title: L10n.text("Recording Archive", locale: locale), eyebrow: L10n.text("Local Recording Manager", locale: locale), headerIcon: "square.and.arrow.up", headerAction: { showWorkflow = true }) {
             GlassesRecordingCard()
-            NavigationLink("ZIP 导出副本与可恢复暂存箱") { PortableExportCopiesView() }
+            NavigationLink(L10n.text("ZIP export copies and recoverable holding area", locale: locale)) { PortableExportCopiesView() }
                 .accessibilityIdentifier("export-copies-open")
             HStack(spacing: 0) {
                 ForEach(["全部", "待文字", "有笔记"], id: \.self) { value in
                     Button { filter = value } label: {
-                        Text(value).font(.system(size: 13, weight: .medium)).frame(maxWidth: .infinity).padding(.vertical, 11)
+                        Text(L10n.text(["全部": "All", "待文字": "Needs text", "有笔记": "Has notes"][value] ?? value, locale: locale)).font(.system(size: 13, weight: .medium)).frame(maxWidth: .infinity).padding(.vertical, 11)
                             .foregroundStyle(filter == value ? .white : Palette.ink)
                             .background(filter == value ? Palette.ink : .clear, in: Capsule())
                     }
@@ -29,14 +30,14 @@ struct ArchiveView: View {
             ArchiveFeedbackView()
             if archive.recordings.isEmpty {
                 Card {
-                    EmptyState(icon: "waveform.badge.magnifyingglass", title: "还没有录音", detail: "可手动导入本地音频\n眼镜录音需先开启本机接收")
+                    EmptyState(icon: "waveform.badge.magnifyingglass", title: L10n.text("No Recordings Yet", locale: locale), detail: L10n.text("Import local audio manually\nEnable local reception first for glasses recordings", locale: locale))
                         .padding(.top, 25).padding(.bottom, 10)
-                    importButton("导入本地音频").padding(.horizontal, 20).padding(.bottom, 20)
+                    importButton(L10n.text("Import Local Audio", locale: locale)).padding(.horizontal, 20).padding(.bottom, 20)
                 }
             } else {
-                SectionLabel(title: "校验归档", trailing: "\(archive.recordings.count) 个本机副本")
+                SectionLabel(title: L10n.text("Verify Archive", locale: locale), trailing: L10n.format("%@ local copies", locale: locale, String(describing: archive.recordings.count)))
                 if visibleRecordings.isEmpty {
-                    Card { EmptyState(icon: "line.3.horizontal.decrease.circle", title: "此分类没有记录", detail: "文字必须由你手工提供；这里不会自动转写。") }
+                    Card { EmptyState(icon: "line.3.horizontal.decrease.circle", title: L10n.text("No Records in This Category", locale: locale), detail: L10n.text("You must provide text manually. This page does not transcribe automatically.", locale: locale)) }
                 }
                 ForEach(visibleRecordings) { recording in
                     NavigationLink { ArchiveDetailView(original: recording) } label: {
@@ -45,11 +46,11 @@ struct ArchiveView: View {
                                 Image(systemName: "waveform").foregroundStyle(Palette.green).frame(width: 38, height: 44).background(Palette.background, in: RoundedRectangle(cornerRadius: 12))
                                 VStack(alignment: .leading, spacing: 7) {
                                     Text(recording.title).font(.system(size: 15, weight: .medium)).foregroundStyle(Palette.ink).lineLimit(2)
-                                    Text("\(recording.importedAt.formatted(date: .abbreviated, time: .shortened)) 导入 · \(ByteCountFormatter.string(fromByteCount: recording.byteCount, countStyle: .file))")
+                                    Text(L10n.format("Imported %@ · %@", locale: locale, String(describing: recording.importedAt.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(locale))), String(describing: ByteCountFormatter.string(fromByteCount: recording.byteCount, countStyle: .file))))
                                         .font(.system(size: 10)).foregroundStyle(Palette.muted)
-                                    Badge(text: archive.verificationIssues[recording.id] != nil ? "校验异常 · 需复核" : (recording.transcripts.isEmpty ? "曾校验副本 · 待提供文字" : "\(recording.transcripts.count) 版本地 Markdown"), active: archive.verificationIssues[recording.id] == nil)
+                                    Badge(text: archive.verificationIssues[recording.id] != nil ? L10n.text("Verification Issue · Review Needed", locale: locale) : (recording.transcripts.isEmpty ? L10n.text("Previously Verified Copy · Awaiting Text", locale: locale) : L10n.format("%@ local Markdown revisions", locale: locale, String(describing: recording.transcripts.count))), active: archive.verificationIssues[recording.id] == nil)
                                     if archive.verificationIssues[recording.id] != nil {
-                                        Label("归档校验异常，查看详情", systemImage: "exclamationmark.triangle")
+                                        Label(L10n.text("Archive Verification Issue; View Details", locale: locale), systemImage: "exclamationmark.triangle")
                                             .font(.caption2).foregroundStyle(Palette.amber)
                                     }
                                 }
@@ -59,13 +60,13 @@ struct ArchiveView: View {
                         }
                     }.buttonStyle(.plain).accessibilityIdentifier("archive-row-\(recording.id.uuidString)")
                 }
-                importButton("继续导入")
+                importButton(L10n.text("Continue Import", locale: locale))
             }
             if archive.allowsTestFixture {
                 Button { Task { await archive.importTestFixture() } } label: {
-                    Label("导入合成测试样本", systemImage: "testtube.2").font(.footnote)
+                    Label(L10n.text("Import Synthetic Test Sample", locale: locale), systemImage: "testtube.2").font(.footnote)
                 }.disabled(archive.isBusy).accessibilityIdentifier("archive-import-fixture")
-                Text("隔离的 Debug 验收入口；非有效音频，点击后才创建。")
+                Text(L10n.text("Isolated Debug verification entry. Creates a non-playable audio fixture only when tapped.", locale: locale))
                     .font(.caption2).foregroundStyle(Palette.amber)
                 #if DEBUG
                 Menu {
@@ -74,44 +75,45 @@ struct ArchiveView: View {
                             .accessibilityIdentifier("container-fixture-\(fixture.rawValue)")
                     }
                 } label: {
-                    Label("选择合成容器样本", systemImage: "testtube.2").font(.footnote)
+                    Label(L10n.text("Choose Synthetic Container Sample", locale: locale), systemImage: "testtube.2").font(.footnote)
                 }.disabled(archive.isBusy).accessibilityIdentifier("container-fixture-menu")
                 #endif
             }
             if !store.recordings.isEmpty {
                 NavigationLink { LegacyRecordingsView() } label: {
-                    Card { FeatureRow(icon: "folder", title: "旧版导入副本", subtitle: "\(store.recordings.count) 个文件保留原位，不自动迁移", status: "查看") }
+                    Card { FeatureRow(icon: "folder", title: L10n.text("Legacy Imported Copies", locale: locale), subtitle: L10n.format("%@ files kept in place; no automatic migration", locale: locale, String(describing: store.recordings.count)), status: L10n.text("View", locale: locale)) }
                 }.buttonStyle(.plain).accessibilityIdentifier("legacy-recordings")
             }
             Button { showWorkflow = true } label: {
                 HStack(spacing: 18) {
                     VStack(alignment: .leading, spacing: 7) {
-                        Text("导出目的地").font(.system(size: 12)).foregroundStyle(Palette.muted)
+                        Text(L10n.text("Export Destination", locale: locale)).font(.system(size: 12)).foregroundStyle(Palette.muted)
                         Text("NAS / Obsidian").font(.system(size: 20, weight: .semibold)).foregroundStyle(Palette.ink)
-                        Label("本地 Markdown 可分享 · 上传待接入", systemImage: "clock").font(.system(size: 11)).foregroundStyle(Palette.muted).padding(.top, 5)
+                        Label(L10n.text("Local Markdown sharing available · Uploads not integrated yet", locale: locale), systemImage: "clock").font(.system(size: 11)).foregroundStyle(Palette.muted).padding(.top, 5)
                     }
                     Spacer(); Image(systemName: "server.rack").font(.system(size: 30, weight: .light)).foregroundStyle(Palette.green)
                 }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(Palette.mint.opacity(0.18), in: RoundedRectangle(cornerRadius: 20))
             }.buttonStyle(.plain)
-            Button("刷新与恢复本地归档") { Task { await archive.load() } }.font(.caption).disabled(archive.isBusy)
-            Text("手动导入 · 不自动转写 · 不自动上传").font(.system(size: 11)).foregroundStyle(Palette.muted).frame(maxWidth: .infinity)
+            Button(L10n.text("Refresh and Recover Local Archive", locale: locale)) { Task { await archive.load() } }.font(.caption).disabled(archive.isBusy)
+            Text(L10n.text("Manual import · No automatic transcription or uploads", locale: locale)).font(.system(size: 11)).foregroundStyle(Palette.muted).frame(maxWidth: .infinity)
         }
         .task { await archive.load() }
         .fileImporter(isPresented: $showImporter, allowedContentTypes: [.audio, UTType(filenameExtension: "ogg") ?? .audio]) { result in
             switch result {
             case .success(let url): Task { await archive.importFile(url) }
-            case .failure(let error): archive.errorMessage = "文件选择失败：\(error.localizedDescription)"
+            case .failure(let error): archive.errorMessage = L10n.format("File selection failed: %@", locale: locale, String(describing: error.localizedDescription))
             }
         }
         .sheet(isPresented: $showWorkflow) { ArchiveWorkflowView() }
     }
     private func importButton(_ title: String) -> some View {
-        PrimaryButton(title: archive.isBusy ? "归档处理中…" : title, icon: "square.and.arrow.down", enabled: !archive.isBusy) { showImporter = true }
+        PrimaryButton(title: archive.isBusy ? L10n.text("Processing Archive…", locale: locale) : title, icon: "square.and.arrow.down", enabled: !archive.isBusy) { showImporter = true }
             .accessibilityIdentifier("archive-import-file")
     }
 }
 
 struct ArchiveDetailView: View {
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var archive: LocalArchiveController
     let original: ArchivedRecording
     @State private var mode = "归档证据"
@@ -127,19 +129,19 @@ struct ArchiveDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 19) {
                 VStack(alignment: .leading, spacing: 10) {
-                    Label("本机校验归档", systemImage: "checkmark.shield").font(.caption).foregroundStyle(Palette.mint)
+                    Label(L10n.text("Locally Verified Archive", locale: locale), systemImage: "checkmark.shield").font(.caption).foregroundStyle(Palette.mint)
                     Text(recording.title).font(.title3.weight(.semibold)).foregroundStyle(.white)
-                    Text("没有执行音频解码、识别或远端上传").font(.system(size: 11)).foregroundStyle(Palette.mint.opacity(0.8))
+                    Text(L10n.text("No audio decoding, recognition, or remote uploads performed", locale: locale)).font(.system(size: 11)).foregroundStyle(Palette.mint.opacity(0.8))
                 }.padding(20).frame(maxWidth: .infinity, alignment: .leading).background(Palette.ink, in: RoundedRectangle(cornerRadius: 20))
-                Picker("归档详情", selection: $mode) {
-                    Text("归档证据").tag("归档证据"); Text("文字与修订").tag("文字与修订")
+                Picker(L10n.text("Archive Details", locale: locale), selection: $mode) {
+                    Text(L10n.text("Archive Evidence", locale: locale)).tag("归档证据"); Text(L10n.text("Text and Revisions", locale: locale)).tag("文字与修订")
                 }.pickerStyle(.segmented)
                 ArchiveFeedbackView()
                 if let integrityIssue {
                     VStack(alignment: .leading, spacing: 7) {
-                        Label("此条归档存在校验异常", systemImage: "exclamationmark.triangle").font(.subheadline.weight(.medium))
+                        Label(L10n.text("This Archive Has a Verification Issue", locale: locale), systemImage: "exclamationmark.triangle").font(.subheadline.weight(.medium))
                         Text(integrityIssue).font(.caption)
-                        Text("刷新或收起错误不会清除这条异常；完整复核通过后才恢复。历史校验记录仍保留。")
+                        Text(L10n.text("Refreshing or dismissing the error does not clear this issue. It clears only after a full recheck passes. Historical verification records are retained.", locale: locale))
                             .font(.caption2)
                     }.foregroundStyle(Palette.amber).padding(15).frame(maxWidth: .infinity, alignment: .leading)
                         .background(Color(red: 0.99, green: 0.95, blue: 0.85), in: RoundedRectangle(cornerRadius: 14))
@@ -148,51 +150,51 @@ struct ArchiveDetailView: View {
                 if mode == "归档证据" { evidenceContent } else { transcriptContent }
             }.padding(24)
         }.background(Palette.background).scrollDismissesKeyboard(.interactively)
-            .navigationTitle("录音详情").navigationBarTitleDisplayMode(.inline).toolbar(.visible, for: .navigationBar)
+            .navigationTitle(L10n.text("Recording Details", locale: locale)).navigationBarTitleDisplayMode(.inline).toolbar(.visible, for: .navigationBar)
             .preference(key: CompanionTabBarHiddenPreference.self, value: true)
             .onAppear { if title.isEmpty { title = recording.title } }
             .sheet(item: $share) { item in ArchiveShareView(item: item) }
             .onDisappear { bundleTask?.cancel() }
-            .confirmationDialog("导出这一条录音及选定修订，不含其他资料；会生成额外本地副本。",isPresented:$confirmBundle) {
+            .confirmationDialog(L10n.text("Exports only this recording and the selected revisions, without other data. Creates an additional local copy.", locale: locale),isPresented:$confirmBundle) {
                 if let latest = recording.transcripts.last {
-                    Button("音频 + 最新笔记") { exportBundle(.selected([latest.id])) }
-                    Button("音频 + 全部笔记修订") { exportBundle(.all) }
+                    Button(L10n.text("Audio + Latest Note", locale: locale)) { exportBundle(.selected([latest.id])) }
+                    Button(L10n.text("Audio + All Note Revisions", locale: locale)) { exportBundle(.all) }
                 }
-                Button("仅音频与校验清单") { exportBundle(.selected([])) }.accessibilityIdentifier("archive-bundle-audio-only")
+                Button(L10n.text("Audio and Verification Manifest Only", locale: locale)) { exportBundle(.selected([])) }.accessibilityIdentifier("archive-bundle-audio-only")
             }
     }
     private var evidenceContent: some View {
         VStack(alignment: .leading, spacing: 18) {
             Card {
-                evidenceRow("1", title: "来源副本已复制", detail: "来源未移动；不代表眼镜无线传输完整", complete: recording.evidence.sourceCopied, id: "evidence-copy")
+                evidenceRow("1", title: L10n.text("Source Copy Created", locale: locale), detail: L10n.text("Source not moved; does not prove complete wireless transfer from the glasses", locale: locale), complete: recording.evidence.sourceCopied, id: "evidence-copy")
                 Divider().overlay(Palette.line)
-                evidenceRow("2", title: integrityIssue == nil ? "归档字节曾通过校验" : "归档内容需要检查", detail: "历史 SHA-256 与长度记录，不代表音频可解码", complete: recording.evidence.checksumVerified && integrityIssue == nil, id: "evidence-checksum")
+                evidenceRow("2", title: integrityIssue == nil ? L10n.text("Archive Bytes Previously Verified", locale: locale) : L10n.text("Archive Content Needs Review", locale: locale), detail: L10n.text("Historical SHA-256 and length records do not prove the audio can be decoded", locale: locale), complete: recording.evidence.checksumVerified && integrityIssue == nil, id: "evidence-checksum")
                 Divider().overlay(Palette.line)
-                evidenceRow("3", title: recording.evidence.transcriptProvided ? "用户文字已入档" : "待用户提供文字", detail: "本 App 没有执行语音识别", complete: recording.evidence.transcriptProvided, id: "evidence-transcript")
+                evidenceRow("3", title: recording.evidence.transcriptProvided ? L10n.text("User Text Archived", locale: locale) : L10n.text("Awaiting User-Provided Text", locale: locale), detail: L10n.text("This app did not perform speech recognition", locale: locale), complete: recording.evidence.transcriptProvided, id: "evidence-transcript")
                 Divider().overlay(Palette.line)
-                evidenceRow("4", title: recording.evidence.noteExported ? "本地 Markdown 已生成" : "待生成 Markdown", detail: "不代表 NAS 已接收或 Obsidian 已索引", complete: recording.evidence.noteExported, id: "evidence-note")
+                evidenceRow("4", title: recording.evidence.noteExported ? L10n.text("Local Markdown Created", locale: locale) : L10n.text("Markdown Not Created Yet", locale: locale), detail: L10n.text("Does not prove receipt by NAS or indexing by Obsidian", locale: locale), complete: recording.evidence.noteExported, id: "evidence-note")
             }
             Card {
-                Text("校验记录").font(.headline).foregroundStyle(Palette.ink)
-                Text("入档校验：\(recording.checksumVerifiedAt.formatted(date: .abbreviated, time: .standard))")
+                Text(L10n.text("Verification History", locale: locale)).font(.headline).foregroundStyle(Palette.ink)
+                Text(L10n.format("Verified on import: %@", locale: locale, String(describing: recording.checksumVerifiedAt.formatted(Date.FormatStyle(date: .abbreviated, time: .standard).locale(locale)))))
                 if let date = archive.latestVerifications[recording.id] {
-                    Text("本次运行复核：\(date.formatted(date: .abbreviated, time: .standard))")
-                } else { Text("列表显示历史记录；刷新列表不会重读全部音频。") }
-                Text("录音时间：\(recording.recordedAt?.formatted(date: .abbreviated, time: .shortened) ?? "未知，不以导入时间替代")")
+                    Text(L10n.format("Verified this session: %@", locale: locale, String(describing: date.formatted(Date.FormatStyle(date: .abbreviated, time: .standard).locale(locale)))))
+                } else { Text(L10n.text("The list shows historical records. Refreshing it does not reread all audio.", locale: locale)) }
+                Text(L10n.format("Recorded: %@", locale: locale, String(describing: recording.recordedAt?.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(locale)) ?? L10n.text("Unknown; import time is not recording time", locale: locale))))
                 Text("SHA-256\n\(recording.sha256)").font(.system(size: 10, design: .monospaced)).textSelection(.enabled)
             }.font(.caption).foregroundStyle(Palette.muted)
             NavigationLink { AudioContainerInspectionView(recordingID: recording.id) } label: {
-                Card { FeatureRow(icon: "waveform.path.ecg", title: "音频容器检查", subtitle: "手动检查 Ogg / Opus 结构，不解码或识别", status: "本地工具", active: true) }
+                Card { FeatureRow(icon: "waveform.path.ecg", title: L10n.text("Audio Container Inspection", locale: locale), subtitle: L10n.text("Manually inspect Ogg / Opus structure without decoding or recognition", locale: locale), status: L10n.text("Local Tools", locale: locale), active: true) }
             }.buttonStyle(.plain).accessibilityIdentifier("archive-open-container-check")
-            PrimaryButton(title: "重新校验音频与笔记", icon: "checkmark.shield", enabled: !archive.isBusy) {
+            PrimaryButton(title: L10n.text("Reverify Audio and Notes", locale: locale), icon: "checkmark.shield", enabled: !archive.isBusy) {
                 Task { _ = await archive.verify(recording.id) }
             }.accessibilityIdentifier("archive-verify")
-            Button("校验并分享音频副本") {
+            Button(L10n.text("Verify and Share Audio Copy", locale: locale)) {
                 Task { if let url = await archive.verify(recording.id) { share = ArchiveShareItem(url: url, isMarkdown: false) } }
             }.disabled(archive.isBusy).font(.subheadline).accessibilityIdentifier("archive-share-audio")
-            Button("导出 Obsidian / NAS 便携 ZIP") { confirmBundle = true }
+            Button(L10n.text("Export Portable ZIP for Obsidian / NAS", locale: locale)) { confirmBundle = true }
                 .disabled(archive.isBusy).font(.subheadline).accessibilityIdentifier("archive-export-bundle")
-            Text("解压后保留 notes/ 与 audio/ 的相对目录；不包含 API Key 或其他会话。导出不是上传或索引成功。").font(.caption).foregroundStyle(Palette.muted)
+            Text(L10n.text("Keep the relative notes/ and audio/ directories after extracting. Contains no API keys or other conversations. Exporting does not prove uploading or indexing succeeded.", locale: locale)).font(.caption).foregroundStyle(Palette.muted)
         }
     }
     private func exportBundle(_ selection: SnapshotRevisionSelection) {
@@ -204,40 +206,40 @@ struct ArchiveDetailView: View {
     }
     private var transcriptContent: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Label("手工提供文字 · 不启动 ASR", systemImage: "pencil.line").font(.caption).foregroundStyle(Palette.green)
+            Label(L10n.text("Provide Text Manually · Does Not Start ASR", locale: locale), systemImage: "pencil.line").font(.caption).foregroundStyle(Palette.green)
             Card { ManualRecordingASRView(id: recording.id, title: recording.title) }
             Card {
-                Text("笔记标题").font(.subheadline.weight(.medium)).foregroundStyle(Palette.ink)
-                TextField("单行标题，最多 256 UTF-8 字节", text: $title).textInputAutocapitalization(.never)
+                Text(L10n.text("Note Title", locale: locale)).font(.subheadline.weight(.medium)).foregroundStyle(Palette.ink)
+                TextField(L10n.text("Single-line title, up to 256 UTF-8 bytes", locale: locale), text: $title).textInputAutocapitalization(.never)
                     .padding(12).background(Palette.background, in: RoundedRectangle(cornerRadius: 10)).accessibilityIdentifier("archive-note-title").focused($editing)
-                Text("你提供的文字").font(.subheadline.weight(.medium)).foregroundStyle(Palette.ink)
+                Text(L10n.text("Your Text", locale: locale)).font(.subheadline.weight(.medium)).foregroundStyle(Palette.ink)
                 TextEditor(text: $transcript).frame(minHeight: 170).scrollContentBackground(.hidden)
                     .padding(8).background(Palette.background, in: RoundedRectangle(cornerRadius: 12)).focused($editing).accessibilityIdentifier("archive-transcript")
-                Text("当前 \(transcript.utf8.count) 字节 / 1 MiB。未保存文字离开此页会丢失。")
+                Text(L10n.format("%@ bytes / 1 MiB. Unsaved text is lost when you leave this page.", locale: locale, String(describing: transcript.utf8.count)))
                     .font(.caption2).foregroundStyle(Palette.muted)
             }
-            PrimaryButton(title: "保存为本地 Markdown 修订", icon: "doc.badge.plus", enabled: !archive.isBusy && !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) {
+            PrimaryButton(title: L10n.text("Save as Local Markdown Revision", locale: locale), icon: "doc.badge.plus", enabled: !archive.isBusy && !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) {
                 editing = false
                 Task { _ = await archive.saveTranscript(recordingID: recording.id, text: transcript, title: title) }
             }.accessibilityIdentifier("archive-save-note")
-            Text("改文字或标题会新建修订；相同输入复用旧版，不覆盖旧稿。")
+            Text(L10n.text("Changing the text or title creates a new revision. Identical input reuses the existing revision without overwriting earlier drafts.", locale: locale))
                 .font(.caption).foregroundStyle(Palette.muted)
-            SectionLabel(title: "本地修订", trailing: "\(recording.transcripts.count) 版")
+            SectionLabel(title: L10n.text("Local Revisions", locale: locale), trailing: L10n.format("%@ revisions", locale: locale, String(describing: recording.transcripts.count)))
             if recording.transcripts.isEmpty {
-                Text("还没有 Markdown 修订").font(.subheadline).foregroundStyle(Palette.muted).accessibilityIdentifier("archive-no-revisions")
+                Text(L10n.text("No Markdown Revisions Yet", locale: locale)).font(.subheadline).foregroundStyle(Palette.muted).accessibilityIdentifier("archive-no-revisions")
             }
             ForEach(recording.transcripts.reversed()) { revision in
                 Card {
                     HStack(alignment: .top) {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("第 \(revision.number) 版 · \(revision.title)").font(.subheadline.weight(.medium)).foregroundStyle(Palette.ink).accessibilityIdentifier("archive-revision-\(revision.number)")
-                            Text(revision.createdAt.formatted(date: .abbreviated, time: .shortened)).font(.caption2).foregroundStyle(Palette.muted)
+                            Text(L10n.format("Revision %@ · %@", locale: locale, String(describing: revision.number), String(describing: revision.title))).font(.subheadline.weight(.medium)).foregroundStyle(Palette.ink).accessibilityIdentifier("archive-revision-\(revision.number)")
+                            Text(revision.createdAt.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(locale))).font(.caption2).foregroundStyle(Palette.muted)
                         }
                         Spacer()
                         Button {
                             Task { if let url = await archive.prepareNoteShare(recordingID: recording.id, revisionID: revision.id) { share = ArchiveShareItem(url: url, isMarkdown: true) } }
                         } label: { Image(systemName: "square.and.arrow.up").frame(width: 36, height: 36) }
-                            .disabled(archive.isBusy).accessibilityLabel("核对并分享第 \(revision.number) 版 Markdown").accessibilityIdentifier("archive-share-note-\(revision.number)")
+                            .disabled(archive.isBusy).accessibilityLabel(L10n.format("Verify and share Markdown revision %@", locale: locale, String(describing: revision.number))).accessibilityIdentifier("archive-share-note-\(revision.number)")
                     }
                 }
             }
@@ -255,14 +257,15 @@ struct ArchiveDetailView: View {
 }
 
 struct ArchiveFeedbackView: View {
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var archive: LocalArchiveController
     var body: some View {
         if archive.isBusy { ProgressView(archive.activity).font(.caption).frame(maxWidth: .infinity).padding(8) }
         if let error = archive.errorMessage {
             VStack(alignment: .leading, spacing: 8) {
-                Label("本地操作未完成", systemImage: "exclamationmark.triangle").font(.subheadline.weight(.medium))
+                Label(L10n.text("Local Operation Incomplete", locale: locale), systemImage: "exclamationmark.triangle").font(.subheadline.weight(.medium))
                 Text(error).font(.caption).fixedSize(horizontal: false, vertical: true)
-                Button("收起错误说明") { archive.errorMessage = nil }.font(.caption)
+                Button(L10n.text("Dismiss Error Details", locale: locale)) { archive.errorMessage = nil }.font(.caption)
             }.foregroundStyle(Palette.amber).padding(15).frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color(red: 0.99, green: 0.95, blue: 0.85), in: RoundedRectangle(cornerRadius: 14)).accessibilityIdentifier("archive-error")
         } else if let message = archive.statusMessage {
@@ -273,34 +276,35 @@ struct ArchiveFeedbackView: View {
 }
 
 struct LegacyRecordingsView: View {
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var store: CompanionStore
     @EnvironmentObject private var archive: LocalArchiveController
     @State private var selected: LocalRecording?
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                Text("旧副本保留原目录。没有自动迁移、删除或追加 SHA-256 成功标记；明确选择一条后，才复制到新的校验归档。")
+                Text(L10n.text("Legacy copies stay in their original directory. There is no automatic migration, deletion, or added SHA-256 success marker. A copy is added to the new verified archive only after you explicitly select it.", locale: locale))
                     .font(.subheadline).foregroundStyle(Palette.muted)
                 ArchiveFeedbackView()
                 ForEach(store.recordings) { recording in
                     Card {
                         Text(recording.name).font(.headline).foregroundStyle(Palette.ink)
-                        Badge(text: "旧版副本 · 未经新归档校验")
+                        Badge(text: L10n.text("Legacy Copy · Not Verified by the New Archive", locale: locale))
                         if let url = store.recordingURL(recording) {
-                            Button("复制到校验归档（保留旧副本）") { selected = recording }.disabled(archive.isBusy)
-                            ShareLink(item: url) { Label("分享旧音频副本", systemImage: "square.and.arrow.up") }.font(.caption)
-                        } else { Text("旧副本当前不可读取，元数据仍保留。").font(.caption).foregroundStyle(Palette.amber) }
+                            Button(L10n.text("Copy to Verified Archive and Keep Legacy Copy", locale: locale)) { selected = recording }.disabled(archive.isBusy)
+                            ShareLink(item: url) { Label(L10n.text("Share Legacy Audio Copy", locale: locale), systemImage: "square.and.arrow.up") }.font(.caption)
+                        } else { Text(L10n.text("The legacy copy is currently unreadable. Its metadata is retained.", locale: locale)).font(.caption).foregroundStyle(Palette.amber) }
                     }
                 }
             }.padding(24)
-        }.background(Palette.background).navigationTitle("旧版导入副本").navigationBarTitleDisplayMode(.inline).toolbar(.visible, for: .navigationBar)
+        }.background(Palette.background).navigationTitle(L10n.text("Legacy Imported Copies", locale: locale)).navigationBarTitleDisplayMode(.inline).toolbar(.visible, for: .navigationBar)
             .preference(key: CompanionTabBarHiddenPreference.self, value: true)
-            .confirmationDialog("仅复制这一条到新校验归档；不删除或移动旧副本。", isPresented: Binding(get: { selected != nil }, set: { if !$0 { selected = nil } })) {
-                Button("确认复制，保留旧副本") {
+            .confirmationDialog(L10n.text("Copies only this item into the new verified archive. Does not delete or move the legacy copy.", locale: locale), isPresented: Binding(get: { selected != nil }, set: { if !$0 { selected = nil } })) {
+                Button(L10n.text("Confirm Copy and Keep Legacy Copy", locale: locale)) {
                     if let recording = selected, let url = store.recordingURL(recording) { Task { await archive.importFile(url, title: recording.name) } }
                     selected = nil
                 }
-                Button("取消", role: .cancel) { selected = nil }
+                Button(L10n.text("Cancel", locale: locale), role: .cancel) { selected = nil }
             }
     }
 }
@@ -313,6 +317,7 @@ struct ArchiveShareItem: Identifiable {
 }
 
 struct ArchiveShareView: View {
+    @Environment(\.locale) private var locale
     @Environment(\.dismiss) private var dismiss
     let item: ArchiveShareItem
     @State private var presentation: ArchiveExportKind?
@@ -320,25 +325,25 @@ struct ArchiveShareView: View {
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 22) {
-                Label("仅分享本地文件", systemImage: "square.and.arrow.up").font(.title3.weight(.semibold)).foregroundStyle(Palette.ink)
+                Label(L10n.text("Share Local Files Only", locale: locale), systemImage: "square.and.arrow.up").font(.title3.weight(.semibold)).foregroundStyle(Palette.ink)
                 Text(item.isBundle
-                     ? "ZIP 已逐项解包核对长度、CRC 与 SHA-256。包含所选音频、笔记和校验清单；解压后将整个文件夹放入 Obsidian，保留 notes/ 与 audio/ 同级。没有上传到 NAS 或验证索引。"
+                     ? L10n.text("Each ZIP entry has been extracted and checked for length, CRC, and SHA-256. Contains the selected audio, notes, and verification manifest. After extracting, place the whole folder in Obsidian and keep notes/ and audio/ at the same level. Nothing has been uploaded to NAS, and indexing has not been verified.", locale: locale)
                      : item.isMarkdown
-                     ? "Markdown 已在分享前核对摘要。单独分享笔记不包含音频附件；若放入 Obsidian，请同时保存对应音频，并保持 notes/ 与 audio/ 的相对目录。"
-                     : "这个文件是经过字节复核的本机副本；没有验证可解码性，也没有后台上传。")
+                     ? L10n.text("The Markdown digest was checked before sharing. Sharing a note alone does not include audio attachments. For Obsidian, also save the corresponding audio and preserve the relative notes/ and audio/ directories.", locale: locale)
+                     : L10n.text("This is a local copy with verified bytes. Decodability has not been checked, and there is no background upload.", locale: locale))
                     .font(.subheadline).foregroundStyle(Palette.muted).lineSpacing(5)
-                Text("打开系统分享面板不代表远端收到；请在目标应用确认保存结果。")
+                Text(L10n.text("Opening the system share sheet does not prove remote receipt. Confirm the saved result in the destination app.", locale: locale))
                     .font(.caption).foregroundStyle(Palette.amber)
                 Button { open(.share) } label: {
-                    Label("打开系统分享", systemImage: "square.and.arrow.up").font(.subheadline.weight(.semibold))
+                    Label(L10n.text("Open System Share Sheet", locale: locale), systemImage: "square.and.arrow.up").font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white).frame(maxWidth: .infinity).padding(17).background(Palette.ink, in: RoundedRectangle(cornerRadius: 14))
                 }.accessibilityIdentifier("archive-system-share")
                 Button { open(.files) } label: {
-                    Label("存储到文件", systemImage: "folder").frame(maxWidth: .infinity).padding(15)
+                    Label(L10n.text("Save to Files", locale: locale), systemImage: "folder").frame(maxWidth: .infinity).padding(15)
                 }.accessibilityIdentifier("archive-save-files")
                 Spacer()
-            }.padding(24).background(Palette.background).navigationTitle("本地文件分享").navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
+            }.padding(24).background(Palette.background).navigationTitle(L10n.text("Local File Sharing", locale: locale)).navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.text("Done", locale: locale)) { dismiss() } } }
         }
         .sheet(item: $presentation) { kind in
             NativeArchiveExportSheet(url: item.url, kind: kind) { error in
@@ -346,13 +351,13 @@ struct ArchiveShareView: View {
                 if let error { exportError = error }
             }
         }
-        .alert("无法打开文件分享", isPresented: Binding(get: { exportError != nil }, set: { if !$0 { exportError = nil } })) {
-            Button("知道了", role: .cancel) {}
+        .alert(L10n.text("Unable to Open File Sharing", locale: locale), isPresented: Binding(get: { exportError != nil }, set: { if !$0 { exportError = nil } })) {
+            Button(L10n.text("Got It", locale: locale), role: .cancel) {}
         } message: { Text(exportError ?? "") }
     }
     private func open(_ kind: ArchiveExportKind) {
         guard item.url.isFileURL, FileManager.default.isReadableFile(atPath: item.url.path) else {
-            exportError = "文件当前不可读取，请返回录音详情重新校验后再试。原录音未修改。"; return
+            exportError = L10n.text("The file is currently unreadable. Return to Recording Details, reverify, and try again. The original recording is unchanged.", locale: locale); return
         }
         presentation = kind
     }
@@ -366,6 +371,7 @@ enum ArchiveExportKind: String, Identifiable {
 /// Present from SwiftUI's actual sheet host, not a guessed root controller.
 /// UIKit directly receives the verified local URL; no Transferable metadata hop.
 struct NativeArchiveExportSheet: UIViewControllerRepresentable {
+    @Environment(\.locale) private var locale
     let url: URL
     let kind: ArchiveExportKind
     let completion: (String?) -> Void
@@ -380,7 +386,7 @@ struct NativeArchiveExportSheet: UIViewControllerRepresentable {
         let activity = UIActivityViewController(activityItems: [url], applicationActivities: nil)
         activity.completionWithItemsHandler = { [weak coordinator] _, _, _, error in
             DispatchQueue.main.async {
-                coordinator?.completion(error == nil ? nil : "系统分享未完成，请重试或使用存储到文件。原件保留。")
+                coordinator?.completion(error == nil ? nil : L10n.text("System sharing did not complete. Try again or use Save to Files. The original is retained.", locale: locale))
             }
         }
         return activity
@@ -397,25 +403,26 @@ struct NativeArchiveExportSheet: UIViewControllerRepresentable {
 }
 
 struct ArchiveWorkflowView: View {
+    @Environment(\.locale) private var locale
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("从声音，到自己的知识。").font(.title2.bold()).foregroundStyle(Palette.ink)
-                    Text("用户选择来源，先复制到稳定的本机专用目录，再独立核对字节。文字由你手工提供；每次修改生成新笔记，不覆盖旧稿。")
+                    Text(L10n.text("From Sound to Your Own Knowledge.", locale: locale)).font(.title2.bold()).foregroundStyle(Palette.ink)
+                    Text(L10n.text("You choose the source. It is copied into a stable local app directory before its bytes are independently verified. You provide the text manually; each edit creates a new note without overwriting earlier drafts.", locale: locale))
                         .font(.subheadline).foregroundStyle(Palette.muted).lineSpacing(5)
                     Card {
-                        FeatureRow(icon: "1.circle", title: "眼镜到手机", subtitle: "录音同步、完整性和断点续传需另行接入")
-                        FeatureRow(icon: "2.circle", title: "本机校验归档", subtitle: "明确选择文件、源保留、SHA-256 去重", status: "本地可用", active: true)
-                        FeatureRow(icon: "3.circle", title: "手工文字与 Markdown", subtitle: "本地修订与系统分享，不自动识别", status: "本地可用", active: true)
-                        FeatureRow(icon: "4.circle", title: "NAS 与 Obsidian", subtitle: "远端传输、附件映射和实际索引尚未验收")
+                        FeatureRow(icon: "1.circle", title: L10n.text("Glasses to Phone", locale: locale), subtitle: L10n.text("Recording sync, integrity checks, and resumable transfers need separate integration", locale: locale))
+                        FeatureRow(icon: "2.circle", title: L10n.text("Locally Verified Archive", locale: locale), subtitle: L10n.text("Explicit file selection, original sources retained, SHA-256 deduplication", locale: locale), status: L10n.text("Available Locally", locale: locale), active: true)
+                        FeatureRow(icon: "3.circle", title: L10n.text("Manual Text and Markdown", locale: locale), subtitle: L10n.text("Local revisions and system sharing, without automatic recognition", locale: locale), status: L10n.text("Available Locally", locale: locale), active: true)
+                        FeatureRow(icon: "4.circle", title: L10n.text("NAS and Obsidian", locale: locale), subtitle: L10n.text("Remote transfer, attachment mapping, and actual indexing are not yet verified", locale: locale))
                     }
-                    Text("校验只针对复制后的字节，不证明音频解码、原始无线覆盖或文字准确。没有预设 NAS 地址，没有读取官方凭证。")
+                    Text(L10n.text("Verification covers copied bytes only. It does not prove audio decodability, complete original wireless transfer, or text accuracy. No NAS address is preset, and no official credentials are read.", locale: locale))
                         .font(.footnote).foregroundStyle(Palette.green)
                 }.padding(24)
-            }.background(Palette.background).navigationTitle("归档链路").navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { dismiss() } } }
+            }.background(Palette.background).navigationTitle(L10n.text("Archive Workflow", locale: locale)).navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.text("Done", locale: locale)) { dismiss() } } }
         }
     }
 }

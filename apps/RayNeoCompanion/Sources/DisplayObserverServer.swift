@@ -88,28 +88,29 @@ import SwiftUI
 }
 
 struct DisplayObserverView: View {
+    @Environment(\.locale) private var locale
     @ObservedObject private var server = DisplayObserverServer.shared
     @ObservedObject private var observation = DisplayObservation.shared
     var body: some View {
         ScrollView {
             VStack(alignment:.leading,spacing:18) {
-                Text("显示观察 · USB").font(.title2.bold())
-                Text("只读回传页面状态；模拟预览不是镜片截图。不会开启录音、调用模型或改变眼镜页面。")
-                Text(server.status).accessibilityIdentifier("display-observer-status")
-                Toggle("包含本轮发送文字",isOn:$observation.includesText).accessibilityIdentifier("display-observer-text")
-                Text("仅在开启期间收集，最多80条事件；文字不写入日志或磁盘。关闭会清空缓存与令牌。若 App 被挂起，电脑会显示数据失联。")
+                Text(L10n.text("Display Observer · USB", locale: locale)).font(.title2.bold())
+                Text(L10n.text("Returns page state read-only. The simulated preview is not a glasses screenshot. Does not start recording, call models, or change the glasses page.", locale: locale))
+                Text(L10n.appStatus(server.status, locale: locale)).accessibilityIdentifier("display-observer-status")
+                Toggle(L10n.text("Include Text Sent During This Session", locale: locale),isOn:$observation.includesText).accessibilityIdentifier("display-observer-text")
+                Text(L10n.text("Collects up to 80 events only while enabled. Text is not written to logs or disk. Disabling clears the cache and token. If iOS suspends the app, the computer shows that the data connection is lost.", locale: locale))
                     .font(.caption).foregroundStyle(.secondary)
-                Button(server.running ? "关闭观察接口" : "开启 USB 观察接口") { server.running ? server.stop() : server.start() }
+                Button(server.running ? L10n.text("Disable Observer Interface", locale: locale) : L10n.text("Enable USB Observer Interface", locale: locale)) { server.running ? server.stop() : server.start() }
                     .buttonStyle(.borderedProminent).accessibilityIdentifier("display-observer-toggle")
                 if server.running {
-                    Text("在电脑观察页输入一次性令牌：").font(.caption)
+                    Text(L10n.text("Enter this one-time token on the computer's observer page:", locale: locale)).font(.caption)
                     Text(server.token).font(.system(.caption,design:.monospaced)).textSelection(.enabled)
                         .accessibilityIdentifier("display-observer-token")
-                    Button("复制令牌") { UIPasteboard.general.setItems([["public.utf8-plain-text":server.token]],options:[.localOnly:true,.expirationDate:Date().addingTimeInterval(120)]) }
-                    Text("USB 转发端口 18765 · 仅本机回环地址可访问 · 不依赖越狱")
+                    Button(L10n.text("Copy Token", locale: locale)) { UIPasteboard.general.setItems([["public.utf8-plain-text":server.token]],options:[.localOnly:true,.expirationDate:Date().addingTimeInterval(120)]) }
+                    Text(L10n.text("USB forwarded port 18765 · Local loopback access only · No jailbreak required", locale: locale))
                         .font(.caption).foregroundStyle(.secondary)
                 }
             }.padding(20)
-        }.navigationTitle("显示观察").navigationBarTitleDisplayMode(.inline)
+        }.navigationTitle(L10n.text("Display Observer", locale: locale)).navigationBarTitleDisplayMode(.inline)
     }
 }

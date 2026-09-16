@@ -2,7 +2,7 @@ import XCTest
 
 final class CompanionUITests: XCTestCase {
     private let scope = UUID().uuidString
-    private var testArguments: [String] { ["--ui-test-scope", scope] }
+    private var testArguments: [String] { ["--ui-test-scope", scope, "--ui-language", "zh-Hans"] }
     override func setUpWithError() throws { continueAfterFailure = false }
 
     func testAlwaysOnRequiresConsentAndRealDevice() {
@@ -573,7 +573,7 @@ final class CompanionUITests: XCTestCase {
     }
 
     private func openContainerFixture(_ fixture: String, app: XCUIApplication) {
-        app.launchArguments = ["--ui-test-scope", UUID().uuidString, "--ui-tab", "2", "--ui-archive-fixture"]
+        app.launchArguments = ["--ui-test-scope", UUID().uuidString, "--ui-language", "zh-Hans", "--ui-tab", "2", "--ui-archive-fixture"]
         app.launch()
         let menu = app.buttons["container-fixture-menu"]
         XCTAssertTrue(menu.waitForExistence(timeout: 10))

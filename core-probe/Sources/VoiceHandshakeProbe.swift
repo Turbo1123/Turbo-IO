@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import RayNeoProtocol
+import RayNeoSession
 
 /// Main queue only. Standby VAD decodes bounded audio in memory only.
 /// Legacy one-shot fixtures remain metadata-only; no disk/network audio output.
@@ -14,6 +15,9 @@ final class VoiceHandshakeProbe {
     private let cloud = CloudVoicePipeline()
     var cloudTools: (() -> [[String: Any]])? { didSet { cloud.toolDefinitions = cloudTools } }
     var executeCloudTool: ((String, String, UUID) async -> String)? { didSet { cloud.executeTool = executeCloudTool } }
+    var modelBackend: (() -> ConversationBackend)? { didSet { cloud.modelBackend = modelBackend } }
+    var modelAvailable: (() -> Bool)? { didSet { cloud.modelAvailable = modelAvailable } }
+    var hermesResponse: ((String, UUID, @escaping (String, Bool) -> Void) async throws -> Void)? { didSet { cloud.hermesResponse = hermesResponse } }
     private var incrementalFixtureUntil: TimeInterval?
     private var nativeVAD = RNVoiceVADCreate()
     private var vadPackets = 0

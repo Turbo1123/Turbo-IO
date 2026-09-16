@@ -1,0 +1,14 @@
+# Resource-only overlay for the existing device spec. No signing overrides.
+targets:
+  RayNeoCompanion:
+    sources:
+      - Resources
+    settings:
+      base:
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+  RayNeoCompanionDevice:
+    sources:
+      - Resources
+    settings:
+      base:
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

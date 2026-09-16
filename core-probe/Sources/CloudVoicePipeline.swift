@@ -1,4 +1,5 @@
 import Foundation
+import RayNeoSession
 
 /// Main-queue owned, one round at a time. Credentials/audio/text never logged.
 /// ASR/LLM use fixed origins. Optional tools are provided by the consented host;
@@ -15,6 +16,9 @@ final class CloudVoicePipeline {
     var continuousASR = false // Set only while stopped; experimental opt-in.
     var toolDefinitions: (() -> [[String: Any]])?
     var executeTool: ((String, String, UUID) async -> String)?
+    var modelBackend: (() -> ConversationBackend)?
+    var modelAvailable: (() -> Bool)?
+    var hermesResponse: ((String, UUID, @escaping (String, Bool) -> Void) async throws -> Void)?
     private(set) var id: UUID?
     private var session: URLSession?
     private var socket: URLSessionWebSocketTask?
@@ -27,13 +31,16 @@ final class CloudVoicePipeline {
     private var lastTranscriptUpdate = 0.0
     private var turns = StreamingASRTurns()
     private var modelID: UUID?
+    private var activeBackend = ConversationBackend.deepSeek
     private let noRedirect = NoCloudRedirect()
 
     func start(id: UUID) {
         precondition(Thread.isMainThread)
         cancel()
         self.id = id
-        guard let key = CloudVoiceKeys.get(CloudVoiceKeys.asrService), CloudVoiceKeys.get(CloudVoiceKeys.llmService) != nil else { fail(id,"缺少Keychain凭证"); return }
+        activeBackend = modelBackend?() ?? .deepSeek
+        guard let key = CloudVoiceKeys.get(CloudVoiceKeys.asrService),
+              modelAvailable?() ?? (CloudVoiceKeys.get(CloudVoiceKeys.llmService) != nil) else { fail(id,"缺少所选后端或ASR凭证；没有切换模型"); return }
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 12
         config.timeoutIntervalForResource = continuousASR ? 135 : 35
@@ -132,7 +139,7 @@ final class CloudVoicePipeline {
                         let transcript = self.parts.keys.sorted().compactMap { self.parts[$0] }.joined()
                         guard self.finishing, !transcript.isEmpty, transcript.utf8.count <= 8192 else { throw CloudError.invalid }
                         ws.cancel(with:.normalClosure,reason:nil)
-                        self.log?("云ASR task-finished characters=\(transcript.count)；转交DeepSeek，仅文字")
+                        self.log?("云ASR task-finished characters=\(transcript.count)；转交所选后端，仅文字")
                         self.startModel(id,transcript:transcript)
                         return
                     case "task-failed": throw CloudError.remote
@@ -173,9 +180,34 @@ final class CloudVoicePipeline {
         }
     }
     private func startModel(_ current: UUID, transcript: String, turnID: UUID? = nil) {
-        guard id == current, let session, let key = CloudVoiceKeys.get(CloudVoiceKeys.llmService) else { fail(current,"缺少模型凭证"); return }
+        guard id == current else { return }
         let responseID = turnID ?? current
         modelTask?.cancel(); modelID = responseID
+        // Selection is locked while standby is enabled; capture it once for this
+        // response. A failed Hermes request never enters the DeepSeek branch.
+        let backend = activeBackend
+        if backend == .hermes {
+            guard let respond = hermesResponse else { fail(current, "Hermes 未配置，没有切换模型"); return }
+            modelTask = Task { @MainActor [weak self] in
+                guard let self else { return }
+                var coalescer = AnswerDeltaCoalescer()
+                do {
+                    try await respond(transcript, responseID) { [weak self] text, final in
+                        guard let self, self.id == current, self.modelID == responseID, !Task.isCancelled else { return }
+                        do {
+                            for chunk in try coalescer.append(text, final: final, now: ProcessInfo.processInfo.systemUptime) {
+                                guard self.id == current, self.modelID == responseID, !Task.isCancelled else { return }
+                                self.onText?(responseID, chunk.text, chunk.final)
+                            }
+                        } catch { self.fail(current, "Hermes 回答超出镜片文本边界") }
+                    }
+                } catch {
+                    if self.id == current, self.modelID == responseID, !Task.isCancelled { self.fail(current, "Hermes 请求失败；没有切换模型") }
+                }
+            }
+            return
+        }
+        guard let session, let key = CloudVoiceKeys.get(CloudVoiceKeys.llmService) else { fail(current,"缺少DeepSeek模型凭证"); return }
         var request = URLRequest(url:URL(string:"https://api.deepseek.com/chat/completions")!)
         request.httpMethod = "POST"; request.timeoutInterval = 20
         request.setValue("Bearer " + key,forHTTPHeaderField:"Authorization")
@@ -183,7 +215,13 @@ final class CloudVoicePipeline {
         let tools = toolDefinitions?() ?? []
         let allowed = Set(tools.compactMap { ($0["function"] as? [String: Any])?["name"] as? String })
         let toolPolicy = tools.isEmpty ? "没有工具执行能力，不能声称已创建提醒、待办或执行操作。" : "仅在用户明确要求时调用提供的Codex工具，每轮最多一个。普通聊天直接回答。不得编造执行成功，不得替用户批准权限。用户要求停止朗读或换聊天话题不等于停止Codex任务。任务可后台运行；问进度用codex_status，审批请用户在Turbo IO确认。待办天气等其他工具尚未接入，不能声称执行。"
-        let messages = [["role":"system","content":"你是眼镜上的中文语音助手。用纯文本回答，不用Markdown。默认简洁；用户明确要求篇幅时遵循，例如约300字。" + toolPolicy]] + history.suffix(6) + [["role":"user","content":transcript]]
+        let messages = [["role":"system","content":"""
+        你是 Norman IO，用户通过眼镜交流的研究助理。用自然、平等、专业的语气交流，像熟悉研究工作的同事。直接回应问题，不用客服套话，不反复自我介绍，不奉承用户。
+        默认用中文，以适合镜片阅读的纯文本短句回答，不用 Markdown。先给结论或下一步，再补必要理由；简单问题通常两三句，复杂问题或用户要求展开时给足细节。跟随用户明确指定的语言和篇幅。
+        帮助用户澄清研究问题、检查假设、比较方法、解释概念并提出可验证的下一步。对有问题的前提温和但明确地指出原因；关键信息不足时只问最必要的问题。
+        区分已知事实、推测和建议。不编造论文、作者、DOI、实验数据或引用；未检索或未验证的信息要明确说明。不把未经计算或验证的公式推导、数值结论说成已验证，不冒充已读取用户的笔记、文件或长期记忆。
+        当前对话由 DeepSeek 提供回答，你不是用户的 Hermes 实例。未实际接入的能力不能声称可用；不能仅因用户说出唤醒词就声称已切换模型或助手。
+        """ + "\n" + toolPolicy]] + history.suffix(6) + [["role":"user","content":transcript]]
         var body: [String: Any] = ["model":"deepseek-v4-flash","thinking":["type":"disabled"],"stream":true,"max_tokens":1024,"messages":messages]
         if !tools.isEmpty { body["tools"] = tools; body["tool_choice"] = "auto"; body["parallel_tool_calls"] = false }
         do { request.httpBody = try JSONSerialization.data(withJSONObject:body) }

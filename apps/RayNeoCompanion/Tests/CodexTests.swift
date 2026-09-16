@@ -93,4 +93,105 @@ import XCTest
         let result = await c.executeTool(name: "codex_approve", arguments: "{}", requestID: UUID())
         XCTAssertEqual(calls, 0); XCTAssertTrue(result.contains("未执行"))
     }
+    func testUnauthorizedRecoveryAllowsSameEndpointSaveAndRetriesOriginalRequest() async throws {
+        let d = defaults(); d.set("https://test.invalid", forKey: "companion.codex.v1.endpoint")
+        var authenticated = false
+        var submitted: [Data] = []
+        let c = CodexCompanion(defaults: d, key: { _ in "synthetic" }, send: { _, _, path, body in
+            if path == "/v1/state" {
+                return Data(#"{"protocolVersion":1,"online":true,"workspace":"synthetic","readOnly":true,"tasks":[]}"#.utf8)
+            }
+            submitted.append(try XCTUnwrap(body))
+            guard authenticated else { throw CodexBridgeError.rejected("unauthorized") }
+            return Data(#"{"accepted":true,"taskId":"synthetic-task"}"#.utf8)
+        })
+        do { _ = try await c.message("synthetic recovery request"); XCTFail("Expected auth rejection") } catch {}
+        XCTAssertTrue(c.hasUnknownDelivery)
+        let pending = try XCTUnwrap(d.data(forKey: "companion.codex.v1.pending"))
+        XCTAssertNoThrow(try c.save(endpoint: "https://TEST.invalid/", token: "", voiceTools: false))
+        XCTAssertEqual(submitted.count, 1, "Saving configuration must not submit anything")
+        XCTAssertEqual(d.data(forKey: "companion.codex.v1.pending"), pending)
+        XCTAssertTrue(c.hasUnknownDelivery)
+        do { _ = try await c.message("must not create another request"); XCTFail("Unresolved request must still block new tasks") } catch {}
+        authenticated = true
+        await c.retryPending()
+        XCTAssertEqual(submitted.count, 2)
+        let original = try JSONSerialization.jsonObject(with: XCTUnwrap(submitted.first)) as? NSDictionary
+        let recovered = try JSONSerialization.jsonObject(with: XCTUnwrap(submitted.last)) as? NSDictionary
+        XCTAssertEqual(original, recovered, "Recovery must use the original request ID and body")
+        XCTAssertFalse(c.hasUnknownDelivery)
+        XCTAssertNil(d.data(forKey: "companion.codex.v1.pending"))
+        XCTAssertEqual(c.selectedTaskID, "synthetic-task")
+    }
+    func testRestoredPendingAllowsCredentialRepairButRejectsEndpointChange() throws {
+        let d = defaults(); d.set("https://test.invalid", forKey: "companion.codex.v1.endpoint")
+        d.set("original-task", forKey: "companion.codex.v1.selected")
+        let pending = Data(#"{"endpoint":"https://test.invalid","path":"/v1/message","body":{"text":"synthetic","requestId":"original-request"}}"#.utf8)
+        d.set(pending, forKey: "companion.codex.v1.pending")
+        var calls = 0
+        let c = CodexCompanion(defaults: d, key: { _ in "synthetic" }, send: { _, _, _, _ in calls += 1; return Data() })
+        XCTAssertNoThrow(try c.save(endpoint: "https://test.invalid", token: "", voiceTools: false))
+        XCTAssertThrowsError(try c.save(endpoint: "https://other.invalid", token: "", voiceTools: false))
+        XCTAssertEqual(c.endpoint, "https://test.invalid")
+        XCTAssertEqual(c.selectedTaskID, "original-task")
+        XCTAssertEqual(d.data(forKey: "companion.codex.v1.pending"), pending)
+        XCTAssertTrue(c.hasUnknownDelivery)
+        XCTAssertEqual(calls, 0)
+    }
+    func testFailedRecoveryRetainsPendingAndExplainsAuthenticationFailure() async throws {
+        let d = defaults(); d.set("https://test.invalid", forKey: "companion.codex.v1.endpoint")
+        var calls = 0
+        let c = CodexCompanion(defaults: d, key: { _ in "synthetic" }, send: { _, _, _, _ in
+            calls += 1; throw CodexBridgeError.rejected("unauthorized")
+        })
+        do { _ = try await c.message("synthetic") } catch {}
+        let pending = try XCTUnwrap(d.data(forKey: "companion.codex.v1.pending"))
+        await c.retryPending()
+        XCTAssertEqual(calls, 2)
+        XCTAssertTrue(c.hasUnknownDelivery)
+        XCTAssertEqual(d.data(forKey: "companion.codex.v1.pending"), pending)
+        XCTAssertTrue(c.status.contains("令牌"), "Authentication failure must remain actionable after recovery")
+    }
+    func testExplicitAbandonUnlocksWrongEndpointWithoutSendingOrStopping() async throws {
+        let d = defaults(); d.set("https://test.invalid:8443", forKey: "companion.codex.v1.endpoint")
+        d.set("old-task", forKey: "companion.codex.v1.selected")
+        var calls = 0
+        let c = CodexCompanion(defaults: d, key: { _ in "synthetic" }, send: { _, _, _, _ in
+            calls += 1; throw CodexBridgeError.rejected("unauthorized")
+        })
+        do { _ = try await c.message("synthetic"); XCTFail("Expected rejection") } catch {}
+        XCTAssertTrue(c.hasUnknownDelivery)
+        XCTAssertThrowsError(try c.save(endpoint: "https://test.invalid:8444", token: "", voiceTools: false))
+        try c.abandonPending()
+        XCTAssertFalse(c.hasUnknownDelivery)
+        XCTAssertNil(d.data(forKey: "companion.codex.v1.pending"))
+        XCTAssertEqual(c.selectedTaskID, "old-task", "Abandoning delivery must not pretend to stop an existing task")
+        XCTAssertEqual(calls, 1, "Abandoning must not send or stop any task")
+        XCTAssertNoThrow(try c.save(endpoint: "https://test.invalid:8444", token: "", voiceTools: false))
+        XCTAssertEqual(c.endpoint, "https://test.invalid:8444")
+        XCTAssertNil(c.selectedTaskID)
+        XCTAssertEqual(calls, 1)
+        let restored = CodexCompanion(defaults: d, key: { _ in "synthetic" })
+        XCTAssertFalse(restored.hasUnknownDelivery)
+        XCTAssertEqual(restored.endpoint, "https://test.invalid:8444")
+    }
+    func testAbandonCannotRaceAnActiveSubmission() async throws {
+        let d = defaults(); d.set("https://test.invalid", forKey: "companion.codex.v1.endpoint")
+        let started = expectation(description: "Submission started")
+        var release: CheckedContinuation<Data, Error>?
+        let c = CodexCompanion(defaults: d, key: { _ in "synthetic" }, send: { _, _, _, _ in
+            try await withCheckedThrowingContinuation { continuation in
+                release = continuation; started.fulfill()
+            }
+        })
+        let operation = Task { try? await c.message("synthetic") }
+        await fulfillment(of: [started], timeout: 2)
+        XCTAssertTrue(c.busy)
+        XCTAssertThrowsError(try c.abandonPending())
+        XCTAssertTrue(c.hasUnknownDelivery)
+        XCTAssertNotNil(d.data(forKey: "companion.codex.v1.pending"))
+        release?.resume(throwing: CodexBridgeError.offline)
+        _ = await operation.value
+        XCTAssertTrue(c.hasUnknownDelivery)
+    }
 }

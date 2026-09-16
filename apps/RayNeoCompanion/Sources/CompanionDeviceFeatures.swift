@@ -111,6 +111,7 @@ import UIKit
     func receive(device: String, business: UInt8, data: Data) {
         guard voice.deviceID == device else { return }
         if business == 13 || business == 15 { store?.alwaysOn.receive(device: device, business: business, packet: data) }
+        if GlassesPrompterMode.isOpaqueAudio(business: business, packet: data) { return }
         do {
             let wire = try DeviceBusinessWire(data)
             switch business {
@@ -375,6 +376,7 @@ import UIKit
     // Teleprompter state/transport is implemented in the dedicated extension below.
     @Published private(set) var teleprompterStatus = "尚未发送稿件"
     @Published private(set) var teleprompterID: String?
+    @Published private(set) var teleprompterMode: GlassesPrompterMode?
     @Published private(set) var teleprompterOffset: Int64 = 0
     var teleprompterFile: URL?
     var teleprompterDevice: String?
@@ -384,7 +386,7 @@ import UIKit
 }
 
 extension CompanionDeviceFeatures {
-    func prepareTeleprompter(_ text: String, speed: Int) {
+    func prepareTeleprompter(_ text: String, speed: Int, mode: GlassesPrompterMode = .constantSpeed) {
         perform {
             guard canControl, recordingID == nil, teleprompterID == nil, let device = voice.deviceID else { throw DeviceFeatureError.busy }
             guard !text.trimmingCharacters(in:.whitespacesAndNewlines).isEmpty, text.count <= 12_000,
@@ -396,11 +398,13 @@ extension CompanionDeviceFeatures {
             guard try FileManager.default.contentsOfDirectory(atPath:dir.path).count < 100 else { throw DeviceFeatureError.storageLimit }
             let url = dir.appendingPathComponent(did + ".txt")
             try Data(text.utf8).write(to:url,options:[.withoutOverwriting,.completeFileProtectionUntilFirstUserAuthentication])
-            teleprompterID = did; teleprompterDevice = device; teleprompterFile = url
+            teleprompterID = did; teleprompterDevice = device; teleprompterFile = url; teleprompterMode = mode
             teleprompterOffset = 0; teleprompterPrepared = false; teleprompterSentFile = false
             // Optional layout fields intentionally omitted: never guess pixel/gear defaults.
-            try send(20,2,["action":1,"did":did,"total":text.utf8.count,"scroll":2,"speed":speed,"pageOffset":0,"highLightOffset":0])
-            teleprompterStatus = "已请求准备稿件，等待眼镜回应；本次不启用跟读/麦克风"
+            try send(20,2,mode.preparationPayload(did:did,total:text.utf8.count,speed:speed))
+            teleprompterStatus = mode == .constantSpeed
+                ? "已请求准备稿件，等待眼镜回应；本次不启用跟读/麦克风"
+                : "已请求原生跟读试验，等待眼镜回应；效果仍需真机验证"
             DispatchQueue.main.asyncAfter(deadline:.now()+30) { [weak self] in
                 guard let self, self.teleprompterID == did, !self.teleprompterPrepared else { return }
                 self.teleprompterStatus = "准备超时；未确认收稿，不会自动开始滚动。可点退出取消本轮。"
@@ -414,7 +418,10 @@ extension CompanionDeviceFeatures {
             guard [3,4,5,6,7].contains(type) else { throw DeviceFeatureError.invalidPacket }
             var body: [String:Any] = ["action":1,"did":did]
             if type == 4 { body["offset"] = teleprompterOffset; body["code"] = 1; body["isCompleted"] = false }
-            if type == 7 { guard (60...240).contains(speed) else { throw DeviceFeatureError.invalidPacket }; body["scroll"] = 2; body["speed"] = speed }
+            if type == 7 {
+                guard teleprompterMode == .constantSpeed, (60...240).contains(speed) else { throw DeviceFeatureError.invalidPacket }
+                body["scroll"] = 2; body["speed"] = speed
+            }
             try send(20,type,body)
             if type == 6, let task = teleprompterTransferTask { voice.cancelFile(task); teleprompterTransferTask = nil }
             teleprompterStatus = "控制 type\(type) 已提交，等待眼镜回应"
@@ -450,7 +457,7 @@ extension CompanionDeviceFeatures {
         } else if action == 2 { teleprompterStatus = "眼镜回应 type\(wire.type) code=\(code ?? -1)" }
         if control == .stop, action == 1 || code == 1 {
             if let task = teleprompterTransferTask { voice.cancelFile(task); teleprompterTransferTask = nil }
-            teleprompterID = nil; teleprompterPrepared = false; teleprompterFile = nil
+            teleprompterID = nil; teleprompterMode = nil; teleprompterPrepared = false; teleprompterFile = nil
         }
     }
 }

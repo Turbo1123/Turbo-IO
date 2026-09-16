@@ -65,7 +65,7 @@ final class HeadControlNotificationTest: ObservableObject {
             expiresAt = now().addingTimeInterval(timeout)
             lastDecision = nil
             error = nil
-            status = "测试卡已发送；等待点头或摇头（(Int(timeout)) 秒）"
+            status = "测试卡已发送；等待点头或摇头（\(Int(timeout)) 秒）"
             scheduleExpiry(for: id)
         } catch {
             self.error = "测试卡未发送：\(error.localizedDescription)"
@@ -153,6 +153,7 @@ final class HeadControlNotificationTest: ObservableObject {
 }
 
 struct HeadControlNotificationTestView: View {
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var test: HeadControlNotificationTest
     @State private var title = "头控测试"
     @State private var source = "Turbo IO"
@@ -162,31 +163,31 @@ struct HeadControlNotificationTestView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 Card {
-                    Label("本机头控测试", systemImage: "person.crop.circle.badge.checkmark")
+                    Label(L10n.text("Local Head Gesture Test", locale: locale), systemImage: "person.crop.circle.badge.checkmark")
                         .font(.headline)
-                    Text("仅发送一张待办建议卡。点头/摇头只在本页显示结果，绝不会调用网络、Core 或自动化。")
+                    Text(L10n.text("Sends only one to-do suggestion card. Nod/shake results appear only on this page and never call the network, Core, or automation.", locale: locale))
                         .font(.caption).foregroundStyle(Palette.muted)
-                    TextField("标题", text: $title).textInputAutocapitalization(.never)
-                    TextField("来源", text: $source).textInputAutocapitalization(.never)
-                    TextField("内容", text: $content, axis: .vertical).lineLimit(2...4)
-                    Button("发送 30 秒头控测试卡") { test.send(title: title, source: source, content: content) }
+                    TextField(L10n.text("Title", locale: locale), text: $title).textInputAutocapitalization(.never)
+                    TextField(L10n.text("Source", locale: locale), text: $source).textInputAutocapitalization(.never)
+                    TextField(L10n.text("Content", locale: locale), text: $content, axis: .vertical).lineLimit(2...4)
+                    Button(L10n.text("Send 30-Second Head Gesture Test Card", locale: locale)) { test.send(title: title, source: source, content: content) }
                         .disabled(!test.canSend).accessibilityIdentifier("head-control-test-send")
                     if test.hasPendingCard {
-                        Button("立即移除测试卡", role: .destructive) { test.cancel() }
+                        Button(L10n.text("Remove Test Card Now", locale: locale), role: .destructive) { test.cancel() }
                             .accessibilityIdentifier("head-control-test-cancel")
                     }
                 }
                 Card {
-                    Text(test.status).font(.subheadline).accessibilityIdentifier("head-control-test-status")
+                    Text(L10n.headControlStatus(test.status, locale: locale)).font(.subheadline).accessibilityIdentifier("head-control-test-status")
                     if let decision = test.lastDecision { Text(decision).font(.caption).foregroundStyle(Palette.green) }
                     if let error = test.error { Text(error).font(.caption).foregroundStyle(.red) }
-                    Text("协议范围：业务 21；下发 type 33，匹配 type 34 回传后删除并发送 type 35 回执。未验证的回传会被忽略。")
+                    Text(L10n.text("Protocol scope: business 21. Sends type 33, then deletes the card and sends a type 35 acknowledgment after a matching type 34 response. Unverified responses are ignored.", locale: locale))
                         .font(.caption2).foregroundStyle(Palette.muted)
                 }
             }.padding(22)
         }
         .background(Palette.background)
-        .navigationTitle("头控通知测试")
+        .navigationTitle(L10n.text("Head Gesture Notification Test", locale: locale))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
         .preference(key: CompanionTabBarHiddenPreference.self, value: true)

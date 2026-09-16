@@ -13,3 +13,26 @@
 *.pem
 *.key
 *.mobileprovision
+
+# Local Xcode / SwiftPM output and device backups (at any package depth).
+.swiftpm/
+.local-backups/
+DerivedData/
+xcuserdata/
+*.xcresult/
+*.xcarchive/
+*.app/
+*.xcappdata/
+
+# Private bridge configuration and runtime state. Prefer storage outside Git.
+.private/
+.local-state/
+*.token
+token-file
+task-ledger.json
+task-ledger.json[.]*
+*.pfx
+*.cer
+*.crt
+*.cert
+*.provisionprofile

@@ -1,0 +1,25 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
+import {createTaskHandler} from './task-http.mjs';
+const id='00000000-0000-4000-8000-000000000001';
+test('v2 authentication, explicit capability negotiation and action routing',async t=>{
+  const calls=[],service={async health(c){calls.push(c);return {protocolVersion:2,ready:true};},async submit(v){calls.push(v);return {status:'running'};},async get(){return {status:'waiting'};},async decide(i,v){calls.push([i,v]);return {status:'running'};},async stop(){return {status:'stopping'};},async acknowledge(){return {status:'unknown'};}};
+  const token='T'.repeat(48),headers={Authorization:'Bearer '+token,'Content-Type':'application/json'};
+  const server=createServer(createTaskHandler(service,token));await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
+  t.after(()=>{server.closeAllConnections();server.close();});const base=`http://127.0.0.1:${server.address().port}`;
+  assert.equal((await fetch(base+'/v2/health')).status,401);
+  assert.equal((await fetch(base+'/v2/health',{headers:{...headers,Origin:'https://example.com'}})).status,403);
+  assert.equal((await fetch(base+'/v1/tasks',{method:'POST',headers,body:'{}'})).status,409);
+  const health=await (await fetch(base+'/v2/health?conversationId='+id,{headers})).json();assert.equal(health.protocolVersion,2);
+  assert.equal((await fetch(base+'/v2/health?conversationId=x',{headers})).status,400);
+  assert.equal((await fetch(base+'/v2/tasks',{method:'POST',headers,body:'{'})).status,400);
+  assert.equal((await fetch(base+'/v2/tasks',{method:'POST',headers,body:'x'.repeat(17000)})).status,413);
+  assert.equal((await fetch(base+'/v2/tasks/'+id+'/stop',{method:'POST',headers,body:JSON.stringify({conversationId:id,extra:true})})).status,400);
+  const response=await fetch(base+'/v2/tasks',{method:'POST',headers,body:JSON.stringify({requestId:id,conversationId:id,text:'hi'})});
+  assert.equal(response.status,200);assert.equal((await response.json()).status,'running');
+  assert.equal((await fetch(base+'/v2/tasks/'+id,{headers})).status,200);
+  assert.equal((await fetch(base+'/v2/tasks/'+id+'/decision',{method:'POST',headers,body:'{}'})).status,200);
+  assert.equal((await fetch(base+'/v2/tasks/'+id+'/acknowledge',{method:'POST',headers,body:JSON.stringify({conversationId:id})})).status,200);
+  assert.equal((await fetch(base+'/config.set',{headers})).status,404);
+});

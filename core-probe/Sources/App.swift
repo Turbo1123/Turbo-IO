@@ -2,6 +2,7 @@ import UIKit
 import CoreBluetooth
 import ExternalAccessory
 import RayNeoProtocol
+import RayNeoSession
 
 #if !COMPANION_DEVICE
 @main
@@ -79,6 +80,13 @@ final class ProbeController: UIViewController, CBCentralManagerDelegate, StreamD
     func companionDiscover() { loadViewIfNeeded(); loadCore(); sdkDiscovery(); scan() }
     var companionTools: (() -> [[String: Any]])?
     var companionExecuteTool: ((String, String, UUID) async -> String)?
+    var companionModelBackend: (() -> ConversationBackend)?
+    var companionModelAvailable: (() -> Bool)?
+    var companionHermesResponse: ((String, UUID, @escaping (String, Bool) -> Void) async throws -> Void)?
+    private var companionCloudReady: Bool {
+        CloudASRHostSettings.normalize(CloudVoiceKeys.asrHost) != nil && CloudVoiceKeys.get(CloudVoiceKeys.asrService) != nil &&
+            (companionModelAvailable?() ?? (CloudVoiceKeys.get(CloudVoiceKeys.llmService) != nil))
+    }
     func companionConnect() { loadViewIfNeeded(); connectSDK() }
     func companionReconnectBonded() {
         loadViewIfNeeded()
@@ -124,13 +132,16 @@ final class ProbeController: UIViewController, CBCentralManagerDelegate, StreamD
         return linked.count == 1 && linked[0].isConnected() && linked[0].bleStateByte() == 9
     }
     var companionPhase: String { voiceProbe.standby.phase.rawValue }
+    var companionInitialSpeechSeconds: Int? {
+        voiceProbe.standby.initialSpeechSecondsRemaining(now: ProcessInfo.processInfo.systemUptime)
+    }
     var companionEnabled: Bool { voiceProbe.standby.enabled }
     var companionContinuous: Bool { voiceProbe.standby.continuousASREnabled }
     var companionCloud: Bool { voiceProbe.standby.cloudEnabled }
     func companionStart(cloud: Bool, continuous: Bool) -> Bool {
         loadViewIfNeeded()
         guard companionReady, let device = core?.linkedDevices()?.first,
-              !cloud || CloudVoiceKeys.ready else { return false }
+              !cloud || companionCloudReady else { return false }
         UserDefaults.standard.set(true, forKey: "companion.autoVoice.v1")
         voiceProbe.setCloudMode(cloud)
         UserDefaults.standard.set(cloud, forKey: CloudVoiceKeys.enabledKey)
@@ -145,14 +156,14 @@ final class ProbeController: UIViewController, CBCentralManagerDelegate, StreamD
         disableStandby()
     }
     func companionEnableDefaultCloudVoice() {
-        guard CloudVoiceKeys.ready else { return }
+        guard companionCloudReady else { return }
         UserDefaults.standard.set(true, forKey: "companion.autoVoice.v1")
         UserDefaults.standard.set(true, forKey: CloudVoiceKeys.enabledKey)
         UserDefaults.standard.set(true, forKey: "companion.continuousASR.v1")
         companionRestoreAutomaticVoice()
     }
     private func companionRestoreAutomaticVoice() {
-        guard !voiceProbe.standby.enabled, CloudVoiceKeys.ready,
+        guard !voiceProbe.standby.enabled, companionCloudReady,
               UserDefaults.standard.bool(forKey: "companion.autoVoice.v1") else { return }
         loadCore()
         guard let bonded = core?.bondedDevices(), bonded.count == 1 else {
@@ -207,12 +218,20 @@ final class ProbeController: UIViewController, CBCentralManagerDelegate, StreamD
         voiceProbe.onSubmittedCommand = { [weak self] in self?.companionCommand?($0) }
         voiceProbe.onArchiveTranscript = { [weak self] id, text, final in self?.companionTranscript?(id,text,final) }
         voiceProbe.cloudTools = { [weak self] in self?.companionTools?() ?? [] }
+        voiceProbe.modelBackend = { [weak self] in self?.companionModelBackend?() ?? .deepSeek }
+        voiceProbe.modelAvailable = { [weak self] in self?.companionModelAvailable?() ?? (CloudVoiceKeys.get(CloudVoiceKeys.llmService) != nil) }
+        voiceProbe.hermesResponse = { [weak self] text, id, onText in
+            guard let respond = self?.companionHermesResponse else { throw HermesConversationError.configuration }
+            try await respond(text, id, onText)
+        }
         voiceProbe.executeCloudTool = { [weak self] name, args, id in
             guard let execute = self?.companionExecuteTool else { return "Codex未配置，未执行。" }
             return await execute(name, args, id)
         }
         #endif
-        voiceProbe.setCloudMode(UserDefaults.standard.bool(forKey:CloudVoiceKeys.enabledKey) && CloudVoiceKeys.ready)
+        // Keep the user's selected real mode when credentials are unavailable;
+        // its start check fails explicitly instead of enabling random local replies.
+        voiceProbe.setCloudMode(UserDefaults.standard.bool(forKey:CloudVoiceKeys.enabledKey))
         voiceProbe.send = { [weak self] deviceID, payload in
             guard let core = self?.core, let linked = core.linkedDevices(), linked.count == 1,
                   let device = linked.first, device.deviceID() == deviceID,

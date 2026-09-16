@@ -11,6 +11,7 @@ enum Palette {
 }
 
 struct Screen<Content: View>: View {
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var store: CompanionStore
     let title: String
     let eyebrow: String
@@ -31,11 +32,12 @@ struct Screen<Content: View>: View {
                         Spacer()
                         if let headerIcon {
                             Button { headerAction?() } label: { Image(systemName: headerIcon).font(.system(size: 23)).foregroundStyle(Palette.ink).frame(width: 42, height: 42) }
-                                .accessibilityLabel(headerIcon == "gearshape" ? "偏好设置" : "归档链路")
+                                .accessibilityIdentifier(headerIcon == "gearshape" ? "screen-settings" : "screen-archive")
+                                .accessibilityLabel(headerIcon == "gearshape" ? L10n.text("Preferences", locale: locale) : L10n.text("Archive Workflow", locale: locale))
                         }
                     }
                     if store.demoMode {
-                        Label("演示模式 · 示例数据，不连接眼镜", systemImage: "sparkles")
+                        Label(L10n.text("Demo mode · Sample data, no glasses connection", locale: locale), systemImage: "sparkles")
                             .font(.caption.weight(.medium)).foregroundStyle(Palette.amber)
                             .padding(12).frame(maxWidth: .infinity, alignment: .leading)
                             .background(Color(red: 0.98, green: 0.92, blue: 0.77), in: RoundedRectangle(cornerRadius: 12))
@@ -53,6 +55,7 @@ struct Screen<Content: View>: View {
 }
 
 struct Card<Content: View>: View {
+    @Environment(\.locale) private var locale
     @ViewBuilder var content: () -> Content
     var body: some View {
         VStack(alignment: .leading, spacing: 16, content: content)
@@ -63,6 +66,7 @@ struct Card<Content: View>: View {
 }
 
 struct SectionLabel: View {
+    @Environment(\.locale) private var locale
     let title: String
     var trailing: String = ""
     var body: some View {
@@ -75,6 +79,7 @@ struct SectionLabel: View {
 }
 
 struct Badge: View {
+    @Environment(\.locale) private var locale
     let text: String
     var active = false
     var body: some View {
@@ -86,6 +91,7 @@ struct Badge: View {
 }
 
 struct PrimaryButton: View {
+    @Environment(\.locale) private var locale
     let title: String
     var icon = "arrow.right"
     var enabled = true
@@ -103,10 +109,11 @@ struct PrimaryButton: View {
 }
 
 struct FeatureRow: View {
+    @Environment(\.locale) private var locale
     let icon: String
     let title: String
     let subtitle: String
-    var status: String = "待接入"
+    var status: String = ""
     var active = false
     var body: some View {
         HStack(spacing: 14) {
@@ -117,12 +124,13 @@ struct FeatureRow: View {
                 Text(subtitle).font(.system(size: 11)).foregroundStyle(Palette.muted).fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 4)
-            Badge(text: status, active: active)
+            Badge(text: status.isEmpty ? L10n.text("Not connected yet", locale: locale) : status, active: active)
         }.padding(.vertical, 2).contentShape(Rectangle())
     }
 }
 
 struct EmptyState: View {
+    @Environment(\.locale) private var locale
     let icon: String
     let title: String
     let detail: String
@@ -137,6 +145,7 @@ struct EmptyState: View {
 }
 
 struct GlassesIllustration: View {
+    @Environment(\.locale) private var locale
     var body: some View {
         GeometryReader { geometry in
             let width = geometry.size.width

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct QWeatherDashboardView: View {
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var weather: QWeatherDashboard
     @State private var draft = QWeatherConfiguration()
     @State private var key = ""
@@ -8,55 +9,55 @@ struct QWeatherDashboardView: View {
     @State private var confirmIcon = false
     var body: some View {
         Form {
-            Section("仪表盘首页 · 实时天气") {
-                Text("这里更新首页的小天气，不更新自选城市天气卡片，也不修改看板布局。")
+            Section(L10n.text("Dashboard Home · Live Weather", locale: locale)) {
+                Text(L10n.text("Updates the small weather display on the home screen. Does not change selected-city weather cards or the dashboard layout.", locale: locale))
                     .font(.caption)
-                Text(weather.status).accessibilityIdentifier("qweather-status")
-                Text(weather.reply).font(.caption).accessibilityIdentifier("qweather-reply")
+                Text(L10n.qweatherStatus(weather.status, locale: locale)).accessibilityIdentifier("qweather-status")
+                Text(L10n.qweatherStatus(weather.reply, locale: locale)).font(.caption).accessibilityIdentifier("qweather-reply")
             }
-            Section("和风服务 · 配置保存在本机") {
-                TextField("专属 API Host（不含 https://）",text:$draft.host)
+            Section(L10n.text("QWeather Service · Settings Stored Locally", locale: locale)) {
+                TextField(L10n.text("Dedicated API host (without https://)", locale: locale),text:$draft.host)
                     .textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("qweather-host")
-                SecureField("API Key（留空保留该 Host 的 Key）",text:$key)
+                SecureField(L10n.text("API key (leave blank to keep this host's key)", locale: locale),text:$key)
                     .textInputAutocapitalization(.never).autocorrectionDisabled().accessibilityIdentifier("qweather-key")
-                TextField("地点名称",text:$draft.location).accessibilityIdentifier("qweather-location")
+                TextField(L10n.text("Location name", locale: locale),text:$draft.location).accessibilityIdentifier("qweather-location")
                 HStack {
-                    TextField("纬度",text:$draft.latitude).keyboardType(.numbersAndPunctuation).accessibilityIdentifier("qweather-latitude")
-                    TextField("经度",text:$draft.longitude).keyboardType(.numbersAndPunctuation).accessibilityIdentifier("qweather-longitude")
+                    TextField(L10n.text("Latitude", locale: locale),text:$draft.latitude).keyboardType(.numbersAndPunctuation).accessibilityIdentifier("qweather-latitude")
+                    TextField(L10n.text("Longitude", locale: locale),text:$draft.longitude).keyboardType(.numbersAndPunctuation).accessibilityIdentifier("qweather-longitude")
                 }
-                Toggle("认证连接后自动更新仪表盘",isOn:$draft.enabled).accessibilityIdentifier("qweather-enabled")
-                Button("保存并应用") {
+                Toggle(L10n.text("Update Dashboard Automatically After Authenticated Connection", locale: locale),isOn:$draft.enabled).accessibilityIdentifier("qweather-enabled")
+                Button(L10n.text("Save and Apply", locale: locale)) {
                     draft.host = draft.host.trimmingCharacters(in:.whitespacesAndNewlines).lowercased()
                     weather.save(draft,key:key.trimmingCharacters(in:.whitespacesAndNewlines)); key = ""
                 }.disabled(weather.busy).accessibilityIdentifier("qweather-save")
-                Text("保存后连接状态下会查询所填坐标，可能消耗额度；不获取手机定位。Key 按 Host 隔离存入本机钥匙串，首次解锁后可供后台读取。不发送录音或聊天。")
+                Text(L10n.text("After saving while connected, the supplied coordinates will be queried and may use your quota. Phone location is not accessed. Keys are stored separately by host in the local Keychain and are available in the background after the first unlock. No recordings or chats are sent.", locale: locale))
                     .font(.caption).foregroundStyle(.secondary)
             }
-            Section("查询与下发") {
-                Button("重新获取 / 重试首页下发") { weather.retry() }.disabled(weather.busy).accessibilityIdentifier("qweather-refresh")
+            Section(L10n.text("Fetch and Send", locale: locale)) {
+                Button(L10n.text("Fetch Again / Retry Home Screen Update", locale: locale)) { weather.retry() }.disabled(weather.busy).accessibilityIdentifier("qweather-refresh")
                 if let s = weather.snapshot {
-                    Text("\(weather.configuration.location) · \(s.condition) · \(String(format:"%.2f",s.temperature))°C → 镜片 \(s.lensTemperature)°C")
+                    Text(L10n.format("%@ · %@ · %@°C → Glasses %@°C", locale: locale, String(describing: weather.configuration.location), String(describing: s.condition), String(describing: String(format:"%.2f",s.temperature)), String(describing: s.lensTemperature)))
                         .accessibilityIdentifier("qweather-preview")
-                    Text("获取：\(s.fetchedAt.formatted(date:.omitted,time:.standard))；本机缓存最多 10 分钟。接口没有观测时间，获取时间不代表观测时间。")
+                    Text(L10n.format("Fetched: %@. Cached locally for up to 10 minutes. The API provides no observation time; the fetch time is not the observation time.", locale: locale, String(describing: s.fetchedAt.formatted(Date.FormatStyle(date: .omitted, time: .standard).locale(locale)))))
                         .font(.caption)
-                    Text("来源：和风天气 QWeather").font(.caption)
+                    Text(L10n.text("Source: QWeather", locale: locale)).font(.caption)
                     ForEach(s.attributions,id:\.self) { Text($0).font(.caption2).textSelection(.enabled) }
-                    Text("天气码 \(s.code) 不自动等于固件图标；先发送同号候选测试，目视核对后才能启用该类型自动下发。")
+                    Text(L10n.format("Weather code %@ does not automatically match a firmware icon. Send a candidate test with the same ID and visually verify it before enabling automatic updates for this type.", locale: locale, String(describing: s.code)))
                         .font(.caption)
-                    Button("发送仪表盘候选测试") { test = true }.disabled(weather.busy).accessibilityIdentifier("qweather-test-dashboard")
-                    Button("镜片图标已核对，保存映射") { confirmIcon = true }.disabled(weather.busy).accessibilityIdentifier("qweather-confirm-icon")
+                    Button(L10n.text("Send Dashboard Candidate Test", locale: locale)) { test = true }.disabled(weather.busy).accessibilityIdentifier("qweather-test-dashboard")
+                    Button(L10n.text("Glasses Icon Verified; Save Mapping", locale: locale)) { confirmIcon = true }.disabled(weather.busy).accessibilityIdentifier("qweather-confirm-icon")
                 }
             }
         }
-        .navigationTitle("仪表盘天气")
+        .navigationTitle(L10n.text("Dashboard Weather", locale: locale))
         .preference(key:CompanionTabBarHiddenPreference.self,value:true)
         .onAppear { draft = weather.configuration }
         .onDisappear { key = "" }
-        .confirmationDialog("向仪表盘首页发送真实温度和待验的同号图标？不会修改天气卡片。",isPresented:$test) {
-            Button("发送一次首页测试") { weather.testCandidate() }
+        .confirmationDialog(L10n.text("Send the real temperature and the unverified icon with the same numeric ID to the dashboard home screen? Weather cards will stay unchanged.", locale: locale),isPresented:$test) {
+            Button(L10n.text("Send One Home Screen Test", locale: locale)) { weather.testCandidate() }
         }
-        .confirmationDialog("仅在已看到眼镜首页温度与正确天气图标后确认。协议回执不能代替目视验收。",isPresented:$confirmIcon) {
-            Button("已目视确认图标正确") { weather.confirmDisplayedIcon(); draft = weather.configuration }
+        .confirmationDialog(L10n.text("Confirm only after seeing the correct temperature and weather icon on the glasses home screen. A protocol acknowledgment does not replace visual verification.", locale: locale),isPresented:$confirmIcon) {
+            Button(L10n.text("I Visually Confirmed the Icon Is Correct", locale: locale)) { weather.confirmDisplayedIcon(); draft = weather.configuration }
         }
     }
 }

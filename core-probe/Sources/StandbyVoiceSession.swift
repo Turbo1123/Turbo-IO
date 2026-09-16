@@ -20,6 +20,12 @@ final class StandbyVoiceSession {
     private var duplexPackets = 0
     private var endpoint = SpeechEndpointDetector()
     private var noSpeechDeadline: TimeInterval?
+    private var initialSpeechDeadline: TimeInterval?
+    /// Presentation uses the same monotonic deadline as actual session exit.
+    func initialSpeechSecondsRemaining(now: TimeInterval) -> Int? {
+        guard phase == .recording, let initialSpeechDeadline else { return nil }
+        return Int(ceil(max(0, initialSpeechDeadline - now)))
+    }
     private(set) var target: String?
     private(set) var phase: Phase = .disabled
     private var deadline: TimeInterval?
@@ -49,6 +55,7 @@ final class StandbyVoiceSession {
         if !ready, phase != .waitingForConnection {
             // No write to an invalid/replaced transport; remote stop not guaranteed.
             deadline = nil
+            initialSpeechDeadline = nil
             followupWait = nil
             sessionDeadline = nil; cloudSessionID = nil; cloudRoundID = nil
             setPhase(.waitingForConnection)
@@ -94,6 +101,7 @@ final class StandbyVoiceSession {
         followupWait = nil
         endpoint = SpeechEndpointDetector()
         noSpeechDeadline = vadEnabled && !continuousASREnabled ? now + 5 : nil
+        initialSpeechDeadline = cloudEnabled && continuousASREnabled ? now + 8 : nil
         packets = 0; bytes = 0; round += 1; response = makeText()
         cloudRoundID = cloudEnabled ? UUID() : nil
         cloudSessionID = cloudRoundID
@@ -134,6 +142,11 @@ final class StandbyVoiceSession {
                 log?("持续ASR超过5秒没有音频回调，取消；缺流不当成静音句末"); closeRound(sendExit:true); return
             }
         }
+        if phase == .recording, let initialSpeechDeadline, now >= initialSpeechDeadline {
+            log?("唤醒后8秒未收到有效识别，停止收音并退出；服务保留待命")
+            closeRound(sendExit:true)
+            return
+        }
         if phase == .displaying, let wait = followupWait,
            wait.round == cloudRoundID, now >= wait.deadline {
             followupWait = nil
@@ -169,6 +182,7 @@ final class StandbyVoiceSession {
     }
     func cloudEndpoint(id: UUID, now: TimeInterval) {
         guard cloudEnabled, cloudRoundID == id, phase == .recording else { return }
+        initialSpeechDeadline = nil
         guard write(continuousASREnabled ? .vadStop : .stopAudio) else { failRound(); return }
         deadline = now + 30
         setPhase(.processing)
@@ -178,6 +192,7 @@ final class StandbyVoiceSession {
         guard continuousASREnabled, cloudEnabled, active, cloudSessionID == session,
               cloudRoundID != id else { return }
         let interrupting = phase == .processing || phase == .displaying
+        initialSpeechDeadline = nil
         if followupWait != nil { log?("有效新句取消旧轮续说退出计时") }
         followupWait = nil
         cloudRoundID = id; transcript = ""; transcriptFinal = false; answerBytes = 0
@@ -196,6 +211,7 @@ final class StandbyVoiceSession {
     func cloudTranscript(_ text: String, final: Bool, id: UUID) {
         guard cloudEnabled, cloudRoundID == id, phase == .recording, !transcriptFinal,
               !text.isEmpty, text.utf8.count <= 512 else { return }
+        if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { initialSpeechDeadline = nil }
         guard write(.streamText(text,final)) else { failRound(); return }
         transcript = text; transcriptFinal = final
         log?("云识别type5提交 utf8Bytes=\(text.utf8.count) wireKey=final final=\(final)；正文不入日志")
@@ -253,6 +269,7 @@ final class StandbyVoiceSession {
         if phase == .recording || (continuousASREnabled && wasActive) { ok = write(.stopAudio) }
         if wasActive && sendExit { ok = write(.exit) && ok }
         deadline = nil
+        initialSpeechDeadline = nil
         cloudRoundID = nil
         followupWait = nil
         cloudSessionID = nil; sessionDeadline = nil; lastDuplexAudio = nil
@@ -264,6 +281,7 @@ final class StandbyVoiceSession {
         // Best-effort bounded cleanup; no repeated sends or automatic recording.
         _ = write(.stopAudio); _ = write(.exit)
         deadline = nil
+        initialSpeechDeadline = nil
         cloudRoundID = nil
         followupWait = nil
         cloudSessionID = nil; sessionDeadline = nil; lastDuplexAudio = nil

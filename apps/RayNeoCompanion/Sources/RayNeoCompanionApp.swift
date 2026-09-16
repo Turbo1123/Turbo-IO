@@ -2,11 +2,15 @@ import SwiftUI
 
 @main
 struct RayNeoCompanionApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+    @StateObject private var languageSettings = AppLanguageSettings.forCurrentLaunch()
     @StateObject private var store = CompanionStore.forCurrentLaunch()
 
     var body: some Scene {
         WindowGroup {
             RootView()
+                .environmentObject(languageSettings)
+                .environment(\.locale, languageSettings.locale)
                 .environmentObject(store)
                 .environmentObject(store.archive)
                 .environmentObject(store.archive.audioInspection)
@@ -14,6 +18,7 @@ struct RayNeoCompanionApp: App {
                 .environmentObject(store.voice)
                 .environmentObject(store.codex)
                 .environmentObject(store.codexPush)
+                .environmentObject(store.hermesPush)
                 .environmentObject(store.timeline)
                 .environmentObject(store.recordingASR)
                 .environmentObject(store.features)
@@ -23,11 +28,15 @@ struct RayNeoCompanionApp: App {
                 .environmentObject(store.qweather)
                 .tint(Palette.green)
                 .preferredColorScheme(.light)
+                .onChange(of: scenePhase) { phase in
+                    if phase == .active { languageSettings.refreshSystemLocale() }
+                }
         }
     }
 }
 
 struct RootView: View {
+    @Environment(\.locale) private var locale
     @EnvironmentObject private var store: CompanionStore
     @State private var hideTabBar = false
     @State private var didApplyLaunchArguments = false
@@ -47,10 +56,10 @@ struct RootView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if !hideTabBar {
             HStack(spacing: 0) {
-                tabButton(0, "设备", "eyeglasses")
-                tabButton(1, "会话", "bubble.left")
-                tabButton(2, "归档", "folder")
-                tabButton(3, "工具", "case")
+                tabButton(0, L10n.text("Device", locale: locale), "eyeglasses")
+                tabButton(1, L10n.text("Conversation", locale: locale), "bubble.left")
+                tabButton(2, L10n.text("Archive", locale: locale), "folder")
+                tabButton(3, L10n.text("Tools", locale: locale), "case")
             }
             .padding(.horizontal, 16).padding(.top, 9).padding(.bottom, 2)
             .background(.white)
@@ -61,6 +70,7 @@ struct RootView: View {
         .task {
             while !Task.isCancelled {
                 await store.codexPush.tick()
+                store.hermesPush.tick(locale: locale)
                 do { try await Task.sleep(nanoseconds: 2_000_000_000) } catch { break }
             }
         }
@@ -68,16 +78,16 @@ struct RootView: View {
             guard url.isFileURL, ["txt", "epub"].contains(url.pathExtension.lowercased()) else { return }
             incomingBook = url; confirmBook = true
         }
-        .confirmationDialog("将这份书籍复制为Turbo IO本地文字？不上传、不修改原文件。", isPresented: $confirmBook) {
-            Button("导入书籍") {
+        .confirmationDialog(L10n.text("Copy this book into Turbo IO as local text? Nothing will be uploaded, and the original file will stay unchanged.", locale: locale), isPresented: $confirmBook) {
+            Button(L10n.text("Import Book", locale: locale)) {
                 guard let url = incomingBook else { return }
                 incomingBook = nil
                 Task { await store.books.importFile(url); showBooks = true }
             }
-            Button("取消", role: .cancel) { incomingBook = nil }
+            Button(L10n.text("Cancel", locale: locale), role: .cancel) { incomingBook = nil }
         }
         .sheet(isPresented: $showBooks) {
-            NavigationStack { BookShelfView().toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { showBooks = false } } } }
+            NavigationStack { BookShelfView().toolbar { ToolbarItem(placement: .confirmationAction) { Button(L10n.text("Done", locale: locale)) { showBooks = false } } } }
         }
         .onAppear {
             guard !didApplyLaunchArguments else { return }
