@@ -1,0 +1,21 @@
+{
+  "version": "TWR1-WEB03-AP",
+  "baseFirmware": "Strix OS 1.0.4.12",
+  "officialIOSPrivateHost": "1.0.5 (201)",
+  "archive": "StrixOS-1.0.4.12-TurboWeRead-TWR1-EXPERIMENTAL.zip",
+  "archiveBytes": 9291197,
+  "archiveSHA256": "a7a1e98dd22bd45a87bba5f8c19862d5fa3a5f0d5877ed4330cca8face75575c",
+  "apBytes": 9544840,
+  "apSHA256": "66c88f54c12ad129d8d568261e399350201df47e0ce9904cf8440e03e1f90ab4",
+  "apMD5": "e252514f01d48765136e7a437f6d06ca",
+  "manifestSHA256": "f7577f3027195b6d746b10417f42d055d8aeb7691a88565b7ee73519823466ee",
+  "changedPayloads": ["nuttx_ap.bin"],
+  "unchangedStockPayloads": 13,
+  "physicalFeedbackDate": "2026-09-24",
+  "physicalFeedback": "User confirmed update completed and glasses returned to home; earlier shelf synchronization passed. Latest full-text reading and long-duration behavior are not fully accepted.",
+  "knownIssues": ["Long-press rotary return to bookshelf may malfunction", "Music wheel remains oversensitive", "Latest cover rendering, cross-chapter reading and long-duration behavior not fully accepted"],
+  "webContentAdapterIncluded": false,
+  "publicPhoneTurnkeyIntegration": false,
+  "productionReady": false,
+  "recoveryGuaranteed": false
+}

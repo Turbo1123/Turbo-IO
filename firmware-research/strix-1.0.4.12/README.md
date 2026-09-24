@@ -8,7 +8,7 @@
 
 ## 最新：TNV1 原生导航与 TDP1 显示测试
 
-另有[微信读书书架与阅读页的研究思路](../../docs/WEREAD_RESEARCH.md)：介绍手机/眼镜分工及可参考的开源项目，**本次仅文档，没有 TWR1 固件下载**。私用阅读实验仍有“长按旋钮返回可能异常”的已知问题，不能把本页其他固件混用为阅读版。
+新增 [TWR1 微信读书：原创模块、精确实刷固件与离线重建](native-navigation/weread/README.md)，以及[研究思路](../../docs/WEREAD_RESEARCH.md)。不含网页正文适配、Cookie 或私用 IPA；公开手机模块未接入默认构建/专用打包门禁，没有匹配手机集成请先别刷。已知“长按旋钮返回可能异常”，不能把本页其他固件混用为阅读版。
 
 2026-09-22 的新匹配版本已单独发布：[TNV1 固件与校验](https://github.com/Turbo1123/Turbo-IO/releases/tag/firmware-strix-1.0.4.12-tnv1) · [源码、构建与使用](native-navigation/README.md)。新增独立第九项导航，保留第八项 Turbo Display **测试工具**；手机传语义数据、眼镜本地绘制。仅 AP 内容变化，保留其余13项。本页下方继续记录早期 R3 图片验证，**不是 TNV1 操作指南，两个包不能混用**。
 

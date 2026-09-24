@@ -31,7 +31,7 @@
 
 | 日期 | 更新 | 公开范围 |
 | --- | --- | --- |
-| 2026-09-24 | [微信读书：四本书架与阅读页](#weread-research) | 思路与参考项目；不含 TWR1 源码、固件或网页适配 |
+| 2026-09-24 | [微信读书：四本书架与阅读页](#weread-research) | TWR1 原创模块、构建工具与实刷实验固件；不含网页正文适配 |
 | 2026-09-23 | [网易云音乐：第十项菜单](#music-app) | TMU1 源码、配套手机代码与实测实验固件 |
 | 2026-09-22 | [Turbo Display 与原生导航](#native-apps) | TDP1/TNV1 源码、配套手机代码与匹配固件 |
 | 2026-09-22 | [ANIM60 本地动图](#animation-test) | 动图实验源码与独立固件候选；非通用动图上传 |
@@ -42,7 +42,9 @@
 
 ### 2026-09-24 · 微信读书研究：四本书架与原生阅读页
 
-分享“手机获取内容、处理封面和分页，眼镜显示四本书架与有界正文窗口”的[实现思路及参考项目](docs/WEREAD_RESEARCH.md)。书架/统计可参考 [Tencent/WeChatReading](https://github.com/Tencent/WeChatReading)，网页阅读可研究 [finlater/weread.koplugin](https://github.com/finlater/weread.koplugin)；后者是独立的 AGPL KOReader 插件，不是雷鸟插件。**本次只公开说明，不发布网页正文适配、TWR1 源码/固件或任何 Cookie/Key；不是公开构建已具备该能力的声明。私用研究版已知问题：长按旋钮返回书架可能异常。**
+**新增第十一项“微信读书”研究菜单：四本封面书架、原生文本窗口与手动/自动滚动。** 已公开[原创 AP / 手机模块、构建与协议说明](firmware-research/strix-1.0.4.12/native-navigation/weread/README.md)，以及 [TWR1 实刷实验固件](https://github.com/Turbo1123/Turbo-IO/releases/tag/firmware-strix-1.0.4.12-twr1)。源码重建 AP 与实刷版本一致，仅 AP 改变，其他13个负载不变。**已知问题：长按旋钮返回书架可能异常。非开发者请勿刷，不保证回滚或救砖。**
+
+手机模块公开书架/统计、封面处理、TXT/EPUB 导入及阅读传输，**不含网页正文适配、Cookie、Key 或私用 IPA，也尚未接入主仓库默认构建及 TWR1 OTA 打包入口**；没有自己的匹配手机集成时先别刷。这不是“下载源码就能直接读取所有微信读书正文”的声明。书架/统计参考 [Tencent/WeChatReading](https://github.com/Tencent/WeChatReading)，网页阅读可自行研究 AGPL 项目 [finlater/weread.koplugin](https://github.com/finlater/weread.koplugin)。[架构思路与许可范围](docs/WEREAD_RESEARCH.md)
 
 ![微信读书界面效果示意：菜单入口、同步提示、四本书架与阅读页](docs/screenshots/weread-ui-concept.jpg)
 
@@ -232,7 +234,7 @@ Key由我在本机安全填写，不索取聊天明文、不复用维护者配�
 
 </details>
 
-模型 Key、搜索 Key、TTS 云端 Key、个人提示词与私有知识库由使用者自己配置；本机 TTS 不需要服务 Key。二进制例外仅限上方原厂砸壳 IPA，以及独立标注警告的 R3、TNV1、ANIM60、TMU1 实验固件/原厂内容基线 Release；不提供合并后手机成品包或个人签名材料。固件中的原厂代码/资源版权不变，实验附件不是官方升级推荐；未知二进制版本不得跳过兼容检查。iOS 详细版本/UUID见 [V2文档](official-addon/README.md#1-兼容性门槛)，Android输入校验见 [Android文档](android-addon/README.md#2-兼容与安装边界)。
+模型 Key、搜索 Key、TTS 云端 Key、个人提示词与私有知识库由使用者自己配置；本机 TTS 不需要服务 Key。二进制例外仅限上方原厂砸壳 IPA，以及独立标注警告的 R3、TNV1、ANIM60、TMU1、TWR1 实验固件/原厂内容基线 Release；不提供合并后手机成品包或个人签名材料。固件中的原厂代码/资源版权不变，实验附件不是官方升级推荐；未知二进制版本不得跳过兼容检查。iOS 详细版本/UUID见 [V2文档](official-addon/README.md#1-兼容性门槛)，Android输入校验见 [Android文档](android-addon/README.md#2-兼容与安装边界)。
 
 ### 按需阅读
 
@@ -392,6 +394,7 @@ node scripts/start.mjs --device
 
 ## Roadmap
 
+- TWR1 阅读：完善长按返回、将无网页适配的手机模块接入公开构建与专用 OTA 门禁，再扩大镜片验收；目前公开的是可复现 AP 与手机源码模块，不是开箱应用。
 - TMU1 音乐：降低旋钮误切歌，增加距离阈值/可配置控制；扩大后台、断连恢复和长时运行验收。本次发布保留当前实测行为，不宣称这些改进已完成。
 
 以下是后续研究方向，不是已实现功能或交付时间承诺；顺序会随实测结果与社区贡献调整。

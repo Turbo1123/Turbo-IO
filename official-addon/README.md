@@ -8,7 +8,7 @@
 
 ## 可选高风险固件研究构建
 
-**微信读书研究说明：** [四本书架、手机缩图、正文窗口与参考项目](../docs/WEREAD_RESEARCH.md)。本次只分享思路和 `finlater/weread.koplugin` 链接，不把网页正文适配代码合入公开构建，不提供 Cookie。私用 TWR1 的长按旋钮返回可能异常；不要使用下面的音乐/导航固件代替阅读固件。
+**微信读书 TWR1：** [原创 AP、书架/本地阅读手机模块、固件与构建说明](../firmware-research/strix-1.0.4.12/native-navigation/weread/README.md) · [架构与参考项目](../docs/WEREAD_RESEARCH.md)。不含网页正文适配或 Cookie；公开手机模块尚未接入本页默认构建与 TWR1 打包门禁。长按旋钮返回可能异常；没有匹配手机集成请先别刷，不要使用下面的音乐/导航授权代替阅读固件。
 
 **新增 [TMU1 网易云音乐与眼镜五行歌词教程](../firmware-research/strix-1.0.4.12/native-navigation/music/README.md)**：官方 iOS1.0.5（201）宿主，`TIO_MUSIC=1` 显式编译，配对 TMU1 精确固件。手机/镜片封面、歌词、播放控制获实测正常反馈；**旋钮太灵敏、易误切歌为已知问题**。扫码登录未通过，不绕过服务限制。源码与固件公开，不提供合并/签名后的 IPA。非开发者请勿刷。
 
