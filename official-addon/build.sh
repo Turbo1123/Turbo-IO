@@ -56,6 +56,18 @@ if [[ ${TIO_NATIVE_NAV:-0} == 1 ]]; then
 fi
 if [[ ${TIO_MUSIC:-0} == 1 ]]; then output=build/music/TurboIOPrivateAddon.dylib; mkdir -p build/music; fi
 sdk_path=$(xcrun --sdk iphoneos --show-sdk-path)
+caption_options=()
+caption_sources=()
+subtitle_core=SubtitleHUDCore.m
+subtitle_runtime=SubtitleHUD.m
+if [[ ${TIO_LOCAL_TRANSLATION:-0} == 1 ]]; then
+  [[ "$mode" == embedded ]] || { echo 'Local translation requires embedded mode and iOS 26+' >&2; exit 2; }
+  caption_options=(-DTIO_LOCAL_TRANSLATION=1 -I "$PWD/local-translation" -I "$PWD")
+  caption_sources=(local-translation/LocalTranslationEntry.m)
+  subtitle_core=local-translation/SubtitleHUDCore.m
+  subtitle_runtime=local-translation/SubtitleHUD.m
+  output=build/local-translation/TurboIOPrivateAddon.dylib; mkdir -p build/local-translation
+fi
 link_options=()
 # Opt-in diagnostic for the iOS 16 jailbreak injector's chained-fixup stall.
 # Keep the normal embedded build unchanged until the device comparison passes.
@@ -69,7 +81,8 @@ xcrun --sdk iphoneos clang -arch arm64 -isysroot "$sdk_path" -miphoneos-version-
   ${ota_options[@]+"${ota_options[@]}"} ${ota_sources[@]+"${ota_sources[@]}"} \
   ${native_options[@]+"${native_options[@]}"} ${native_sources[@]+"${native_sources[@]}"} \
   ${music_options[@]+"${music_options[@]}"} ${music_sources[@]+"${music_sources[@]}"} \
-  NavigationModes.m ProtocolContext.m NavigationSubtitleHUD.m NavigationPlaces.m NavigationPlacePicker.m A2UIProtocol.m NavigationCore.m NavigationTeleHUD.m NavigationTransport.m "$navigation_ui" ManualHUD.m SubtitleHUDCore.m SubtitleHUD.m \
+  ${caption_options[@]+"${caption_options[@]}"} ${caption_sources[@]+"${caption_sources[@]}"} \
+  NavigationModes.m ProtocolContext.m NavigationSubtitleHUD.m NavigationPlaces.m NavigationPlacePicker.m A2UIProtocol.m NavigationCore.m NavigationTeleHUD.m NavigationTransport.m "$navigation_ui" ManualHUD.m "$subtitle_core" "$subtitle_runtime" \
   "-DTIO_TARGET_BUNDLE_ID=\"$bundle\"" -install_name "$install_name" "${link_options[@]}" \
   Core.m Profile.m KnowledgeClient.m KnowledgeUI.m ProfileUI.m HomeTabLayout.m HomeTabBridge.m ResearchCatalog.m ResearchUI.m NewsPresentation.m PrivateBootstrap.m VoiceTTSCore.m VoiceTTS.m WebSearch.m TodoProtocol.m TodoRuntime.m NewsCore.m NewsReader.m NewsTeleprompter.m RecordingExports.m RecordingExportsUI.m RecordingExportsMenu.m RecordingText.m RecordingTextUI.m RecordingTextMenu.m AlwaysOnAudioFiles.m AlwaysOnOgg.m AlwaysOnAudioNative.m AlwaysOnAudioUI.m Addon.m -o "$output"
 codesign --force --sign - "$output"

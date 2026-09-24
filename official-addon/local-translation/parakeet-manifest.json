@@ -1,0 +1,86 @@
+{
+  "repo": "FluidInference/parakeet-realtime-eou-120m-coreml",
+  "revision": "40a23f4c0b333aa17ad8c0f2ea47ec2347f2f355",
+  "files": [
+    {
+      "path": "decoder.mlmodelc/analytics/coremldata.bin",
+      "size": 243,
+      "sha256": "3996975a8cbc1949159c55605b3132b39b2484f51acbd55d796d93c70de02b49"
+    },
+    {
+      "path": "decoder.mlmodelc/coremldata.bin",
+      "size": 497,
+      "sha256": "c3ccbff963d8cf07e2be2bd56ea3384a89ea49628922c6bd95ff62e2ae57dc34"
+    },
+    {
+      "path": "decoder.mlmodelc/metadata.json",
+      "size": 3283,
+      "sha256": "0977480649f2756894b0acfe2fdf4231a991f25e3fe02562bfb71b65ca944575"
+    },
+    {
+      "path": "decoder.mlmodelc/model.mil",
+      "size": 7409,
+      "sha256": "b7c084a35bdbc887d69d6226cd533e2c11b2792c37d7352cf878f9f6f3c13555"
+    },
+    {
+      "path": "decoder.mlmodelc/weights/weight.bin",
+      "size": 7873600,
+      "sha256": "0b4cacecdcd9df79ab1e56de67230baf5a8664d2afe0bb8f3408eefa972cb2f4"
+    },
+    {
+      "path": "joint_decision.mlmodelc/analytics/coremldata.bin",
+      "size": 243,
+      "sha256": "5bca32ad130dcad6605cc00044c752aa5b45ef57d14c17f2d1a2fa49d6cf55b5"
+    },
+    {
+      "path": "joint_decision.mlmodelc/coremldata.bin",
+      "size": 493,
+      "sha256": "22d4abc4625b935ee035b5f8ce7cb28d1041b9b01c12173e287bf4b5f5d99625"
+    },
+    {
+      "path": "joint_decision.mlmodelc/metadata.json",
+      "size": 3181,
+      "sha256": "e970ae87137730020690d24d971813db3633bbdfed602d43b6a9c84deced6dc8"
+    },
+    {
+      "path": "joint_decision.mlmodelc/model.mil",
+      "size": 9608,
+      "sha256": "45e8590bc87e34c162b547e43a4f60e64db15b017f48395d7835a6867884804f"
+    },
+    {
+      "path": "joint_decision.mlmodelc/weights/weight.bin",
+      "size": 2794182,
+      "sha256": "7039b2010a269153f5a96edf28637f921a86ef8822f248f2d6712f7a6bce84b4"
+    },
+    {
+      "path": "streaming_encoder.mlmodelc/analytics/coremldata.bin",
+      "size": 243,
+      "sha256": "ae0a559f8d53c43fe13c5c142b15ca237b97812febde71a36475b7b9612baec5"
+    },
+    {
+      "path": "streaming_encoder.mlmodelc/coremldata.bin",
+      "size": 670,
+      "sha256": "b57dfe32ed2acb0081f97d7a9e410117005823e3d2d995e21feb9e60775443c3"
+    },
+    {
+      "path": "streaming_encoder.mlmodelc/metadata.json",
+      "size": 5327,
+      "sha256": "3adc7839db0f5d20b19e2dcd1c009bcf935a7edc61d7473c8150be444bd80488"
+    },
+    {
+      "path": "streaming_encoder.mlmodelc/model.mil",
+      "size": 655998,
+      "sha256": "eb9d56d7467ad3a8796ec9098b27fb89197638b31e24ede6dd924807d25086e6"
+    },
+    {
+      "path": "streaming_encoder.mlmodelc/weights/weight.bin",
+      "size": 212865856,
+      "sha256": "ff553fcb4f4560cfce1e558e16bb9d856e4b4f6a4c08f800d5c126fce4196822"
+    },
+    {
+      "path": "vocab.json",
+      "size": 17437,
+      "sha256": "83fd42ad33dae1bd3ceee6c0bb6c625f314cf0b2dc8430be441ac1e2643d5c36"
+    }
+  ]
+}

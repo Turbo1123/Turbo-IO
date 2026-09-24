@@ -1,0 +1,20 @@
+{
+  "model_repository": "https://huggingface.co/tencent/Hy-MT2-1.8B-1.25Bit-GGUF",
+  "model_revision": "9df5c824a00a744fb0512a29c640466f4d97dfb0",
+  "original_file": "Hy-MT2-1.8B-1.25Bit.gguf",
+  "size_bytes": 461860800,
+  "original_sha256": "cc497fe8f033b52b3b8b00a7669e9661435432f9d4cd43f7ed24400c01507a93",
+  "adapted_sha256": "e482a38ceaaf8420573483c96ddc8449922b5f5de6a8023b70316e65d41e6de7",
+  "adaptation": "224 tensor type IDs 42 -> 43; general.file_type 41 -> 42; tensor payload unchanged",
+  "kernel_repository": "https://github.com/sjl623/llama.cpp.git",
+  "kernel_revision": "1e411d8f5a1e23525fa3265dfb4bd76265465397",
+  "backend": "CPU ARM NEON; no Metal",
+  "context_tokens": 1024,
+  "batch_tokens": 128,
+  "default_threads": 6,
+  "max_threads": 8,
+  "max_output_tokens": 384,
+  "translation_timeout_ms": 15000,
+  "min_ios": "26.0",
+  "device_validated": false
+}

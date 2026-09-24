@@ -20,6 +20,9 @@
 #endif
 #import "PrivateBootstrap.h"
 #import "ResearchCatalog.h"
+#if TIO_LOCAL_TRANSLATION
+#import "local-translation/LocalTranslationEntry.h"
+#endif
 #import "ResearchUI.h"
 #import "VoiceTTS.h"
 #if TIO_NATIVE_NAV
@@ -414,6 +417,9 @@ static void AlwaysOnHook(id self,SEL cmd,id value) {
     if([r[@"key"] isEqual:@"agent"])return;
 #if TIO_MUSIC
     if([r[@"key"] isEqual:@"music"]){[self.navigationController pushViewController:TMMusicController() animated:YES];return;}
+#endif
+#if TIO_LOCAL_TRANSLATION
+    if([r[@"key"] isEqual:@"localTranslation"]){TIOOpenLocalTranslation(self);return;}
 #endif
     if([r[@"key"] isEqual:@"knowledge"]){TIOOpenKnowledge(self);return;}
     if([r[@"key"] isEqual:@"ttsEngine"]){[self configureTTSEngine];return;}
