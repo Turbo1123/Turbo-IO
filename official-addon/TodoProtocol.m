@@ -87,10 +87,33 @@ NSDictionary *TIOTodoSnapshot(NSData *data) {
         if(![row isKindOfClass:NSDictionary.class])return nil;
         NSString *wireID=Integer(row[@"eventID"]);id title=row[@"title"];
         if(!Code(row[@"eventType"],1)||(!Code(row[@"status"],0)&&!Code(row[@"status"],1))||!wireID||[seen containsObject:wireID]||![title isKindOfClass:NSString.class]||![title length]||[title length]>240)return nil;
-        [seen addObject:wireID];[items addObject:@{@"wireId":wireID,@"title":title,@"status":row[@"status"]}];
+        [seen addObject:wireID];NSMutableDictionary *item=[@{@"wireId":wireID,@"title":title,@"status":row[@"status"]} mutableCopy];
+        NSString *created=Integer(row[@"createTime"]),*modified=Integer(row[@"lastModifiedTime"]);id important=row[@"isImportant"];
+        if(created)item[@"createTime"]=created;if(modified)item[@"lastModifiedTime"]=modified;
+        if(important&&CFGetTypeID((__bridge CFTypeRef)important)==CFBooleanGetTypeID())item[@"isImportant"]=important;
+        [items addObject:item];
     }
     // Caller must accumulate batches; one batch must never replace the whole store.
     return @{@"items":items,@"total":@(total.longLongValue),@"isLastBatch":last};
+}
+static void AppendVarint(NSMutableData *data,uint64_t value){while(value>=128){uint8_t b=(uint8_t)((value&127)|128);[data appendBytes:&b length:1];value>>=7;}uint8_t b=(uint8_t)value;[data appendBytes:&b length:1];}
+NSData *TIOTodoEncodeStatusUpdate(NSDictionary *item,NSInteger status,NSInteger modifiedAt){
+    if(![item isKindOfClass:NSDictionary.class]||(status!=0&&status!=1)||modifiedAt<=0)return nil;
+    NSString *wire=item[@"wireId"],*created=item[@"createTime"],*title=item[@"title"];id important=item[@"isImportant"];
+    NSCharacterSet *nonDigits=[[NSCharacterSet characterSetWithCharactersInString:@"0123456789"] invertedSet];
+    if(![wire isKindOfClass:NSString.class]||!wire.length||wire.length>19||[wire rangeOfCharacterFromSet:nonDigits].location!=NSNotFound||([wire length]>1&&[wire hasPrefix:@"0"])||([wire length]==19&&[wire compare:@"9223372036854775807" options:NSLiteralSearch]==NSOrderedDescending)||
+       ![created isKindOfClass:NSString.class]||!created.length||created.length>19||[created rangeOfCharacterFromSet:nonDigits].location!=NSNotFound||![title isKindOfClass:NSString.class]||!title.length||title.length>240||!important||CFGetTypeID((__bridge CFTypeRef)important)!=CFBooleanGetTypeID())return nil;
+    NSDictionary *body=@{@"eventType":@1,@"eventID":@([wire longLongValue]),@"createTime":@([created longLongValue]),@"title":title,@"isImportant":important,@"status":@(status),@"lastModifiedTime":@(modifiedAt)};
+    NSData *json=[NSJSONSerialization dataWithJSONObject:body options:0 error:nil];if(!json||json.length>65536)return nil;
+    NSMutableData *out=[NSMutableData data];uint8_t tag=8;[out appendBytes:&tag length:1];AppendVarint(out,1);tag=16;[out appendBytes:&tag length:1];AppendVarint(out,2);tag=26;[out appendBytes:&tag length:1];AppendVarint(out,json.length);[out appendData:json];return out;
+}
+NSDictionary *TIOTodoOutgoingTask(NSData *data){
+    NSDictionary *envelope=TIOTodoEnvelope(data);if(!Code(envelope[@"type"],2))return nil;
+    NSDictionary *row=envelope[@"json"];
+    NSString *wireID=Integer(row[@"eventID"]),*title=row[@"title"];
+    if(!Code(row[@"eventType"],1)||!wireID||![title isKindOfClass:NSString.class]||!title.length||title.length>240||
+       (!Code(row[@"status"],0)&&!Code(row[@"status"],1)))return nil;
+    return @{@"wireId":wireID,@"title":title,@"status":row[@"status"]};
 }
 NSDictionary *TIOTodoCreateIntent(NSString *domain,NSString *intent,id params) {
     if(![domain isEqual:@"task"]||![intent isEqual:@"create_task"])return nil;
@@ -132,14 +155,66 @@ static NSDictionary *CompleteRows(NSDictionary *snapshot) {
     }
     return rows;
 }
-NSDictionary *TIOTodoNewCandidate(NSDictionary *before,NSDictionary *after,NSString *title){
+NSDictionary *TIOTodoOutgoingCompletionCandidate(NSDictionary *snapshot,NSData *data){
+    NSDictionary *outgoing=TIOTodoOutgoingTask(data),*known=CompleteRows(snapshot);
+    if(!outgoing||!known||!Code(outgoing[@"status"],1))return nil;
+    NSDictionary *previous=known[outgoing[@"wireId"]];
+    if(!previous||!Code(previous[@"status"],0)||![previous[@"title"] isEqual:outgoing[@"title"]])return nil;
+    return outgoing;
+}
+NSArray<NSDictionary *> *TIOTodoNewCandidates(NSDictionary *before,NSDictionary *after,NSString *title){
     if(![title isKindOfClass:NSString.class]||!title.length||title.length>240)return nil;
     NSDictionary *old=CompleteRows(before),*current=CompleteRows(after);
-    if(!old||!current||current.count!=old.count+1)return nil;
-    // Reject concurrent removals/edits, including duplicate titles already in
-    // the baseline. Never select the first row of a reordered full-list packet.
-    for(NSString *wire in old)if(![old[wire] isEqual:current[wire]]||[old[wire][@"title"] isEqual:title])return nil;
+    if(!old||!current||current.count<=old.count)return nil;
+    // Reject concurrent removals/edits. Added rows with other titles do not
+    // obscure the observed intent; multiple same-title additions stay explicit.
+    for(NSString *wire in old)if(![old[wire] isEqual:current[wire]])return nil;
+    NSMutableArray *candidates=[NSMutableArray array];
+    for(NSString *wire in current)if(!old[wire]){NSDictionary *candidate=current[wire];if([candidate[@"title"] isEqual:title]&&(Code(candidate[@"status"],0)||Code(candidate[@"status"],1)))[candidates addObject:candidate];}
+    return [candidates copy];
+}
+NSDictionary *TIOTodoNewCandidate(NSDictionary *before,NSDictionary *after,NSString *title){
+    NSArray *candidates=TIOTodoNewCandidates(before,after,title);return candidates.count==1?candidates.firstObject:nil;
+}
+NSDictionary *TIOTodoOneCompletedCandidate(NSDictionary *before,NSDictionary *after){
+    NSDictionary *old=CompleteRows(before),*current=CompleteRows(after);
+    if(!old||!current||current.count!=old.count)return nil;
     NSDictionary *candidate=nil;
-    for(NSString *wire in current)if(!old[wire])candidate=current[wire];
-    return [candidate[@"title"] isEqual:title]&&Code(candidate[@"status"],0)?candidate:nil;
+    for(NSString *wire in old){
+        NSDictionary *was=old[wire],*now=current[wire];
+        if(!now||![was[@"title"] isEqual:now[@"title"]])return nil;
+        if([was isEqual:now])continue;
+        if(candidate||!Code(was[@"status"],0)||!Code(now[@"status"],1))return nil;
+        candidate=now;
+    }
+    return candidate;
+}
+NSDictionary *TIOTodoSnapshotStatusMap(NSDictionary *snapshot){
+    NSDictionary *rows=CompleteRows(snapshot);if(!rows)return nil;
+    NSMutableDictionary *states=[NSMutableDictionary dictionaryWithCapacity:rows.count];
+    for(NSString *wire in rows)states[wire]=rows[wire][@"status"];
+    return [states copy];
+}
+NSDictionary *TIOTodoSnapshotDelta(NSDictionary *knownStatuses,NSDictionary *snapshot){
+    if(![knownStatuses isKindOfClass:NSDictionary.class])return nil;
+    NSDictionary *rows=CompleteRows(snapshot);if(!rows)return nil;
+    NSMutableArray *added=[NSMutableArray array],*completed=[NSMutableArray array];
+    for(NSString *wire in rows){
+        NSDictionary *item=rows[wire];id previous=knownStatuses[wire];
+        if(!previous){[added addObject:item];continue;}
+        if(Code(previous,0)&&Code(item[@"status"],1))[completed addObject:item];
+    }
+    return @{@"added":added,@"completed":completed};
+}
+NSArray<NSDictionary *> *TIOTodoSnapshotRowsCreatedAfter(NSDictionary *snapshot,NSTimeInterval cutoff){
+    NSDictionary *rows=CompleteRows(snapshot);if(!rows||cutoff<=0)return nil;
+    NSMutableArray *recent=[NSMutableArray array];NSCharacterSet *nonDigits=[[NSCharacterSet characterSetWithCharactersInString:@"0123456789"] invertedSet];
+    for(NSDictionary *item in rows.allValues){
+        id raw=item[@"createTime"];long long created=0;
+        if([raw isKindOfClass:NSString.class]){if(![raw length]||[raw length]>12||[raw rangeOfCharacterFromSet:nonDigits].location!=NSNotFound)continue;created=[raw longLongValue];}
+        else if([raw isKindOfClass:NSNumber.class]&&CFGetTypeID((__bridge CFTypeRef)raw)!=CFBooleanGetTypeID()){double value=[raw doubleValue];created=[raw longLongValue];if(value!=(double)created)continue;}
+        else continue;
+        if(created>0&&(NSTimeInterval)created>=cutoff)[recent addObject:item];
+    }
+    return [recent copy];
 }
