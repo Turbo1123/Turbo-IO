@@ -2,6 +2,8 @@
 NS_ASSUME_NONNULL_BEGIN
 FOUNDATION_EXPORT NSDictionary *TIOWebSearchTool(void);
 FOUNDATION_EXPORT NSDictionary *TIOTodoCreateTool(void);
+FOUNDATION_EXPORT NSDictionary *TIOScheduleCreateTool(void);
+FOUNDATION_EXPORT NSDictionary *TIOAppleReminderCompletionTool(BOOL confirm);
 FOUNDATION_EXPORT NSDictionary *TIOKnowledgeTool(BOOL statusOnly);
 FOUNDATION_EXPORT NSDictionary * _Nullable TIOKnowledgeArguments(NSString *arguments,BOOL statusOnly);
 FOUNDATION_EXPORT NSString * _Nullable TIOTodoToolTitle(NSString *arguments);
@@ -23,6 +25,9 @@ FOUNDATION_EXPORT NSString *TIOWebNetworkErrorMessage(BOOL search,NSError *error
 // Installed by the phone integration only. Completion is metadata, never an
 // invented success. At most one mutating call per user request; no auto retry.
 @property(nonatomic,copy,nullable) void (^createTodo)(NSString *title, void (^completion)(NSDictionary *result));
+@property(nonatomic,copy,nullable) void (^createSchedule)(NSDictionary *schedule, void (^completion)(NSDictionary *result));
+@property(nonatomic,copy,nullable) void (^prepareReminderCompletion)(NSString *title, void (^completion)(NSDictionary *result));
+@property(nonatomic,copy,nullable) void (^confirmReminderCompletion)(void (^completion)(NSDictionary *result));
 @property(nonatomic,copy,nullable) void (^knowledgeQuery)(NSDictionary *input,BOOL statusOnly,void (^completion)(NSDictionary *result));
 @property(nonatomic,copy,nullable) void (^cancelKnowledge)(void);
 - (void)startEndpoint:(NSURL *)url key:(NSString *)key payload:(NSDictionary *)payload searchKey:(NSString *)searchKey;
