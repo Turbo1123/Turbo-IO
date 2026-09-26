@@ -1,0 +1,4 @@
+interface:
+  display_name: "Turbo IO 开发者"
+  short_description: "连接自己的 Server 与 MCP，构建仪表盘和有界眼镜原生应用"
+  default_prompt: "使用 $turboio-developer 从我的 Server 数据构建一个可校验、可导入的眼镜应用。"

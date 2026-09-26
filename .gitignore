@@ -1,4 +1,9 @@
 .DS_Store
+**/.venv/
+**/.state/
+**/__pycache__/
+**/.pytest_cache/
+*.pyc
 .env
 .env.*
 **/.build/

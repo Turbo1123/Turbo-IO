@@ -1,0 +1,33 @@
+name: Developer SDK
+on:
+  pull_request:
+    paths:
+      - 'dashboard-service/**'
+      - 'app-gallery/**'
+      - 'official-addon/research/**'
+      - 'skills/turboio-developer/**'
+      - '.github/workflows/developer-sdk.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'dashboard-service/**'
+      - 'app-gallery/**'
+      - 'official-addon/research/**'
+      - 'skills/turboio-developer/**'
+      - '.github/workflows/developer-sdk.yml'
+permissions:
+  contents: read
+jobs:
+  sdk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.8.22'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: uv sync --locked --directory dashboard-service
+      - run: uv run --directory dashboard-service pytest -q
