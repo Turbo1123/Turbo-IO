@@ -4,7 +4,11 @@
 
 原创代码仅供学习、研究与非商业使用，沿用 [PolyForm Noncommercial 1.0.0](LICENSE)，未经授权不得商用或收费分发。发布源码与明确列出的依赖，另在 Release 提供下述原厂砸壳 IPA 作为 iOS 扩展输入。**不提供已合并 Turbo IO 的 IPA / APK / HAP 成品包、个人预签名 App、签名证书、个人密钥或测试账号**。需要自行配置、编译和签名。
 
-**文档更新：2026-09-25** · 日期表示文档整理或所注明的实测记录，不代表当天全量回归。
+**文档更新：2026-09-26** · 日期表示文档整理或所注明的实测记录，不代表当天全量回归。
+
+**开发者新入口：[仪表盘与小应用 SDK 完整教程](docs/DEVELOPER_ECOSYSTEM.md) · [20 个 MCP 应用模板 / ZIP](app-gallery/README.md) · [自托管 API](dashboard-service/README.md) · [Agent 开发 Skill](skills/turboio-developer/SKILL.md)**
+
+MCP 在**用户自己的 Server** 上运行，眼镜不运行 MCP、浏览器或任意 JS。后端取数 → SDK 生成卡片或有界原生应用 → 手机确认 → 眼镜显示。公开模板均为离线示例，不附带账号、Key 或已授权在线服务；真机需要匹配的 TCE1/TAP1 运行时，旧 FOCUS-04 不自动兼容。
 
 ![Turbo IO 中秋焕新：全新 UI、四项菜单与微信读书、网易云音乐、原生番茄时钟](docs/screenshots/midautumn-update-wide-20260925.png)
 
@@ -37,6 +41,7 @@
 
 | 日期 | 更新 | 公开范围 |
 | --- | --- | --- |
+| 2026-09-26 | [开发者生态：应用广场、仪表盘与 App SDK](#developer-ecosystem) | 自托管 API / Python / MCP、20 个离线模板 ZIP、Agent Skill、协议参考源码；配套完整固件不在本次发布内 |
 | 2026-09-25 | [重磅更新：新 UI、四项菜单、原生番茄时钟](#focus-update) | FOCUS-04 原创源码、配套 iOS 插件与精确实刷实验固件；不含私人配置或网页正文适配 |
 | 2026-09-24 | [本地翻译与英语离线字幕](#local-translation) | Apple / Hy-MT2 / Parakeet 源码、模型下载与可选 iOS 构建；不含权重或密钥 |
 | 2026-09-24 | [微信读书：四本书架与阅读页](#weread-research) | TWR1 原创模块、构建工具与实刷实验固件；不含网页正文适配 |
@@ -45,6 +50,34 @@
 | 2026-09-22 | [ANIM60 本地动图](#animation-test) | 动图实验源码与独立固件候选；非通用动图上传 |
 
 > **自定义固件是试验用品，非开发者请勿刷。** AP 改动仍可能导致无法启动或失去 OTA；不要混用不同候选的固件、手机门禁或授权。原厂回滚不是救砖保证。实机成功不等于生产稳定版。
+
+<a id="developer-ecosystem"></a>
+
+### 2026-09-26 · 让自己的数据，成为眼镜里的应用
+
+应用广场分为 **我的应用 / 应用广场 / 开发指南**。保留四个基础示例，新增天气、降雨、通勤、余票、航班、日程、待办、知识便签、阅读摘记、代码与服务状态等 **20 个可修改的离线模板**。每个都有图标、内容、接入要求、ZIP 和可复制 Agent 提示词。眼镜最多安装四个小应用、一次运行一个，广场条目不会自动全部安装。
+
+```sh
+npx skills add Turbo1123/Turbo-IO --skill turboio-developer -g
+```
+
+把需求与选中的模板提示词交给 Agent，让它连接**你自己的 Server / MCP**，保留最少展示字段，生成并验证小包；密钥始终留在服务端。手机、仪表盘、应用包的开发与打包细节统一放在[开发教程](docs/DEVELOPER_ECOSYSTEM.md)，避免主 README 堆积命令。
+
+- **仪表盘 SDK**：256×194 卡片，文字 / 图标 / 图片 / 进度条 / 柱图 / 折线；后端草稿、revision、发布、手机批准与回执。
+- **App SDK**：540×180，最多四页，JS 仅用于开发电脑构建；ZIP 解压预算 20 KiB。眼镜使用有界原生组件，不执行 ZIP 中的代码。
+- **独立后端**：HTTP API、Python SDK、12 个 MCP 工具，无作者私有服务依赖。
+
+**边界：** 本版小应用使用版本化快照与手机手动导入，自动后台刷新、按钮回传 Server 和队列恢复尚未接通。20 个模板不是 20 项联网成品；公开 API/打包工具可以独立运行，手机模块是集成源码，不是签名安装包。私用匹配运行时的基础安装已有用户实测反馈，但本次不发布新的可刷固件，也不把模拟器测试当镜片验收。
+
+[20 个模板及来源](app-gallery/README.md) · [API 与安装步骤](docs/DEVELOPER_ECOSYSTEM.md) · [手机集成边界](official-addon/research/app-runtime-v1/README.md)
+
+<details>
+<summary>查看应用广场界面</summary>
+
+<img src="docs/screenshots/app-gallery-20260926.png" width="320" alt="应用广场：我的应用、应用广场、开发指南，模拟器中的真实代码界面" />
+
+隔离模拟器运行截图，不是镜片实拍，也不代表已连接上游 MCP。
+</details>
 
 <a id="focus-update"></a>
 
