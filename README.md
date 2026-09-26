@@ -96,14 +96,6 @@ npx skills add Turbo1123/Turbo-IO --skill turboio-developer -g
 
 ### 2026-09-25 · 中秋重磅更新：全新 UI 与 FOCUS-04
 
-<details>
-<summary>查看中秋更新横版效果图</summary>
-
-![Turbo IO 中秋焕新：全新 UI、四项菜单与微信读书、网易云音乐、原生番茄时钟](docs/screenshots/midautumn-update-wide-20260925.png)
-
-[完整更新长海报](docs/screenshots/midautumn-update-20260925.png)。界面效果示意，不是镜片实拍；微信读书公开版正文需自行合法导入。
-</details>
-
 1. **菜单重构**：眼镜菜单四项同屏，明显选中框，左上角时间与电量；详情页不再残留菜单滚动指示器。
 2. **修复遗留固件问题**：优化音乐旋钮轻触误切歌、文字边距、微信读书长按返回/退出与番茄页面重叠。
 3. **新增原生番茄时钟应用**：眼镜第十二项菜单，手机双向控制，短按暂停/继续、长按停止；息屏继续计时、到时空闲提醒，避免长期亮屏打扰。
@@ -112,6 +104,10 @@ npx skills add Turbo1123/Turbo-IO --skill turboio-developer -g
 **[FOCUS-04 固件与构建校验](firmware-research/strix-1.0.4.12/native-navigation/focus/README.md)** · **[配套手机构建和使用](official-addon/focus-edition/README.md)** · **[下载实验固件](https://github.com/Turbo1123/Turbo-IO/releases/tag/firmware-strix-1.0.4.12-tfp1-focus04)**
 
 基于 Strix OS 1.0.4.12，仅 AP 内容变化，其他 13 个固件负载不变；AP **9,558,216 字节**，低于 9,600,000 字节限制。2026-09-25 用户实刷并确认此版正常；仍是试验用品，不代表全场景稳定、不会变砖或可保证救砖。配套宿主为雷鸟 AI **iOS 1.0.5（201）**，不可与旧包/门禁混用。
+
+![Turbo IO 中秋焕新：全新 UI、四项菜单与微信读书、网易云音乐、原生番茄时钟](docs/screenshots/midautumn-update-wide-20260925.png)
+
+[完整更新长海报](docs/screenshots/midautumn-update-20260925.png)。界面效果示意，不是镜片实拍；微信读书公开版正文需自行合法导入。
 
 <details>
 <summary>查看首页、番茄时钟与音乐单独效果图</summary>
