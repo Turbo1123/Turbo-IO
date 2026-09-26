@@ -115,3 +115,7 @@ node android-addon/package.mjs /path/to/RayNeo_AI_1.0.4.apk
 下一步：扩大非 Root 设备与高德配置覆盖、模拟导航镜片验收、户外跟随/断连/退出、长期稳定性，再逐项移植待办、提词器、全天智记和其他 Agent。欢迎提交**脱敏**复现步骤，不要附 Key、个人录音、聊天、设备标识或官方包。
 
 原创代码沿用仓库 [PolyForm Noncommercial 1.0.0](../LICENSE)，仅非商业学习研究；第三方 App、SDK 和服务的权利与条款不因本项目改变。未经授权不得商用或收费分发。
+
+## 全天智记上下文（Android 1.0.5 源码候选）
+
+新增定稿文本采集、有界窗口队列、显式上传/恢复、主对话上下文工具及外部 Agent 只读接入示例。配置、数据保留和验证边界见 [Ambient context bridge](docs/AMBIENT_CONTEXT.md)。这是源码集成，查询鉴权通过不代表录音上传或完整 Agent 链路已经验收。
