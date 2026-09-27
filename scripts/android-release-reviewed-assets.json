@@ -1,6 +1,7 @@
 {
   "note": "Exact reviewed synthetic art, existing public gallery ZIPs checked by PrivateArtifactAudit, and byte-identical previously published animation resource; no user screenshots or credentials.",
   "files": {
+    "docs/screenshots/android-ios-release-hero-20260927.png": "a4dd272488989648f828d2386225e521b2db00fd495d2d2949f158be376d6ef0",
     "android-addon/assets/art/app-gallery.png": "39a47976f6496c3bff5f94f7d22cf490db7fe46d4815ccf2d18867b0e8d99097",
     "android-addon/assets/art/dashboard-editor.png": "fff2d8f0dead14a989866462e2fa4b928266336a055acb626ab83b0babb5ca3a",
     "android-addon/assets/art/focus-tomato-v2.png": "e8b3fceb63f1d19138c256a1d108ca8a2e33c132cf79f6313cd0c88d40bb553a",

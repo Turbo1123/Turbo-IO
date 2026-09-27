@@ -1,5 +1,7 @@
 # Turbo IO · 原生鸿蒙 HarmonyOS SDK 与研究客户端
 
+> **停止更新（2026-09-27）**：本目录保留既有研究源码和历史验收记录，作者不再维护、移植新功能或适配新固件。下面的“当前版本”和能力描述均指历史研究版本，不代表与最新 iOS / Android 同步。已知问题不再安排修复，后续开发请自行评估。
+
 面向开发者的雷鸟 iO / RayNeo iO **原生 HarmonyOS** 客户端，ArkTS / ArkUI + BLE 协议 HAR。不运行 Android APK，不注入官方 App，也不需要 Root。
 
 **这是学习研究用源码，不是给小白下载即用的成品。只发布源码，不提供 HAP / IPA / APK、预签名包、代签服务、证书或任何维护者 Key。** 沿用仓库 [PolyForm Noncommercial 1.0.0](../LICENSE)，仅非商业使用；第三方组件保留各自许可。
