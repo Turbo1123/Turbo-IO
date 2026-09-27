@@ -4,17 +4,19 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import {execFileSync} from 'node:child_process';
-import {fileURLToPath} from 'node:url';
+import {profileFor,verifyHost} from './host-profiles.mjs';
+import {queueHook,fileHook,EVENT_GUARD} from './ota-hooks.mjs';
 
-const root=path.dirname(fileURLToPath(import.meta.url));
-const host=path.join(root,'build/host-104');
+const root=path.dirname(new URL(import.meta.url).pathname);
 const source=process.argv[2];
-if(!source) throw new Error('Usage: node android-addon/package.mjs /path/to/RayNeo_AI_1.0.4.apk');
-const dex=path.join(root,'build/dex/classes.dex');
-if(!fs.existsSync(dex)) throw new Error('Build the original addon first: bash android-addon/build.sh');
+if(!source) throw new Error('Usage: node android-addon/package.mjs /path/to/supported-RayNeo.apk');
 const sha=crypto.createHash('sha256').update(fs.readFileSync(source)).digest('hex');
-if(sha!=='ef2e7dd346ca478e13d0f3f1bf31fa61412e44fb9b4ca9cf0d3e864ac608584b') throw new Error('Unsupported APK; refusing to guess offsets/classes');
+const profile=profileFor(sha),host=path.join(root,'build',profile.directory);
+if(profile.version!=='1.0.5')throw new Error('INTEGRATION-07 OTA adapter only supports pinned 1.0.5 (201); use the prior builder for 1.0.4');
 if(!fs.existsSync(host)) execFileSync('apktool',['d','--no-res','--output',host,source],{stdio:'inherit'});
+// No writes until every required callback/transport descriptor has been checked.
+const abi=verifyHost(host,profile);
+if(abi.ota){fs.writeFileSync(abi.ota.queue,queueHook(fs.readFileSync(abi.ota.queue,'utf8')));fs.writeFileSync(abi.ota.sender,fileHook(fs.readFileSync(abi.ota.sender,'utf8')));}
 
 function wrap(file,name,signature,args,returnMode) {
   let text=fs.readFileSync(file,'utf8');
@@ -43,13 +45,13 @@ function wrap(file,name,signature,args,returnMode) {
   text+='\n'+header+'\n    .locals 1\n'+body+'\n    .catch Ljava/lang/Throwable; {:turboio_try .. :turboio_try_end} :turboio_error\n.end method\n';
   fs.writeFileSync(file,text);
 }
-const listener=path.join(host,'smali_classes2/H7/c$c.smali');
+const listener=abi.listener;
 wrap(listener,'onAsrResult','(Ljava/lang/String;ZLjava/lang/String;)V','p0 .. p3','after');
 wrap(listener,'onNlpResult','(Lcom/rayneo/airuntime/controller/NlpResult;)V','p0 .. p1','guard');
 wrap(listener,'onResponseComplete','()V','p0 .. p0','guard');
-wrap(path.join(host,'smali_classes2/com/rayneo/venus/MainActivity.smali'),'onPostResume','()V','p0 .. p0','after');
-// Preserve all official event delivery, observe only business-19 metadata afterward.
-const eventFile=path.join(host,'smali_classes2/com/rayneo/rayneo_venus_sdk_plugin/j.smali');
+wrap(abi.activity,'onPostResume','()V','p0 .. p0','after');
+// Preserve official event delivery; observe bounded file and custom ACK metadata afterward.
+const eventFile=abi.event;
 let eventText=fs.readFileSync(eventFile,'utf8');
 const eventHeader='.method public final z(Ljava/lang/String;Ljava/util/Map;)V';
 if(eventText.includes('turboioOriginal_z(')) {
@@ -60,9 +62,10 @@ if(eventText.includes('turboioOriginal_z(')) {
   eventText=eventText.replace(eventHeader,'.method public final turboioOriginal_z(Ljava/lang/String;Ljava/util/Map;)V');
 }
 eventText+='\n'+eventHeader+`\n    .locals 1
+${abi.ota?EVENT_GUARD:''}
     invoke-virtual {p0, p1, p2}, Lcom/rayneo/rayneo_venus_sdk_plugin/j;->turboioOriginal_z(Ljava/lang/String;Ljava/util/Map;)V
     :turboio_nav_try
-    invoke-static {p1, p2}, Lcom/turboio/addon/NavGlasses;->event(Ljava/lang/String;Ljava/util/Map;)V
+    invoke-static {p1, p2}, Lcom/turboio/addon/NativeTransfer;->event(Ljava/lang/String;Ljava/util/Map;)V
     :turboio_nav_end
     return-void
     :turboio_nav_error
@@ -71,16 +74,15 @@ eventText+='\n'+eventHeader+`\n    .locals 1
     .catch Ljava/lang/Throwable; {:turboio_nav_try .. :turboio_nav_end} :turboio_nav_error
 .end method\n`;
 fs.writeFileSync(eventFile,eventText);
-const output=path.join(root,'build/TurboIO-RayNeo-1.0.4-unsigned.apk');
-execFileSync('apktool',['b',host,'-o',output],{stdio:'inherit'});
-const entries=execFileSync('unzip',['-Z1',output],{encoding:'utf8'}).trim().split('\n');
-if(entries.includes('classes4.dex')) throw new Error('Unexpected classes4.dex collision');
-const staged=path.join(root,'build/classes4.dex');
-fs.copyFileSync(dex,staged);
-execFileSync('zip',['-q','-j',output,staged]);
-const report={sourceSha256:sha,sourceVersion:'1.0.4 (195)',originalSignaturePreserved:false,
-  changes:['ASR observer','NLP/complete guards','onPostResume native entry','business19 display events','classes4.dex addon'],
+const output=path.join(root,'build/TurboIO-RayNeo-'+profile.version+'-unsigned.apk');
+const assembled=path.join(root,'build/TurboIO-RayNeo-'+profile.version+'-assembled.apk');
+execFileSync('apktool',['b',host,'-o',assembled],{stdio:'inherit'});
+const dex=path.join(root,'build/dex/classes.dex');
+execFileSync('python3',[path.join(root,'assemble_apk.py'),source,assembled,dex,output,'--public-assets'],{stdio:'inherit'});
+execFileSync('python3',[path.join(root,'verify_apk.py'),source,output,'--public-assets'],{stdio:'inherit'});
+const report={sourceSha256:sha,sourceVersion:profile.version+' ('+profile.code+')',originalSignaturePreserved:false,
+  changes:['ASR observer','NLP/complete guards','onPostResume native entry','bounded event observer; exclusive business9 before-vendor interception','version-pinned OTA queue and file gates','classes4.dex addon','allowlisted public editorial assets and 20 SDK gallery ZIPs','TTS visibility; non-exported task and dedicated OTA foreground services'],
   credentialsBundled:false,outputSha256:crypto.createHash('sha256').update(fs.readFileSync(output)).digest('hex'),
   installed:false,nonRootValidated:false};
-fs.writeFileSync(path.join(root,'build/package-report.json'),JSON.stringify(report,null,2)+'\n');
+fs.writeFileSync(path.join(root,'build/package-report-'+profile.version+'.json'),JSON.stringify(report,null,2)+'\n');
 console.log('Unsigned private derivative prepared; signing and non-root acceptance still required.');

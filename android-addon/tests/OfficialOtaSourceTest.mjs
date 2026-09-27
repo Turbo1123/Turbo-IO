@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {patchAndroidSource,slots} from '../official-ota-source.mjs';
+const original=fs.readFileSync(new URL('../build/host-105/lib/arm64-v8a/libapp.so',import.meta.url));
+const {output,report}=patchAndroidSource(original);
+assert.equal(output.length,original.length);assert.equal(report.changes.length,2);
+for(const s of slots)assert.equal(output[s.offset-1],original[s.offset-1]);
+assert.deepEqual(patchAndroidSource(original).output,output);
+assert.throws(()=>patchAndroidSource(output));
+const corrupt=Buffer.from(original);corrupt[100]^=1;assert.throws(()=>patchAndroidSource(corrupt));
+assert.throws(()=>patchAndroidSource(original.subarray(1)));
+console.log('Android source routing: fixed input, length/hash, byte allowlist, wrong-input and repeated-patch tests passed');

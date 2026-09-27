@@ -9,7 +9,7 @@ public final class NavGlasses {
     private static final Handler MAIN=new Handler(Looper.getMainLooper());
     private static volatile String device="",sid="",phase="idle";
     private static String note="眼镜显示未开启",latest="",sent="";
-    private static int textSubmitted,textCompleted;private static boolean navigationSession;
+    private static int textSubmitted,textCompleted;private static boolean navigationSession;private static long lifetime=240000,interval=3000;
     private static long deadline,started,lastSend;private static boolean pending;
     private static Runnable changed;
     public static void listen(Runnable r){changed=r;}
@@ -23,9 +23,10 @@ public final class NavGlasses {
         for(Object d:list)if(Boolean.TRUE.equals(NavReflect.call(d,"b"))){if(!found.isEmpty())throw new IllegalStateException("multiple");found=(String)NavReflect.field(d,"a");}return found;
     }
     public static String connection(){try{return connected().isEmpty()?"眼镜未连接":"已找到官方连接";}catch(Exception e){return "连接信息不可用";}}
-    public static boolean start(String text){return start(text,false);}
+    public static boolean start(String text){return start(text,false);} public static boolean startCaption(String text){boolean ok=start(text,false);if(ok){lifetime=3600000;interval=700;}return ok;}
     public static boolean start(String text,boolean navigation){
-        NavSessionPolicy.Action action=NavSessionPolicy.action(phase);
+        if(NativeNavigation.active()||ReaderBridge.active()||MusicBridge.active()||NativeTransfer.busy()){mark(phase,"请先结束原生导航或其他传输");return false;}
+        lifetime=240000;interval=3000;NavSessionPolicy.Action action=NavSessionPolicy.action(phase);
         if(action==NavSessionPolicy.Action.REUSE){
             try{if(!device.equals(connected())){stop();return false;}latest=NavCore.clip(text,384);navigationSession=navigation;mark("ready","复用本 App 已确认的显示会话，等待文字更新");return true;}
             catch(Exception e){stop();return false;}
@@ -59,9 +60,9 @@ public final class NavGlasses {
         try{
             if(phase.equals("starting")&&now>=deadline){stop();}
             else if(phase.equals("ready")){
-                if(now-started>=240000){stop();}
+                if(now-started>=lifetime){stop();}
                 else if(pending&&now>=deadline){stop();}
-                else if(!pending&&!latest.isEmpty()&&!latest.equals(sent)&&now-lastSend>=3000){
+                else if(!pending&&!latest.isEmpty()&&!latest.equals(sent)&&now-lastSend>=interval){
                     pending=true;deadline=now+8000;lastSend=now;sent=latest;
                     textSubmitted++;send(5,new JSONObject().put("sid",sid).put("mode",3).put("status",0).put("content",new JSONObject().put("source_transcript",latest)));
                 }
@@ -74,7 +75,7 @@ public final class NavGlasses {
         if(!kind.equals("messageReceived")||!active())return;
         try{Object raw=data.get("message");if(!(raw instanceof Map))return;Map<?,?> m=(Map<?,?>)raw;
             String d=String.valueOf(m.get("deviceId"));if(!d.equals(device))return;
-            String biz=String.valueOf(m.get("businessId"));if(!biz.equals("19")&&!biz.equals("AI_SUBTITLE"))return;
+            if(HostBusiness.id(m.get("businessId"))!=19)return;
             Object bytes=m.get("payload");if(!(bytes instanceof byte[]))return;
             NavCore.Envelope e=NavCore.decode((byte[])bytes);if(e==null)return;
             // Audio bodies are not retained, parsed or uploaded.

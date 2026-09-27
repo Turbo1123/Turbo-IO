@@ -1,0 +1,2 @@
+package android.app;import android.os.Bundle;
+public class Application extends android.content.Context {public ActivityLifecycleCallbacks callbacks;public void registerActivityLifecycleCallbacks(ActivityLifecycleCallbacks c){callbacks=c;}public interface ActivityLifecycleCallbacks {void onActivityCreated(Activity a,Bundle b);void onActivityStarted(Activity a);void onActivityResumed(Activity a);void onActivityPaused(Activity a);void onActivityStopped(Activity a);void onActivitySaveInstanceState(Activity a,Bundle b);void onActivityDestroyed(Activity a);}}

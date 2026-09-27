@@ -1,0 +1,37 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$id":"urn:turboio:dashboard:card:v1",
+ "title":"Turbo IO CardDocument v1",
+ "description":"Draft only. Must also pass TCEValidateDraft and TCEEncode; no Bluetooth or model side effects.",
+ "type":"object","additionalProperties":false,
+ "required":["schema","id","name","components"],
+ "properties":{
+  "schema":{"const":1,"type":"integer"},
+  "id":{"type":"string","pattern":"^turbo_ui_card_[a-z0-9_]+$","maxLength":48},
+  "name":{"type":"string","minLength":1,"maxLength":60},
+  "components":{"type":"array","minItems":1,"maxItems":12,"items":{"$ref":"#/$defs/component"}}
+ },
+ "$defs":{
+  "component":{
+   "type":"object","unevaluatedProperties":false,
+   "required":["id","kind","x","y","w","h"],
+   "properties":{
+    "id":{"type":"string","pattern":"^[a-z0-9_]+$","minLength":1,"maxLength":24},
+    "kind":{"enum":["text","icon","image","progress","barChart","lineChart","divider","frame"]},
+    "x":{"type":"integer","minimum":6,"maximum":248,"multipleOf":2},
+    "y":{"type":"integer","minimum":6,"maximum":186,"multipleOf":2},
+    "w":{"type":"integer","minimum":2,"maximum":244,"multipleOf":2},
+    "h":{"type":"integer","minimum":2,"maximum":182,"multipleOf":2}
+   },
+   "oneOf":[
+    {"properties":{"kind":{"const":"text"},"text":{"type":"string","minLength":1,"maxLength":96},"font":{"enum":[14,16,18,20,24,28]},"align":{"enum":["left","center","right"]}},"required":["text","font","align"]},
+    {"properties":{"kind":{"const":"icon"},"icon":{"type":"integer","minimum":0,"maximum":15},"w":{"enum":[16,24,32,48]},"h":{"enum":[16,24,32,48]}},"required":["icon"]},
+    {"properties":{"kind":{"const":"image"},"format":{"const":"mono1-msb"},"pixels":{"type":"string","minLength":1,"maxLength":384,"pattern":"^[A-Za-z0-9+/]+={0,2}$"},"w":{"enum":[16,24,32,48]},"h":{"enum":[16,24,32,48]}},"required":["format","pixels"]},
+    {"properties":{"kind":{"const":"progress"},"value":{"type":"integer","minimum":0,"maximum":100},"w":{"minimum":16},"h":{"maximum":12}},"required":["value"]},
+    {"properties":{"kind":{"enum":["barChart","lineChart"]},"w":{"minimum":64},"h":{"minimum":32},"points":{"type":"array","minItems":2,"maxItems":8,"items":{"type":"integer","minimum":0,"maximum":100}}},"required":["points"]},
+    {"properties":{"kind":{"const":"divider"},"w":{"minimum":8},"h":{"const":2}}},
+    {"properties":{"kind":{"const":"frame"},"w":{"minimum":16},"h":{"minimum":16}}}
+   ]
+  }
+ }
+}

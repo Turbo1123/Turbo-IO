@@ -28,7 +28,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/** Android research extension. No vendor SDK binaries or baked-in credentials. */
+/** Private Android pilot. No vendor SDK binaries or baked-in credentials. */
 public final class TurboAddon {
     private static final Handler MAIN = new Handler(Looper.getMainLooper());
     private static final ExecutorService IO = Executors.newSingleThreadExecutor();
@@ -48,13 +48,19 @@ public final class TurboAddon {
     private static int asrFinals, replacements, completions;
     private static final java.util.concurrent.atomic.AtomicInteger modelRequests = new java.util.concurrent.atomic.AtomicInteger();
     private static volatile int lastHttp;
-    private static final String REVISION = "android-source-v3r5-nav-simulation";
+    private static final String REVISION = "android-105-integration-08";
     private TurboAddon() {}
 
     public static void install(Activity host) {
         if (Looper.myLooper() != Looper.getMainLooper()) { MAIN.post(() -> install(host)); return; }
         app = host.getApplicationContext(); activity = new WeakReference<>(host);
         prefs = app.getSharedPreferences("turboio_settings", 0);
+        VoiceSpeech.init(app);
+        OtaController.init(app);
+        OfficialOtaPreparation.init(app);
+        OfficialOtaBridge.init(app);
+        BackgroundWork.init(app);MusicPlayer.init(app);ReaderLibrary.init(app);CloudCaption.init(app);BackgroundWork.register("新闻",NewsTele::stop);
+        NativeTransfer.init(app);FocusController.init(app);AppController.init(app);CardTransport.init();NativeNavigation.init(app);
         ViewGroup root = host.findViewById(android.R.id.content);
         if (root.findViewWithTag("turboio-entry") != null) return;
         TextView button = new TextView(host);
@@ -88,6 +94,7 @@ public final class TurboAddon {
         if (prefs != null) { cancel(); prefs.edit().putInt("mode", 1).apply(); }
     }
     private static void cancel() {
+        VoiceSpeech.stop("对话已打断或重置");
         generation++; owns = false; done = false; hasFinal = false; template = null; emitted = "";
         HttpURLConnection old = connection; connection = null;
         if (old != null) { Thread closer = new Thread(old::disconnect, "TurboIO-cancel"); closer.setDaemon(true); closer.start(); }
@@ -102,15 +109,22 @@ public final class TurboAddon {
         serial(() -> {
             try { invokeTyped(source,"onAsrResult",new Class<?>[]{String.class,boolean.class,String.class},new Object[]{text,finished,session}); }
             catch(Exception ignored) { diagnostic="官方 ASR 分发失败";return; }
+            if(text!=null&&!text.isEmpty())VoiceSpeech.asr(source,session,finished);
             onAsr(source,text,finished,session);
         });
     }
     public static void dispatchNlp(Object source,Object response) {
-        serial(() -> { if(!onNlp(source,response)) try {invoke(source,"onNlpResult",response);}catch(Exception ignored){diagnostic="官方 NLP 分发失败";} });
+        serial(() -> { if(!onNlp(source,response)) try {invoke(source,"onNlpResult",response);observeSpeech(source,response);}catch(Exception ignored){diagnostic="官方 NLP 分发失败";} });
     }
     public static void dispatchComplete(Object source) {
-        serial(() -> { if(!onComplete(source)) try {invoke(source,"onResponseComplete");}catch(Exception ignored){diagnostic="官方完成分发失败";} });
+        serial(() -> { if(!onComplete(source)) try {invoke(source,"onResponseComplete");VoiceSpeech.finish(source);}catch(Exception ignored){diagnostic="官方完成分发失败";} });
     }
+    private static void observeSpeech(Object source,Object response){try{
+        if(!ChatPolicy.eligible(str(get(response,"Domain")),str(get(response,"Intent")),str(get(response,"Sub")),Boolean.TRUE.equals(get(response,"Offline")),get(response,"Command")!=null))return;
+        // Do not duplicate an explicit vendor spoken response or mutate its metadata.
+        if(!str(get(response,"Spoken")).isEmpty()){VoiceSpeech.suppress();return;}
+        VoiceSpeech.delta(source,str(get(response,"SessionId")),str(get(response,"Answer")),Boolean.TRUE.equals(get(response,"Finished")));
+    }catch(Exception ignored){}}
     public static void onAsr(Object source, String text, boolean finished, String session) {
         if (app == null || mode() == 0 || Boolean.TRUE.equals(BYPASS.get()) || text == null || text.isEmpty()) return;
         if (Looper.myLooper() != Looper.getMainLooper()) { diagnostic = "非主线程 ASR，保留官方"; return; }
@@ -199,6 +213,7 @@ public final class TurboAddon {
         try {
             if (!delta.isEmpty() || finalChunk) invoke(listener, "onNlpResult", copy(template, delta, finalChunk));
             emitted = text;
+            if(failure==null)VoiceSpeech.custom(listener,sid,text,finalChunk);else VoiceSpeech.stop("回答失败，停止朗读");
             if (finalChunk) {
                 done = true; invoke(listener, "onResponseComplete"); completions++;
                 diagnostic = failure == null ? "回复完成，已交给官方收尾" : "自有请求失败，已收尾";
@@ -339,6 +354,9 @@ public final class TurboAddon {
         box.addView(field); return field;
     }
     public static void showHome() {
+        Activity current=host();if(current!=null)EditorialUI.home(current);
+    }
+    private static void showLegacyHome() {
         Activity host = host(); if(host == null) return;
         LinearLayout box=TurboStyle.column(host);
         box.addView(TurboStyle.text(host,"眼镜的智能控制中心",16,TurboStyle.MUTED));TurboStyle.gap(host,box,18);
@@ -353,11 +371,12 @@ public final class TurboAddon {
         TurboStyle.row(host,box,"≋","录音与全天智记","选择本机音频，导出或分享",()->{dialog.dismiss();RecordingExports.show(host,false);});
         TurboStyle.row(host,box,"▤","文字与对话存档","Markdown · 本机转写 · 系统分享",()->new AlertDialog.Builder(host).setTitle("导出内容").setItems(new String[]{"分享 AI 对话 Markdown","选择本机转写文件"},(d,w)->{dialog.dismiss();if(w==0)shareArchive(host);else RecordingExports.show(host,true);}).setNegativeButton("取消",null).show());
         TurboStyle.button(host,box,"诊断与测试",false,()->new AlertDialog.Builder(host).setTitle("诊断 · 不含密钥").setMessage(status()+"\n"+NavGlasses.connection()+"\n"+NavGlasses.status()).setNeutralButton("随机回复",(d,w)->setTestMode()).setNegativeButton("清空上下文",(d,w)->{cancel();HISTORY.clear();}).setPositiveButton("关闭",null).show());
-        TurboStyle.gap(host,box,14);box.addView(TurboStyle.text(host,"ANDROID  /  非商业研究扩展\n保留官方连接与原有功能。自行构建、签名与配置服务；不同设备需独立验收。",12,TurboStyle.MUTED));
+        TurboStyle.gap(host,box,14);box.addView(TurboStyle.text(host,"ANDROID  /  1.0.5 移植基线\n保留官方连接与原有功能。当前仍是旧功能基线，不代表已完成 iOS 全量移植。",12,TurboStyle.MUTED));
     }
-    private static void showSettings() {
+    static void showSettings() {
         Activity host = host(); if(host == null) return;
         LinearLayout box = panel(host); ScrollView scroll = new ScrollView(host); scroll.addView(box);
+        action(host,box,"回答同步朗读 · 本机 TTS",()->VoiceSpeech.show(host));
         Spinner select = new Spinner(host); select.setAdapter(new ArrayAdapter<>(host,android.R.layout.simple_spinner_dropdown_item,new String[]{"官方模型","随机测试回复","自有模型（HTTPS / SSE）"}));
         select.setSelection(mode()); box.addView(select);
         EditText endpoint = input(host,box,"完整 Chat Completions 地址",prefs.getString("endpoint","https://api.deepseek.com/chat/completions"),false);
@@ -365,7 +384,7 @@ public final class TurboAddon {
         EditText key = input(host,box,"API Key（留空保留现有值）","",true);
         label(host,box,"密钥使用 Android Keystore 加密保存，不显示、不写入日志。没有预填旧密钥。");
         EditText persona = input(host,box,"个人提示词",prefs.getString("persona","用简洁中文回答，内容显示在智能眼镜上。"),false);
-        label(host,box,"思考关闭 · 流式开启 · 最多 2048 输出 tokens\n近 50 条成功消息作为上下文；存档仅含扩展成功完成的回复，不读取官方历史。自有 TTS 未实现；重签后请独立验收插话与自动关闭。");
+        label(host,box,"思考关闭 · 流式开启 · 最多 2048 输出 tokens\n近 50 条成功对话作为上下文；存档仅含扩展成功完成的回复，不读取官方历史。声音、插话和自动息屏仍需本版实测。");
         AlertDialog dialog = new AlertDialog.Builder(host).setTitle("模型与对话").setView(scroll).setNegativeButton("返回",(d,w)->showHome()).setPositiveButton("保存",null).create();
         dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             try {
@@ -392,7 +411,7 @@ public final class TurboAddon {
             } catch(IOException ignored) { MAIN.post(()->Toast.makeText(host,"存档读取失败",Toast.LENGTH_LONG).show()); }
         });
     }
-    private static void showTools() {
+    static void showTools() {
         Activity host=host();if(host==null)return;
         LinearLayout box=panel(host);ScrollView scroll=new ScrollView(host);scroll.addView(box);
         Switch search=new Switch(host);search.setText("允许模型使用 TinyFish 搜索");search.setChecked(prefs.getBoolean("search",false));box.addView(search);

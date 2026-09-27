@@ -2,9 +2,11 @@
 
 面向开发者的雷鸟 iO 智能眼镜 SDK、手机 App 扩展与眼镜端应用研究项目，覆盖 **iOS、Android、原生鸿蒙 HarmonyOS**。从自有 AI、录音和 Agent 接入，进一步探索 **Turbo Display 显示测试、ANIM60 本地动图、原生导航**与 **TMU1 音乐封面/歌词应用**。不是给小白直接安装的成品 App。
 
-原创代码仅供学习、研究与非商业使用，沿用 [PolyForm Noncommercial 1.0.0](LICENSE)，未经授权不得商用或收费分发。发布源码与明确列出的依赖，另在 Release 提供下述原厂砸壳 IPA 作为 iOS 扩展输入。**不提供已合并 Turbo IO 的 IPA / APK / HAP 成品包、个人预签名 App、签名证书、个人密钥或测试账号**。需要自行配置、编译和签名。
+原创代码仅供学习、研究与非商业使用，沿用 [PolyForm Noncommercial 1.0.0](LICENSE)，未经授权不得商用或收费分发。除源码及明确列出的依赖，Release 提供原厂砸壳 IPA 作为 iOS 扩展输入，以及下述 **Android 1.0.5 非官方完整插件 APK / 高风险实验固件**。原厂部分版权仍归各自权利人，不因分发修改包而重新许可。**不提供个人密钥、Cookie、账号、签名私钥，亦不提供合并后的 IPA / HAP**；第三方服务由用户自行配置。
 
-**文档更新：2026-09-26** · 日期表示文档整理或所注明的实测记录，不代表当天全量回归。
+**文档更新：2026-09-27** · 日期表示文档整理或所注明的实测记录，不代表当天全量回归。
+
+**Android 新发行：[完整插件 APK + TAP1-TEST-01 固件](https://github.com/Turbo1123/Turbo-IO/releases/tag/android-105-guard07-tap1-test01) · [从安装到刷写的逐步教程](android-addon/docs/INSTALL_AND_FLASH.md)**。Fold3 / Android15 的官方升级路径已实刷成功；公开APK移除微信读书网页正文适配，保留书架和TXT阅读。**刷后必须只读回查并解除结果保护，否则安卓官方功能仍会被拦截。** 实验用品，非开发者请勿刷，不保证不会损坏设备。
 
 **开发者新入口：[仪表盘与小应用 SDK 完整教程](docs/DEVELOPER_ECOSYSTEM.md) · [20 个 MCP 应用模板 / ZIP](app-gallery/README.md) · [自托管 API](dashboard-service/README.md) · [Agent 开发 Skill](skills/turboio-developer/SKILL.md)**
 
@@ -14,7 +16,7 @@ MCP 在**用户自己的 Server** 上运行，眼镜不运行 MCP、浏览器或
 
 **BIG STEP · 从功能，到生态。** 不止使用我们做好的功能：把你自己的数据源，变成眼镜里的仪表盘和原生小应用。[本次更新与价值](#developer-ecosystem) · [从第一个模板开始](docs/DEVELOPER_ECOSYSTEM.md)
 
-*横版为 AI 生成的开发者生态效果示意，不是镜片实拍；图中数据与界面为示例，音乐模板不播放音频。开放的是开发接口与有界组件能力，不是无限系统权限；配套完整新固件不在本次发布内。*
+*横版为 AI 生成的开发者生态效果示意，不是镜片实拍；图中数据与界面为示例，音乐模板不播放音频。开放的是开发接口与有界组件能力，不是无限系统权限。配套TAP1实验固件现单独发布，见上方Android新发行。*
 
 **[☕ 支持项目 · 微信捐赠](#support)**
 
@@ -41,6 +43,7 @@ MCP 在**用户自己的 Server** 上运行，眼镜不运行 MCP、浏览器或
 
 | 日期 | 更新 | 公开范围 |
 | --- | --- | --- |
+| 2026-09-27 | [Android 1.0.5 完整插件与官方流程 OTA](android-addon/docs/INSTALL_AND_FLASH.md) | 去除网页正文适配的完整APK、扩展源码、TAP1-TEST-01原样实刷固件、校验与逐步教程；高风险实验版 |
 | 2026-09-26 | [开发者生态：应用广场、仪表盘与 App SDK](#developer-ecosystem) | 自托管 API / Python / MCP、20 个离线模板 ZIP、Agent Skill、协议参考源码；配套完整固件不在本次发布内 |
 | 2026-09-25 | [重磅更新：新 UI、四项菜单、原生番茄时钟](#focus-update) | FOCUS-04 原创源码、配套 iOS 插件与精确实刷实验固件；不含私人配置或网页正文适配 |
 | 2026-09-24 | [本地翻译与英语离线字幕](#local-translation) | Apple / Hy-MT2 / Parakeet 源码、模型下载与可选 iOS 构建；不含权重或密钥 |

@@ -1,0 +1,28 @@
+package com.turboio.addon;
+import java.lang.reflect.*;import java.util.*;import android.os.SystemClock;
+public class MusicFlowTest {
+ static int n,commands;static long event;static void ok(boolean b){n++;if(!b)throw new AssertionError(n+": "+MusicBridge.status());}
+ static void pump()throws Exception{Method m=MusicBridge.class.getDeclaredMethod("pump");m.setAccessible(true);m.invoke(null);}
+ static byte[] envelope(byte[] raw){StringBuilder hex=new StringBuilder();for(byte b:raw)hex.append(String.format("%02x",b&255));byte[] json=("{\"cmd\":\"turbo_music_v1\",\"payload\":{\"data\":\""+hex+"\"}}").getBytes(java.nio.charset.StandardCharsets.UTF_8);java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream();out.write(8);out.write(1);out.write(16);out.write(6);out.write(26);int l=json.length;while(l>=128){out.write((l&127)|128);l>>>=7;}out.write(l);out.write(json,0,json.length);return out.toByteArray();}
+ static void reply(String peer,int e,int result,long gen,long seq,long request){byte[] b=new byte[32];b[0]='T';b[1]='M';b[2]='A';b[3]='1';b[4]=1;b[5]=(byte)e;b[6]=(byte)result;MusicCodec.put(b,8,NativeTransfer.session);MusicCodec.put(b,12,gen);MusicCodec.put(b,16,seq);MusicCodec.put(b,20,request);MusicCodec.put(b,28,FocusCodec.crc(b,28));NativeTransfer.receiver.message(peer,envelope(b));}
+ public static void main(String[] args)throws Exception{
+ MusicBridge.init(new android.content.Context(),new MusicBridge.Source(){public byte[] state(long e){event=e;return MusicCodec.state(1000,300000,true,1,e,"Test","Artist");}public void command(int e){commands++;}});
+ byte[] cover=new byte[MusicCodec.COVER_BYTES];List<MusicCodec.Line> lines=Arrays.asList(new MusicCodec.Line(0,"test"));MusicBridge.open(cover,lines);ok(MusicBridge.active()&&MusicBridge.busy());ok(NativeTransfer.sent[5]==1);
+ int sent=NativeTransfer.sends;MusicBridge.open(cover,lines);ok(NativeTransfer.sends==sent);reply("other",0,0,1,NativeTransfer.request,0);ok(MusicBridge.busy());reply("glasses",0,0,2,NativeTransfer.request,0);ok(MusicBridge.busy());reply("glasses",0,0,1,NativeTransfer.request+1,0);ok(MusicBridge.busy());reply("glasses",0,0,1,NativeTransfer.request,0);ok(!MusicBridge.busy());
+ SystemClock.now+=200;pump();ok(NativeTransfer.sent[5]==4);reply("glasses",0,0,1,NativeTransfer.request,0);SystemClock.now+=200;pump();ok(NativeTransfer.sent[5]==3);reply("glasses",0,0,1,NativeTransfer.request,0);
+ reply("glasses",4,0,1,NativeTransfer.request,45);ok(commands==1);reply("glasses",4,0,1,NativeTransfer.request,45);ok(commands==1);SystemClock.now+=200;pump();ok(NativeTransfer.sent[5]==2&&event==45);reply("glasses",0,0,1,NativeTransfer.request,0);
+ MusicBridge.close();SystemClock.now+=200;pump();ok(NativeTransfer.sent[5]==5);reply("glasses",0,0,1,NativeTransfer.request,0);ok(!MusicBridge.active());
+ MusicBridge.open(cover,lines);reply("glasses",0,4,1,NativeTransfer.request,0);ok(!MusicBridge.active()&&!MusicBridge.busy());sent=NativeTransfer.sends;MusicBridge.open(cover,lines);ok(NativeTransfer.sends==sent);MusicBridge.resetAfterUserConfirmation();MusicBridge.open(cover,lines);ok(MusicBridge.active());
+ NativeTransfer.complete(TransferGate.State.UNCERTAIN,0);ok(!MusicBridge.active());MusicBridge.resetAfterUserConfirmation();MusicBridge.open(cover,lines);reply("glasses",0,0,1,NativeTransfer.request,0);NativeTransfer.peer="different";SystemClock.now+=200;pump();ok(!MusicBridge.active());
+ MusicBridge.resetAfterUserConfirmation();NativeTransfer.peer="glasses";MusicBridge.open(null,Collections.emptyList());SystemClock.now+=4000;reply("glasses",0,0,1,NativeTransfer.request,0);MusicBridge.assets(cover,lines);SystemClock.now+=200;pump();ok(NativeTransfer.sent[5]==MusicCodec.LYRICS);reply("glasses",0,0,1,NativeTransfer.request,0);SystemClock.now+=4000;pump();ok(NativeTransfer.sent[5]==MusicCodec.CLOCK);SystemClock.now+=4000;reply("glasses",0,0,1,NativeTransfer.request,0);SystemClock.now+=200;pump();ok(NativeTransfer.sent[5]==MusicCodec.COVER);reply("glasses",0,0,1,NativeTransfer.request,0);MusicBridge.close();SystemClock.now+=200;pump();reply("glasses",0,0,1,NativeTransfer.request,0);ok(!MusicBridge.active());
+ // BUSY during OPEN permits a fresh explicit attempt, but does not resend.
+ MusicBridge.open(cover,lines);long refused=NativeTransfer.session;reply("glasses",0,3,1,NativeTransfer.request,0);sent=NativeTransfer.sends;ok(!MusicBridge.active()&&!MusicBridge.busy());SystemClock.now+=5000;pump();ok(NativeTransfer.sends==sent);
+ MusicBridge.open(cover,lines);ok(MusicBridge.active()&&NativeTransfer.session>refused);reply("glasses",0,0,1,NativeTransfer.request,0);SystemClock.now+=200;pump();ok(NativeTransfer.sent[5]==MusicCodec.LYRICS);
+ // The same code on an established session must NOT unlock a new OPEN.
+ reply("glasses",0,3,1,NativeTransfer.request,0);sent=NativeTransfer.sends;MusicBridge.open(cover,lines);ok(!MusicBridge.active()&&NativeTransfer.sends==sent);
+ MusicBridge.resetAfterUserConfirmation();MusicBridge.open(cover,lines);NativeTransfer.complete(TransferGate.State.UNCERTAIN,3);sent=NativeTransfer.sends;MusicBridge.open(cover,lines);ok(!MusicBridge.active()&&NativeTransfer.sends==sent);
+ reply("other",1,0,1,NativeTransfer.request,91);MusicBridge.open(cover,lines);ok(!MusicBridge.active()&&NativeTransfer.sends==sent);
+ reply("glasses",1,0,1,NativeTransfer.request,91);MusicBridge.open(cover,lines);ok(MusicBridge.active());
+ NativeTransfer.complete(TransferGate.State.UNCERTAIN,0);sent=NativeTransfer.sends;reply("glasses",1,0,1,NativeTransfer.request,91);MusicBridge.open(cover,lines);ok(!MusicBridge.active()&&NativeTransfer.sends==sent);
+ System.out.println("MusicFlow: "+n+" checks (mock transport, not device evidence)");}
+}

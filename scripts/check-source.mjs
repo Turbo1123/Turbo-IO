@@ -55,6 +55,10 @@ const reviewedAnimationAssets=new Map([
 const focusReview=JSON.parse(fs.readFileSync(new URL('./focus-reviewed-assets.json',import.meta.url),'utf8'));
 for(const [p,h] of Object.entries(focusReview.media))reviewedScreenshots.set(p,h);
 for(const [p,h] of Object.entries(focusReview.largeText))reviewedLargeSources.set(p,h);
+// Hash-pinned Android release assets. Gallery ZIP contents are independently
+// inspected by android-addon/tests/PrivateArtifactAudit.py; no blanket exemption.
+const androidReview=JSON.parse(fs.readFileSync(new URL('./android-release-reviewed-assets.json',import.meta.url),'utf8'));
+for(const [p,h] of Object.entries(androidReview.files))reviewedScreenshots.set(p,h);
 export function audit(root){
   const findings=[];let files=0;
   const rules=[
