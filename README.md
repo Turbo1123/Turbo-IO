@@ -51,7 +51,7 @@ MCP 在**用户自己的 Server** 上运行，眼镜不运行 MCP、浏览器或
 
 | 日期 | 更新 | 公开范围 |
 | --- | --- | --- |
-| 2026-09-27 | [Android 1.0.5 完整插件与官方流程 OTA](android-addon/docs/INSTALL_AND_FLASH.md) | 去除网页正文适配的完整APK、扩展源码、TAP1-TEST-01原样实刷固件、校验与逐步教程；高风险实验版 |
+| 2026-09-27 | [Android 1.0.5 完整插件与官方流程 OTA](#android-release-update) | 去除网页正文适配的完整APK、扩展源码、TAP1-TEST-01原样实刷固件、校验与逐步教程；高风险实验版 |
 | 2026-09-26 | [开发者生态：应用广场、仪表盘与 App SDK](#developer-ecosystem) | 自托管 API / Python / MCP、20 个离线模板 ZIP、Agent Skill、协议参考源码；配套完整固件不在本次发布内 |
 | 2026-09-25 | [重磅更新：新 UI、四项菜单、原生番茄时钟](#focus-update) | FOCUS-04 原创源码、配套 iOS 插件与精确实刷实验固件；不含私人配置或网页正文适配 |
 | 2026-09-24 | [本地翻译与英语离线字幕](#local-translation) | Apple / Hy-MT2 / Parakeet 源码、模型下载与可选 iOS 构建；不含权重或密钥 |
@@ -61,6 +61,16 @@ MCP 在**用户自己的 Server** 上运行，眼镜不运行 MCP、浏览器或
 | 2026-09-22 | [ANIM60 本地动图](#animation-test) | 动图实验源码与独立固件候选；非通用动图上传 |
 
 > **自定义固件是试验用品，非开发者请勿刷。** AP 改动仍可能导致无法启动或失去 OTA；不要混用不同候选的固件、手机门禁或授权。原厂回滚不是救砖保证。实机成功不等于生产稳定版。
+
+<a id="android-release-update"></a>
+
+### 2026-09-27 · Android 1.0.5 完整插件与实验 OTA
+
+![Turbo IO Android 1.0.5 更新：六类功能、配套实验固件与刷后释放保护说明](docs/screenshots/android-release-update-wide-20260927.png)
+
+**[下载完整 APK / TAP1-TEST-01 / 校验文件](https://github.com/Turbo1123/Turbo-IO/releases/tag/android-105-guard07-tap1-test01) · [完整安装与刷机教程](android-addon/docs/INSTALL_AND_FLASH.md) · [公开范围与源码构建](android-addon/README.md)**
+
+*横版更新说明由 imagegen 生成，不是实机截图，也不能代替完整教程。公开 APK 不含微信读书网页正文适配或私人配置；公开派生包尚未再次实机刷写。眼镜自然重启后，必须按教程只读回查并解除结果保护；更新未结束或状态不明时不能释放。*
 
 <a id="developer-ecosystem"></a>
 
