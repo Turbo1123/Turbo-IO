@@ -66,3 +66,11 @@ xcrun clang -fobjc-arc -fmodules -Wall -Wextra -Wno-unused-parameter -Wno-incomp
 ./build/navigation-tele-tests
 xcrun clang -fobjc-arc -fmodules -Wno-incompatible-pointer-types -framework Foundation A2UIProtocol.m A2UIProtocolTests.m -o build/a2ui-protocol-tests
 ./build/a2ui-protocol-tests
+node --test package.test.mjs
+(
+  cd focus-edition
+  mkdir -p build
+  xcrun clang -fobjc-arc -fmodules -Wall -Wextra -framework Foundation CueCardsCore.m CueCardsCoreTests.m reader.c -o build/cue-cards-core-tests
+  ./build/cue-cards-core-tests
+)
+python3 ../firmware-research/strix-1.0.4.12/native-navigation/workout/test_overlay.py

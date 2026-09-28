@@ -55,6 +55,7 @@ MCP 在**用户自己的 Server** 上运行，眼镜不运行 MCP、浏览器或
 
 | 日期 | 更新 | 公开范围 |
 | --- | --- | --- |
+| 2026-09-28 | [iOS 提词卡与 Apple Watch 户外跑步看板](#ios-cue-cards-watch) | FOCUS-04 集成源码、Watch companion 与 TWK1 固件研究覆盖层；本分支无签名编译和离线回归通过 |
 | 2026-09-27 | [Android 1.0.5 完整插件与官方流程 OTA](#android-release-update) | 去除网页正文适配的完整APK、扩展源码、TAP1-TEST-01原样实刷固件、校验与逐步教程；高风险实验版 |
 | 2026-09-26 | [开发者生态：应用广场、仪表盘与 App SDK](#developer-ecosystem) | 自托管 API / Python / MCP、20 个离线模板 ZIP、Agent Skill、协议参考源码；配套完整固件不在本次发布内 |
 | 2026-09-25 | [重磅更新：新 UI、四项菜单、原生番茄时钟](#focus-update) | FOCUS-04 原创源码、配套 iOS 插件与精确实刷实验固件；不含私人配置或网页正文适配 |
@@ -65,6 +66,16 @@ MCP 在**用户自己的 Server** 上运行，眼镜不运行 MCP、浏览器或
 | 2026-09-22 | [ANIM60 本地动图](#animation-test) | 动图实验源码与独立固件候选；非通用动图上传 |
 
 > **自定义固件是试验用品，非开发者请勿刷。** AP 改动仍可能导致无法启动或失去 OTA；不要混用不同候选的固件、手机门禁或授权。原厂回滚不是救砖保证。实机成功不等于生产稳定版。
+
+<a id="ios-cue-cards-watch"></a>
+
+### 2026-09-28 · iOS 提词卡与 Apple Watch 户外跑步看板
+
+本次在 Turbo IO 原有 FOCUS-04 iOS 集成源码上增加了**手机提词卡管理、Apple Watch 新增与翻页、三端卡片同步，以及 HealthKit 户外跑步到眼镜的 TWK1 运动看板**。提词卡可手动创建、编辑、导入 Markdown/JSON/TXT，也可把用户材料交给已配置的模型生成草稿；跑步数据由 Apple Watch 采集，经 iPhone 中继后显示在眼镜上，并由系统保存为 Apple 健康运动记录。
+
+**[提词卡与跑步看板规格、构建边界和变更记录](docs/IOS_CUE_CARDS_AND_OUTDOOR_RUN.md) · [Turbo IO iOS 插件与签名要求](official-addon/README.md) · [FOCUS-04 集成版](official-addon/focus-edition/README.md)**
+
+这是源码集成，不提供合并后的 IPA、Watch 安装包或可刷写固件 ZIP。使用者需自行构建并签名 iPhone 插件和 Watch companion，眼镜端还需与提词卡菜单及 TWK1 匹配的 Strix OS 1.0.4.12 研究候选。本分支已通过手机和 Watch 无签名编译、打包预检与提词/协议/固件覆盖层离线回归，具体命令见综合规格。iPhone 是手表与眼镜之间的中继；持续锁屏传输、不同签名配置及固件发布包仍需单独验收。历史设备反馈不代表本 PR 分支已重新安装到设备。
 
 <a id="android-release-update"></a>
 

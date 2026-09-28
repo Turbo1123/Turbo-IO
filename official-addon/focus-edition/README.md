@@ -12,6 +12,7 @@
 - 默认本机 TTS；可自行设置模型、TinyFish、云端 TTS Endpoint/Key、地图 Key、个人身份提示词。高德需要自己的 iOS Key 和正确 Bundle ID。
 - 微信读书书架/统计与封面、本地 TXT/EPUB 正文。**不提供网页 Cookie 正文适配，不等于微信读书 Skill 可以取全文**。本机导入应为有权使用、无 DRM 的文件。
 - 本地翻译是可选动态模块，延用[公开翻译模块](../local-translation/README.md)；不附带模型权重。不配置模块时会提示未加载，不能把菜单入口当成已安装模型。
+- 提词卡、Watch companion 与户外跑步看板的新增源码见[专题规格](../../docs/IOS_CUE_CARDS_AND_OUTDOOR_RUN.md)。它们要求 `TIO_DISPLAY_PHONE=1`；构建 iPhone 集成包还要显式嵌入已签名 Watch app。眼镜端需要配套 TWK1 研究候选，本目录既有 FOCUS-04 固件包不含该候选。
 
 ## 构建
 

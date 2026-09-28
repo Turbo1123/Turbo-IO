@@ -2,6 +2,7 @@
 #import "NativeNavigation.h"
 #import "display_carrier.h"
 #import "DisplayDiagnostics.h"
+#include "../../firmware-research/strix-1.0.4.12/native-navigation/workout/workout_wire.h"
 static NSDictionary *ScopedArgs;
 BOOL TNVIsScopedCall(NSString *method,NSDictionary *args){return NSThread.isMainThread&&ScopedArgs&&args==ScopedArgs&&[method isEqual:@"rayneonet_sendFile"];}
 // Canonically rebuild every supported packet, rejecting mismatched lengths,
@@ -17,16 +18,16 @@ static BOOL Valid(NSData *d){return [d isKindOfClass:NSData.class]&&tn_packet_va
 }
 - (void)send:(NSData *)packet task:(NSString *)task submitted:(TNVSubmitted)done{
  NSAssert(NSThread.isMainThread,@"main only");if(!done)return;
- if(!Valid(packet)||!_root.isFileURL||!_device.length||!_current||![_current() isEqual:_device]||!_call||ScopedArgs||![task isKindOfClass:NSString.class]||![[NSUUID alloc]initWithUUIDString:task]){done(NO,nil);return;}
+ if(!(self.workoutProtocol ? ([packet isKindOfClass:NSData.class]&&tw_packet_valid(packet.bytes,packet.length)) : Valid(packet))||!_root.isFileURL||!_device.length||!_current||![_current() isEqual:_device]||!_call||ScopedArgs||![task isKindOfClass:NSString.class]||![[NSUUID alloc]initWithUUIDString:task]){done(NO,nil);return;}
  NSFileManager *fm=NSFileManager.defaultManager;NSError *err=nil;
  if(![fm createDirectoryAtURL:_root withIntermediateDirectories:YES attributes:@{NSFilePosixPermissions:@0700} error:&err]){done(NO,nil);return;}
  NSDictionary *attr=[fm attributesOfItemAtPath:_root.path error:&err];NSArray *items=[fm contentsOfDirectoryAtURL:_root includingPropertiesForKeys:nil options:0 error:&err];
  if(err||![attr[NSFileType] isEqual:NSFileTypeDirectory]||!items||items.count>=512){done(NO,nil);return;}
  NSURL *dir=[_root URLByAppendingPathComponent:task isDirectory:YES];
  if(![fm createDirectoryAtURL:dir withIntermediateDirectories:NO attributes:@{NSFilePosixPermissions:@0700} error:&err]){done(NO,nil);return;}
- NSURL *url=[dir URLByAppendingPathComponent:@"turbo-navigation.tnv"];
+ NSURL *url=[dir URLByAppendingPathComponent:self.workoutProtocol?@"turbo-workout.twk":@"turbo-navigation.tnv"];
  if(![packet writeToURL:url options:NSDataWritingWithoutOverwriting error:&err]){done(NO,nil);return;}
- [fm setAttributes:@{NSFilePosixPermissions:@0600} ofItemAtPath:url.path error:nil];
+ [fm setAttributes:@{NSFilePosixPermissions:@0600, NSFileProtectionKey:NSFileProtectionCompleteUntilFirstUserAuthentication} ofItemAtPath:url.path error:nil];
  NSDictionary *args=@{@"deviceId":_device,@"filePath":url.path,@"taskId":task};
  __block BOOL completed=NO;
  TNVSubmitted finish=^(BOOL ok,NSString *nativeTask){NSString *pinned=[nativeTask copy];dispatch_async(dispatch_get_main_queue(),^{if(completed)return;completed=YES;done(ok,pinned);});};

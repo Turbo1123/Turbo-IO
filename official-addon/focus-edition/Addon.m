@@ -17,6 +17,11 @@
 #import "NewsReader.h"
 #import "MusicPlayer.h"
 #import "ReaderUI.h"
+#if TIO_DISPLAY_PHONE
+#import "CueCards.h"
+#import "HeartRatePhoneUI.h"
+#import "WorkoutGlasses.h"
+#endif
 #import "TDPhoneBridge.h"
 #import "PrivateBootstrap.h"
 #import "ResearchCatalog.h"
@@ -455,6 +460,10 @@ static void AlwaysOnHook(id self,SEL cmd,id value) {
 #endif
     if([r[@"key"] isEqual:@"localTranslation"]){TIOOpenLocalTranslation(self);return;}
     if([r[@"key"] isEqual:@"diagnosticsRuntime"]){[self.navigationController pushViewController:TDDiagnosticsController() animated:YES];return;}
+#if TIO_DISPLAY_PHONE
+    if([r[@"key"] isEqual:@"cuecards"]){[self.navigationController pushViewController:TCCueCardsController() animated:YES];return;}
+    if([r[@"key"] isEqual:@"heartRate"]){[self.navigationController pushViewController:TIOHeartRatePhoneController() animated:YES];return;}
+#endif
     if([r[@"key"] isEqual:@"weread"]){[self.navigationController pushViewController:TWReaderController() animated:YES];return;}
     if([r[@"key"] isEqual:@"music"]){[self.navigationController pushViewController:TMMusicController() animated:YES];return;}
     if([r[@"key"] isEqual:@"knowledge"]){TIOOpenKnowledge(self);return;}
@@ -563,6 +572,18 @@ __attribute__((constructor)) static void Load(void) {
                 __block BOOL cancelled=NO;dispatch_async(dispatch_get_main_queue(),^{if(!cancelled)[request startQuestion:prompt];});
                 return [^{cancelled=YES;[request cancel];} copy];
             });
+#if TIO_DISPLAY_PHONE
+            TCCueCardsConfigure(^NSDictionary *{
+                NSString *endpoint=[Prefs stringForKey:@"endpoint"]?:@"";
+                NSURL *url=TIOValidateEndpoint(endpoint);NSString *key=ReadKey(endpoint);
+                if(!url||!key.length)return nil;
+                NSMutableDictionary *config=[@{@"url":url,@"key":key,@"model":[Prefs stringForKey:@"model"]?:@""} mutableCopy];
+                if([Prefs boolForKey:@"deepseekDisableThinking"])config[@"thinking"]=@{@"type":@"disabled"};
+                return config;
+            });
+            TCCueCardsStartWatch();
+            TWKSetup();
+#endif
             // Research rows are explicit routes now, not a chain of table hooks.
             [Prefs registerDefaults:@{@"voiceExitCommands":@YES,@"ttsEnabled":@YES,@"ttsEngine":@"local"}];
             // Do not automatically resume text capture or a model takeover after relaunch/crash.

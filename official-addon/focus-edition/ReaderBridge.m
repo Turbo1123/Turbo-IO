@@ -16,13 +16,15 @@ BOOL TWDecodeReply(NSDictionary *e,NSDictionary **out){if(![e isKindOfClass:NSDi
 }
 @implementation TWReaderBridge{
  TWTransport *_transport;NSString *_peer,*_task,*_nativeTask,*_note;NSData *_packet;NSMutableArray *_queue,*_early;
- NSDictionary *_job,*_pendingEvent;uint32_t _sid,_seq,_revision,_event;BOOL _ack,_fileDone,_submitted,_active,_failed;
+ NSDictionary *_job,*_pendingEvent,*_lastSnapshot;uint32_t _sid,_seq,_revision,_event;BOOL _ack,_fileDone,_submitted,_active,_failed,_retryLegacyOpen;
  NSTimeInterval _deadline,_next,_heartbeat;
  NSUInteger _transferTotal,_transferSent,_transferConfirmed;uint32_t _transferRevision;BOOL _transferStopped;
 }
 - (instancetype)init{if((self=[super init]))_queue=[NSMutableArray new];return self;}
 - (BOOL)busy{return _packet!=nil||_queue.count!=0;}
 - (BOOL)active{return _active;}
+- (NSDictionary *)lastSnapshot{return _lastSnapshot;}
+- (void)query{if(!_active||_failed||self.busy)return;_heartbeat=NSProcessInfo.processInfo.systemUptime;[self enqueue:WR_QUERY data:nil offset:_event revision:0];[self pump];}
 - (NSDictionary *)transferProgress {
  NSString *state=!_transferTotal?@"idle":_transferConfirmed==_transferTotal?@"complete":_transferStopped?@"stopped":@"sending";
  NSString *text=_transferTotal?[NSString stringWithFormat:@"共 %lu 包 · 已发送 %lu · 已确认 %lu · 剩余 %lu%@",(unsigned long)_transferTotal,(unsigned long)_transferSent,(unsigned long)_transferConfirmed,(unsigned long)(_transferTotal-_transferConfirmed),[state isEqual:@"complete"]?@" · 已收齐":[state isEqual:@"stopped"]?@" · 已停止":@""]:@"";
@@ -38,15 +40,19 @@ BOOL TWDecodeReply(NSDictionary *e,NSDictionary **out){if(![e isKindOfClass:NSDi
  @try{id c=((id(*)(id,SEL,id,id))objc_msgSend)(cls,make,method,args);((void(*)(id,SEL,id,id))objc_msgSend)(plugin,handle,c,[done copy]);return YES;}@catch(NSException *e){return NO;}}];return YES;
 }
 - (void)enqueue:(unsigned)op data:(NSData *)data offset:(uint32_t)offset revision:(uint32_t)revision{[_queue addObject:@{@"op":@(op),@"data":data?:NSData.data,@"offset":@(offset),@"revision":@(revision)}];}
-- (void)open{if(_active)return;if(_failed){_failed=NO;_transport=nil;_peer=nil;}if(![self setup])return;_active=YES;[self enqueue:WR_OPEN data:nil offset:0 revision:0];[self pump];}
+- (void)open{[self openWithKind:0];}
+- (void)openCueCards{[self openWithKind:3];}
+- (void)openWithKind:(uint32_t)kind{if(_active)return;if(_failed){_failed=NO;_transport=nil;_peer=nil;}if(![self setup])return;_retryLegacyOpen=NO;_active=YES;[self enqueue:WR_OPEN data:nil offset:kind revision:0];[self pump];}
 - (void)sendBody:(NSData *)body{if(!_active||_failed||!wr_validate(body.bytes,body.length)||self.busy){_note=@"当前仍在传输，等待眼镜回执后重试";return;}if(_revision==UINT32_MAX){[self close];return;}uint32_t rev=++_revision;uint8_t start[8];wr_put(start,(uint32_t)body.length);wr_put(start+4,wr_crc(body.bytes,body.length));[self enqueue:WR_BEGIN data:[NSData dataWithBytes:start length:8] offset:0 revision:rev];
  for(NSUInteger at=0;at<body.length;at+=480)[self enqueue:WR_CHUNK data:[body subdataWithRange:NSMakeRange(at,MIN(480,body.length-at))] offset:(uint32_t)at revision:rev];[self enqueue:WR_COMMIT data:nil offset:0 revision:rev];_transferTotal=_queue.count;_transferSent=_transferConfirmed=0;_transferRevision=rev;_transferStopped=NO;[self pump];
 }
 - (void)settings:(unsigned)speed automatic:(BOOL)automatic{if(!_active||speed<30||speed>480||self.busy)return;uint8_t b[8];wr_put(b,speed);wr_put(b+4,automatic);[self enqueue:WR_SETTINGS data:[NSData dataWithBytes:b length:8] offset:0 revision:0];[self pump];}
-- (void)close{if(!_active)return;_transferStopped=_transferTotal>_transferConfirmed;[_queue removeAllObjects];_pendingEvent=nil;[self enqueue:WR_CLOSE data:nil offset:0 revision:0];[self pump];}
+- (void)close{if(!_active)return;_retryLegacyOpen=NO;_transferStopped=_transferTotal>_transferConfirmed;[_queue removeAllObjects];_pendingEvent=nil;[self enqueue:WR_CLOSE data:nil offset:0 revision:0];[self pump];}
 - (void)fail:(NSString *)reason{_transferStopped=_transferTotal>_transferConfirmed;_failed=YES;_active=NO;[_queue removeAllObjects];_packet=nil;_pendingEvent=nil;_task=_nativeTask=nil;_early=nil;_note=reason;/* Unknown native ownership: preserve the on-disk file, never delete on timeout. */}
 - (void)finish{if(!_packet||!_ack||!_fileDone||!_submitted)return;if([self isTransferJob]&&_transferConfirmed<_transferTotal)_transferConfirmed++;[_transport cleanup:_task];unsigned op=[_job[@"op"]unsignedIntValue];if(op==WR_CLOSE){_active=NO;_transport=nil;_pendingEvent=nil;}
- _packet=nil;_task=_nativeTask=nil;_early=nil;_job=nil;_next=NSProcessInfo.processInfo.systemUptime+.12;_note=op==WR_COMMIT?@"眼镜已收齐本页，等待画面呈现":op==WR_CLOSE?@"已关闭阅读页面":[NSString stringWithFormat:@"已确认 %u 包 · 剩余 %lu",_seq,(unsigned long)_queue.count];
+ _packet=nil;_task=_nativeTask=nil;_early=nil;_job=nil;
+ if(op==WR_OPEN&&_retryLegacyOpen){_retryLegacyOpen=NO;[self enqueue:WR_OPEN data:nil offset:0 revision:0];}
+ _next=NSProcessInfo.processInfo.systemUptime+.12;_note=op==WR_COMMIT?@"眼镜已收齐本页，等待画面呈现":op==WR_CLOSE?@"已关闭阅读页面":[NSString stringWithFormat:@"已确认 %u 包 · 剩余 %lu",_seq,(unsigned long)_queue.count];
 }
 - (void)pump{NSTimeInterval now=NSProcessInfo.processInfo.systemUptime;if(_peer&&![_peer isEqual:TIOProtocolDevice()]){[self fail:@"连接已变化；本轮停止，重新连接后打开"];return;}if(_failed)return;if(_packet){if(now>=_deadline)[self fail:@"回执超时，已停止。请退出眼镜阅读页或等待90秒，再重新打开。"];return;}if(!_active||now<_next)return;
  if(!_queue.count&&_pendingEvent){NSDictionary *e=_pendingEvent;_pendingEvent=nil;if(self.command)self.command(e);}
@@ -58,10 +64,20 @@ BOOL TWDecodeReply(NSDictionary *e,NSDictionary **out){if(![e isKindOfClass:NSDi
 }
 - (BOOL)consume:(NSDictionary *)e{NSString *type=e[@"eventType"];if([@[@"fileShareSuccess",@"fileShareFailed"]containsObject:type]){if(![e[@"device"]isKindOfClass:NSDictionary.class]||![e[@"device"][@"id"]isEqual:_peer]||![e[@"role"]isEqual:@"sender"])return NO;if(!_nativeTask&&_packet){if(_early.count<8)[_early addObject:e];return NO;}if(![e[@"taskId"]isEqual:_nativeTask])return NO;if([type isEqual:@"fileShareFailed"]){[self fail:@"阅读传输失败"];return YES;}if(![e[@"fileName"]isEqual:@"turbo-reader.twr"])return NO;if(!_fileDone&&[self isTransferJob]&&_transferSent<_transferTotal)_transferSent++;_fileDone=YES;[self finish];return YES;}
  NSDictionary *q;if(!TWDecodeReply(e,&q))return NO;if(![e[@"message"][@"deviceId"]isEqual:TIOProtocolDevice()])return YES;unsigned event=[q[@"event"]unsignedIntValue];
+ if([q[@"sid"]unsignedIntValue]==_sid&&[q[@"sequence"]unsignedIntValue]==_seq)_lastSnapshot=q;
  if(event){if(event==WR_SHELF&&[q[@"sid"]unsignedIntValue]==0){if(!_active){_failed=NO;_transport=nil;_packet=nil;[_queue removeAllObjects];[self open];}return YES;}
   if([q[@"sid"]unsignedIntValue]!=_sid)return YES;if(event==WR_CLOSED){[self fail:[q[@"result"]unsignedIntValue]==WR_OK?@"眼镜已退出阅读":OpenFailure(q)];return YES;}
   uint32_t request=[q[@"request"]unsignedIntValue];if(request>_event){_event=request;_pendingEvent=q;}return YES;}
  if(!_packet||[q[@"sid"]unsignedIntValue]!=_sid||[q[@"sequence"]unsignedIntValue]!=_seq)return YES;
- if([q[@"result"]unsignedIntValue]!=WR_OK){[self fail:OpenFailure(q)];return YES;}_ack=YES;[self finish];return YES;
+ if([q[@"result"]unsignedIntValue]!=WR_OK){
+  if([_job[@"op"]unsignedIntValue]==WR_OPEN&&[_job[@"offset"]unsignedIntValue]==3&&[q[@"result"]unsignedIntValue]==WR_BAD){
+   /* Older TCC1/TWK1 rejects only the new OPEN mode. Retire this file using
+    * both native completion and its ACK before retrying the legacy OPEN. */
+   _retryLegacyOpen=[_queue.lastObject[@"op"]unsignedIntValue]!=WR_CLOSE;_ack=YES;[self finish];return YES;
+  }
+  /* Cancelling a rejected OPEN can reach a receiver with no session to close. */
+  if([_job[@"op"]unsignedIntValue]==WR_CLOSE&&[q[@"result"]unsignedIntValue]==WR_NO_SESSION){_ack=YES;[self finish];return YES;}
+  [self fail:OpenFailure(q)];return YES;
+ }_ack=YES;[self finish];return YES;
 }
 @end

@@ -1,4 +1,5 @@
 #import "DisplayPhoneUI.h"
+#import "WorkoutGlasses.h"
 #import "MusicPlayer.h"
 #import "ReaderUI.h"
 #import "FocusBridge.h"
@@ -24,7 +25,7 @@ static TDPPhoneSession *Session;
 static TDPPhoneTransport *Transport;
 static TDPNavFeed *NavFeed;
 BOOL TDPPhonePauseForOTA(void){
- if(!NSThread.isMainThread||!TFFocusIdleForOTA()||Session.busy||NavFeed.active||!TNVPauseForOTA()||!TDDiagnosticsPauseForOTA()||!TMMusicPauseForOTA()||!TWReaderPauseForOTA())return NO;
+ if(!NSThread.isMainThread||!TFFocusIdleForOTA()||Session.busy||NavFeed.active||!TWKIdle()||!TNVPauseForOTA()||!TDDiagnosticsPauseForOTA()||!TMMusicPauseForOTA()||!TWReaderPauseForOTA())return NO;
  [Session setForegroundActive:NO];return YES;
 }
 static NSString *Peer;
@@ -37,13 +38,14 @@ BOOL TDPPhoneConsumeEvent(NSDictionary *e){
  if(TFFocusConsume(e))return YES;
  if(TWReaderConsume(e))return YES;
  if(TMMusicConsume(e))return YES;
+ if(TWKConsume(e))return YES;
  if(TNVConsume(e))return YES;
  return [Session consumeEvent:e];
 }
 BOOL TDPPhoneRouteReply(NSDictionary *event,void(^completion)(BOOL)){
  if(![event isKindOfClass:NSDictionary.class]||![event[@"eventType"] isEqual:@"messageReceived"])return NO;
  NSDictionary *m=event[@"message"];if(![m isKindOfClass:NSDictionary.class]||![m[@"businessId"] isEqual:@15]||![m[@"payload"] isKindOfClass:NSData.class])return NO;
- NSData *data=m[@"payload"];TDPReply r;if(!TFDecodeReply(event)&&!TDPhoneReply(event)&&!TWDecodeReply(event,NULL)&&!TMMusicReply(event,NULL)&&!TNVDecodeReply(event,NULL)&&!tdp_carrier_decode(15,data.bytes,data.length,&r))return NO;
+ NSData *data=m[@"payload"];TDPReply r;if(!TFDecodeReply(event)&&!TDPhoneReply(event)&&!TWDecodeReply(event,NULL)&&!TMMusicReply(event,NULL)&&!TNVDecodeReply(event,NULL)&&!TWKDecodeReply(event,NULL)&&!TWKDecodeMenu(event,NULL,NULL,NULL)&&!tdp_carrier_decode(15,data.bytes,data.length,&r))return NO;
  NSDictionary *snapshot=[event copy];void(^work)(void)=^{completion(TDPPhoneConsumeEvent(snapshot));};
  if(NSThread.isMainThread)work();else dispatch_async(dispatch_get_main_queue(),work);return YES;
 }

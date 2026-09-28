@@ -46,7 +46,7 @@ fi
 # Keep the normal embedded build unchanged until the device comparison passes.
 if [[ ${TIO_DISPLAY_PHONE:-0} == 1 ]]; then
   [[ ${TIO_IMAGE_RX_LAB:-0} == 1 && "$mode" == embedded ]] || exit 2
-  image_options+=(-DTIO_DISPLAY_PHONE=1 -DTIO_DISPLAY_DIAGNOSTICS=1 -DTIO_NATIVE_NAV=1 nav_runtime.c NativeNavigation.m TNVTransport.m NativeNavigationUI.m display_runtime.c display_client.c display_carrier.c DisplayDelta.c DisplayNavigation.m DisplayHUDRenderer.m DisplayReplyObserver.m DisplayPhoneSession.m DisplayPhoneTransport.m DisplayPhoneUI.m DisplayDiagnostics.m)
+  image_options+=(-DTIO_DISPLAY_PHONE=1 -DTIO_DISPLAY_DIAGNOSTICS=1 -DTIO_NATIVE_NAV=1 -DTIO_HEART_RATE=1 nav_runtime.c NativeNavigation.m TNVTransport.m NativeNavigationUI.m display_runtime.c display_client.c display_carrier.c DisplayDelta.c DisplayNavigation.m DisplayHUDRenderer.m DisplayReplyObserver.m DisplayPhoneSession.m DisplayPhoneTransport.m DisplayPhoneUI.m DisplayDiagnostics.m WorkoutGlasses.m HeartRateWatchBridge.m HeartRatePhoneUI.m WorkoutDashboardCore.m TrainingDashboardRenderer.m CueCardsCore.m CueCards.m CueCardsUI.m -framework WatchConnectivity)
 fi
 if [[ ${TIO_DISPLAY_FLASH:-0} == 1 ]]; then
   [[ ${TIO_DISPLAY_PHONE:-0} == 1 && ${TIO_OTA_FLASH_ENABLED:-0} == 1 && "$mode" == embedded ]] || exit 2
@@ -63,6 +63,11 @@ xcrun --sdk iphoneos clang -arch arm64 -isysroot "$sdk_path" -miphoneos-version-
   ${image_options[@]+"${image_options[@]}"} \
   "-DTIO_TARGET_BUNDLE_ID=\"$bundle\"" -install_name "$install_name" ${link_options[@]+"${link_options[@]}"} \
   Core.m Profile.m ProfileUI.m KnowledgeClient.m KnowledgeUI.m HomeTabLayout.m HomeTabBridge.m ResearchCatalog.m ResearchUI.m NewsPresentation.m PrivateBootstrap.m WebSearch.m TodoProtocol.m TodoRuntime.m A2UIProtocol.m A2UIProbe.m NavigationCore.m NavigationTeleHUD.m NavigationTransport.m NavigationUI.m ManualHUD.m SubtitleHUDCore.m SubtitleHUD.m GlassesLogContract.m GlassesLogGate.m GlassesLogProbe.m NewsCore.m NewsArchive.m NewsReader.m NewsTeleprompter.m RecordingExports.m RecordingExportsUI.m RecordingExportsMenu.m RecordingText.m RecordingTextUI.m RecordingTextMenu.m AlwaysOnAudioFiles.m AlwaysOnOgg.m AlwaysOnAudioNative.m AlwaysOnAudioUI.m TDPhoneStore.m TDPhoneRun.m TDPhoneUI.m TDPhoneReply.m TDPhoneBridge.m TDTransport.m diagnostics.c command.c WeReadAPI.m FocusTransport.m FocusBridge.m focus.c ReaderTransport.m ReaderBridge.m ReadingOverview.m ReadingContent.m ReaderUI.m reader.c -lz -lxml2 -I"$(xcrun --sdk iphoneos --show-sdk-path)/usr/include/libxml2" VoiceTTSCore.m VoiceTTS.m MusicAPI.m MusicTransport.m MusicBridge.m MusicPlayer.m MusicUI.m music.c -framework AVFoundation -framework MediaPlayer -framework CoreImage -framework ImageIO Addon.m -o "$output"
-codesign --force --sign - "$output"
+if [[ ${TIO_SKIP_CODESIGN:-0} == 1 ]]; then
+  [[ "$mode" == embedded ]] || { echo 'Unsigned test build is supported only for embedded mode' >&2; exit 2; }
+  echo 'Built unsigned arm64 iOS addon (TIO_SKIP_CODESIGN=1)'
+else
+  codesign --force --sign - "$output"
+fi
 plutil -lint TurboIOPrivateAddon.plist
 shasum -a 256 "$output"

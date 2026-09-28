@@ -17,7 +17,7 @@ typedef struct {
  uint8_t bank[2][WR_BANK_BYTES];
  uint32_t sid,sequence,last_crc,revision,staging_revision,expected,expected_crc,received,last_tick;
  uint32_t row,consumed_until,selected,speed,credit,event,event_id,event_value,last_contact;
- uint8_t front;bool active,valid,receiving,pending,automatic,dirty,returning;
+ uint8_t front;bool active,valid,receiving,pending,automatic,dirty,returning,cue_home;
 } WRReader;
 uint32_t wr_u32(const uint8_t *);
 void wr_put(uint8_t *,uint32_t);
@@ -36,5 +36,6 @@ void wr_request(WRReader *,unsigned,uint32_t);
 bool wr_back(WRReader *);
 void wr_wheel(WRReader *,int,uint32_t);
 void wr_press(WRReader *,uint32_t);
+bool wr_should_close_for_idle(bool,uint32_t);
 void wr_tick(WRReader *,uint32_t);
 #endif

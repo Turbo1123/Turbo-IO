@@ -1,4 +1,7 @@
 #import "ReaderUI.h"
+#if TIO_DISPLAY_PHONE
+#import "CueCards.h"
+#endif
 #import "ResearchUI.h"
 #import "ReaderBridge.h"
 #import "WeReadAPI.h"
@@ -65,8 +68,18 @@ static NSData *CoverPixels(NSData *data,BOOL *decoded){if(decoded)*decoded=NO;NS
 - (void)read:(NSUInteger)index row:(NSUInteger)row{if(index>=self.books.count||self.loading||self.bridge.busy)return;NSDictionary *b=self.books[index];NSString *file=b[@"file"];[self cancelWeb];if(![file isKindOfClass:NSString.class]||![file isEqual:file.lastPathComponent]||![file.pathExtension isEqual:@"txt"]){self.note=@"请先导入有权使用的 EPUB/TXT 正文";self.pendingBody=TWReaderWindow(@[@"需要本机导入正文",@"手机：导入 EPUB/TXT",@"也可导入 EPUB/TXT",@"长按返回书架"],b[@"title"],(uint32_t)index+1,0,30,NO);return;}
  if(index!=self.selected||!self.lines){NSString *text=[NSString stringWithContentsOfURL:[Root()URLByAppendingPathComponent:file] encoding:NSUTF8StringEncoding error:nil];self.lines=TWReadingLines(text);self.selected=index;}if(!self.lines){self.note=@"本机正文不存在或超出排版限制";return;}NSData *body=TWReaderWindow(self.lines,b[@"title"],(uint32_t)index+1,MIN(row,self.lines.count-1),self.speed,self.automatic);if(body){self.pendingBody=body;self.note=@"发送本机导入正文 · 非微信读书全文接口";}}
 @end
-BOOL TWReaderConsume(NSDictionary *e){return [[TWLibrary shared].bridge consume:e];}
-BOOL TWReaderPauseForOTA(void){TWLibrary *s=TWLibrary.shared;[s cancelWeb];if(!s.bridge.active&&!s.bridge.busy)return YES;s.loadGeneration++;s.loading=NO;s.pendingBody=nil;s.pendingSettings=NO;[s.bridge close];return NO;}
+BOOL TWReaderIdle(void){TWLibrary *s=TWLibrary.shared;return !s.bridge.active&&!s.bridge.busy&&!s.loading;}
+BOOL TWReaderConsume(NSDictionary *e){
+#if TIO_DISPLAY_PHONE
+ if(TCCueCardsConsume(e))return YES;
+#endif
+ return [[TWLibrary shared].bridge consume:e];
+}
+BOOL TWReaderPauseForOTA(void){
+#if TIO_DISPLAY_PHONE
+ if(!TCCueCardsPause())return NO;
+#endif
+ TWLibrary *s=TWLibrary.shared;[s cancelWeb];if(!s.bridge.active&&!s.bridge.busy)return YES;s.loadGeneration++;s.loading=NO;s.pendingBody=nil;s.pendingSettings=NO;[s.bridge close];return NO;}
 void TWReaderPauseForVoice(void){(void)TWReaderPauseForOTA();}
 
 #include "ReaderEditorial.inc"

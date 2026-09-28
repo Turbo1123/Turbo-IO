@@ -1,4 +1,7 @@
 #import "MusicPlayer.h"
+#if TIO_DISPLAY_PHONE
+#import "CueCards.h"
+#endif
 #import "MusicAPI.h"
 #import "MusicBridge.h"
 #import "NativeNavigationUI.h"
@@ -48,7 +51,11 @@ static NSData *Gray(UIImage *image){if(!image.CGImage)return nil;NSMutableData *
  [[TMMusicAPI shared]request:@"/api/song/lyric" payload:@{@"id":s[@"id"],@"lv":@-1,@"kv":@-1,@"tv":@-1} eapi:NO done:^(NSDictionary *j,NSString *err){if(ticket!=self->_ticket)return;id l=[j[@"lrc"]isKindOfClass:NSDictionary.class]?j[@"lrc"]:@{};self->_lyrics=TMParseLRC(String(l[@"lyric"]));if(!self->_lyrics.count)self->_lyrics=@[@{@"ms":@0,@"text":err?@"歌词获取失败，可继续播放":@"纯音乐或暂无歌词"}];[self->_bridge assetsCover:nil lyrics:self->_lyrics];}];
  NSURL *cover=MediaURL(s[@"cover"]);if(cover){[[NSURLSession.sharedSession dataTaskWithURL:cover completionHandler:^(NSData *d,NSURLResponse *r,NSError *e){if(e||d.length>8*1024*1024)return;CGImageSourceRef source=CGImageSourceCreateWithData((__bridge CFDataRef)d,NULL);if(!source)return;CGImageRef image=CGImageSourceCreateThumbnailAtIndex(source,0,(__bridge CFDictionaryRef)@{(__bridge id)kCGImageSourceCreateThumbnailFromImageAlways:@YES,(__bridge id)kCGImageSourceThumbnailMaxPixelSize:@360,(__bridge id)kCGImageSourceCreateThumbnailWithTransform:@YES});CFRelease(source);UIImage *im=image?[UIImage imageWithCGImage:image]:nil;if(image)CGImageRelease(image);NSData *gray=Gray(im);dispatch_async(dispatch_get_main_queue(),^{if(ticket!=self->_ticket)return;self->_cover=im;self->_gray=gray;[self->_bridge assetsCover:gray lyrics:nil];});}]resume];}
 }
-- (void)showOnGlasses{if(!_song)return;if(!TNVPauseForOTA()||[TIOOTAFlashStatus()[@"stage"]unsignedIntegerValue]){_status=@"导航或固件传输占用通道，请先结束";return;}if(_sentTicket==_ticket)[_bridge reopen];else{_sentTicket=_ticket;[_bridge openWithCover:_gray lyrics:_lyrics];}}
+- (void)showOnGlasses{if(!_song)return;
+#if TIO_DISPLAY_PHONE
+ if(!TCCueCardsPause())return;
+#endif
+ if(!TNVPauseForOTA()||[TIOOTAFlashStatus()[@"stage"]unsignedIntegerValue]){_status=@"导航或固件传输占用通道，请先结束";return;}if(_sentTicket==_ticket)[_bridge reopen];else{_sentTicket=_ticket;[_bridge openWithCover:_gray lyrics:_lyrics];}}
 - (void)hideGlasses{[_bridge close];}
 - (void)demo{NSUInteger ticket=++_ticket;_song=@{@"id":@0,@"name":@"夜航 · 本机校验 7392",@"artist":@"Turbo Lab · 合成测试音",@"duration":@90000};_queue=@[];_duration=90;_lyrics=@[@{@"ms":@0,@"text":@"音乐画面校验 7392"},@{@"ms":@5000,@"text":@"城市的灯渐渐远去"},@{@"ms":@10000,@"text":@"沿着星光 慢慢向前"},@{@"ms":@15000,@"text":@"让晚风带我到明天"},@{@"ms":@25000,@"text":@"旋钮切歌 · 按键播放暂停"},@{@"ms":@35000,@"text":@"关闭画面，音乐继续"},@{@"ms":@55000,@"text":@"手机拖动进度，歌词同步"},@{@"ms":@75000,@"text":@"校验结束 8642"}];
  UIGraphicsImageRendererFormat *f=[UIGraphicsImageRendererFormat defaultFormat];f.scale=1;_cover=[[[UIGraphicsImageRenderer alloc]initWithSize:CGSizeMake(288,288) format:f]imageWithActions:^(UIGraphicsImageRendererContext *c){[[UIColor colorWithRed:.12 green:.09 blue:.07 alpha:1]setFill];UIRectFill(CGRectMake(0,0,288,288));[[UIColor colorWithRed:1 green:.47 blue:.16 alpha:1]setFill];[[UIBezierPath bezierPathWithOvalInRect:CGRectMake(44,30,200,200)]fill];[@"TURBO LAB" drawAtPoint:CGPointMake(58,247) withAttributes:@{NSFontAttributeName:[UIFont monospacedSystemFontOfSize:22 weight:UIFontWeightMedium],NSForegroundColorAttributeName:UIColor.whiteColor}];}];_gray=Gray(_cover);
