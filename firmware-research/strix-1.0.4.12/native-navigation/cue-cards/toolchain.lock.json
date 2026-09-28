@@ -1,0 +1,21 @@
+{
+  "toolchains": [
+    {
+      "version": "OHOS (dev) clang version 15.0.4 (llvm-project 39bec79f56c3b5a629e4bacac1dc022e1da552d0)",
+      "verifyToolHashes": false,
+      "source": "DevEco native LLVM pinned by the existing FOCUS build records"
+    },
+    {
+      "version": "OHOS (dev) clang version 15.0.4 (llvm-project 02fbe8daf56b9704358bc2e7bea9da79938a7abf)",
+      "verifyToolHashes": true,
+      "archiveSHA256": "901a253025d0c392e927e938857ee9ee2d608a7e8e370a027a735b528b829575",
+      "source": "https://github.com/openharmony/build/blob/master/prebuilts_config.json",
+      "toolSHA256": {
+        "clang": "4321e386271a9e41667c097fa5c8fe5f6273f06b181395e8c640970f06c9b9f6",
+        "ld.lld": "50d59abdb8b89c5fde9dff89a0bb907aae4d6684e0eda180fe9dd022e5196b8a",
+        "llvm-objcopy": "b92b9f501bc8cf3fc2ff67eaf47c0bd41d8cb557db4fe412883f878ad498ea50",
+        "llvm-nm": "eaada44342a85725ef009e3de30016bd95810ae09c7fb901df8365bb7844fcd8"
+      }
+    }
+  ]
+}

@@ -10,6 +10,9 @@ NSArray<NSDictionary *> *LegacySections(NSString *page){
         @{@"title":@"联网与工具",@"rows":@[Row(@"search",@"允许联网搜索",@"globe",0,7),Row(@"searchKey",@"搜索服务配置",@"key",0,8),Row(@"tools",@"模型可用工具",@"wrench.and.screwdriver",0,11)]},
         @{@"title":@"语音与上下文",@"rows":@[Row(@"exit",@"语音退出",@"waveform",0,6),Row(@"prompt",@"系统提示词",@"text.bubble",0,5),Row(@"history",@"本次对话上下文",@"clock.arrow.circlepath",0,4)]}];
     if([page isEqual:@"library"])return @[
+#if TIO_DISPLAY_PHONE
+        @{@"title":@"随身应用",@"rows":@[Row(@"cuecards",@"提词卡",@"rectangle.stack",-2,23),Row(@"heartRate",@"运动看板 · Apple Watch",@"heart",-2,24)]},
+#endif
         @{@"title":@"阅读空间",@"rows":@[Row(@"weread",@"微信读书 · 第十一项菜单",@"books.vertical",-2,21)]},
         @{@"title":@"音乐随行",@"rows":@[Row(@"music",@"网易云音乐 · 第十项菜单",@"music.note",-2,20)]},
         @{@"title":@"录音与整理",@"rows":@[Row(@"recordings",@"录音与文件分享",@"waveform",-1,0),Row(@"summary",@"转写文字整理",@"text.badge.star",-1,1)]},
@@ -39,7 +42,7 @@ NSArray<NSDictionary *> *TIOResearchSections(NSString *page){
  NSMutableDictionary *lookup=[NSMutableDictionary new];for(NSString *p in @[@"model",@"library",@"diagnostics"])for(NSDictionary *section in LegacySections(p))for(NSDictionary *r in section[@"rows"])lookup[r[@"key"]]=r;
  NSArray *groups=nil;
  if([page isEqual:@"model"])groups=@[@[@"日常对话",@"mode",@"tts",@"search"],@[@"模型与接口",@"api",@"thinking"],@[@"语音设置",@"ttsEngine",@"ttsTest",@"ttsKey",@"exit"],@[@"Agent 与工具",@"agent",@"knowledge",@"tools",@"searchKey"],@[@"提示词与记忆",@"prompt",@"history"]];
- if([page isEqual:@"library"])groups=@[@[@"随身应用",@"music",@"weread",@"navigation",@"localTranslation",@"recordings"],@[@"文字整理",@"summary"],@[@"全天智记",@"lifelogText",@"lifelogAudio",@"capture",@"archive"]];
+ if([page isEqual:@"library"])groups=@[@[@"随身应用",@"cuecards",@"heartRate",@"music",@"weread",@"navigation",@"localTranslation",@"recordings"],@[@"文字整理",@"summary"],@[@"全天智记",@"lifelogText",@"lifelogAudio",@"capture",@"archive"]];
  if([page isEqual:@"diagnostics"])groups=@[@[@"运行与日志",@"diagnosticsRuntime",@"glassesLog",@"status"],@[@"协议实验",@"subtitleHUD",@"a2ui",@"apiTest",@"searchTest",@"todoTest"],@[@"显示实验",@"displayPhone",@"imageRXLab"],@[@"实验固件 · 有风险",@"experimentalOTA"]];
  if(!groups)return @[];NSMutableArray *sections=[NSMutableArray new];NSDictionary *names=@{@"music":@"音乐",@"weread":@"微信读书",@"navigation":@"导航",@"localTranslation":@"本地翻译与字幕",@"recordings":@"录音与分享"};
  for(NSArray *group in groups){NSMutableArray *rows=[NSMutableArray new];for(NSUInteger i=1;i<group.count;i++){NSDictionary *r=lookup[group[i]];if(r){NSMutableDictionary *m=[r mutableCopy];if(names[group[i]])m[@"title"]=names[group[i]];[rows addObject:m];}}if(rows.count)[sections addObject:@{@"title":group[0],@"rows":rows}];}return sections;

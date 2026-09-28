@@ -1,0 +1,49 @@
+name: TurboCueCardsWatch
+options:
+  deploymentTarget:
+    watchOS: "11.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    TIO_COMPANION_BUNDLE_ID: com.rayneo.venus.pub
+    MARKETING_VERSION: "1.0.5"
+    CURRENT_PROJECT_VERSION: "201"
+    SWIFT_ACTIVE_COMPILATION_CONDITIONS: "TIO_WATCH_CUE TIO_WATCH_RUN"
+targets:
+  CueCardsWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: CueCardsWatchApp.swift
+      - path: HeartRateModel.swift
+      - path: WorkoutCadenceWindow.swift
+      - path: HeartRateWatchView.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(TIO_COMPANION_BUNDLE_ID).watchkitapp
+        CODE_SIGN_STYLE: Automatic
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+    info:
+      path: Generated/Info.plist
+      properties:
+        CFBundleDisplayName: Turbo IO
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: $(TIO_COMPANION_BUNDLE_ID)
+        WKRunsIndependentlyOfCompanionApp: false
+        WKSupportsAlwaysOnDisplay: true
+        WKBackgroundModes: [workout-processing]
+        NSHealthShareUsageDescription: 在你开始室外跑步时读取本次心率、系统心率区间、配速、步数、步幅、距离和活动热量，在手机后台继续传到眼镜显示。
+        NSHealthUpdateUsageDescription: 结束时将本次室外跑步及获准的运动样本保存到 Apple 健康，供健身 App 查看。
+        ITSAppUsesNonExemptEncryption: false
+    entitlements:
+      path: Generated/Watch.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
+schemes:
+  CueCardsWatch:
+    build:
+      targets:
+        CueCardsWatch: all

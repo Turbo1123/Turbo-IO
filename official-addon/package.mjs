@@ -15,6 +15,7 @@ export function validateOptions(o) {
   if(!/^[a-f0-9]{40}$/i.test(o.identity||'')||!/^[a-z0-9-]{8,80}$/i.test(o.device||''))throw Error('explicit_identity_and_device_required');
   if(!/^[A-Za-z0-9][A-Za-z0-9.-]+\.[A-Za-z0-9.-]+$/.test(o.bundle||''))throw Error('invalid_bundle');
   if(o.product&&!/^iPhone\d+,\d+$/.test(o.product))throw Error('invalid_explicit_product');
+  if(o['watch-app']!==undefined&&(typeof o['watch-app']!=='string'||!path.isAbsolute(o['watch-app'])))throw Error('invalid_watch_app');
   if(fs.existsSync(o.out))throw Error('output_must_not_exist');
   if(o['experimental-ota']!==undefined&&(!['R3','TNV1','TMU1','TFP1'].includes(o['experimental-ota'])||o.bundle!=='com.rayneo.venus.pub'))throw Error('invalid_experimental_ota_target');
   if(['TNV1','TMU1','TFP1'].includes(o['experimental-ota']) && (typeof o.firmware!=='string'||!path.isAbsolute(o.firmware)))throw Error('research_requires_explicit_firmware');
@@ -41,12 +42,13 @@ export function entitlementsFor(p,o) {
 }
 function run(program,args,options={}){return exec(program,args,{stdio:['pipe','pipe','pipe'],...options});}
 function main(){
+  if(process.argv.includes('--help'))console.log('Optional signed Turbo IO Watch companion: --watch-app /absolute/CueCardsWatch.app; it must match the iPhone bundle ID, signing team, and version.');
   if(process.argv.includes('--help'))console.log('FOCUS-04 integrated edition: --experimental-ota TFP1 --firmware /absolute/exact-FOCUS04-release.zip; see focus-edition/README.md. Optional translation resources may be omitted for this edition.');
   if(process.argv.includes('--help'))console.log('Optional local translation: --translation-module-dir /absolute/module --translation-models /absolute/models (requires TIO_LOCAL_TRANSLATION=1 addon; see local-translation/README.md)');
   if(process.argv.includes('--help')){console.log('node official-addon/package.mjs --app /absolute/Runner.app --addon /absolute/TurboIOPrivateAddon.dylib --profile /absolute/profile.mobileprovision --identity CERTIFICATE_SHA1 --device YOUR_DEVICE_ID --out /absolute/new-private-output [--bundle com.rayneo.venus.pub] [--product iPhone18,4] [--amap-sdk-root /absolute/build/amap-sdk] [--experimental-ota R3|TNV1|TMU1 --firmware /absolute/matching-firmware.zip (required for TNV1/TMU1; HIGH RISK)]');return;}
   const o={bundle:'com.rayneo.venus.pub'};const args=process.argv.slice(2);
   if(args.length%2)throw Error('expected_named_arguments');
-  const seen=new Set();for(let i=0;i<args.length;i+=2){const k=args[i].slice(2);if(!args[i].startsWith('--')||!['app','addon','profile','identity','device','out','bundle','product','amap-sdk-root','experimental-ota','firmware','translation-module-dir','translation-models'].includes(k)||seen.has(k))throw Error('unknown_or_duplicate_argument');seen.add(k);o[k]=args[i+1];}
+  const seen=new Set();for(let i=0;i<args.length;i+=2){const k=args[i].slice(2);if(!args[i].startsWith('--')||!['app','addon','profile','identity','device','out','bundle','product','amap-sdk-root','experimental-ota','firmware','translation-module-dir','translation-models','watch-app'].includes(k)||seen.has(k))throw Error('unknown_or_duplicate_argument');seen.add(k);o[k]=args[i+1];}
   validateOptions(o);
   const mapResources=o['amap-sdk-root']?amapResources(o['amap-sdk-root']):[];
   const symbols=run('/usr/bin/nm',['-g',o.addon],{encoding:'utf8',maxBuffer:64*1024*1024});
@@ -72,6 +74,9 @@ function main(){
 p=plistlib.loads(subprocess.check_output(['security','cms','-D','-i',sys.argv[1]],stderr=subprocess.DEVNULL))
 print(json.dumps({'entitlements':p['Entitlements'],'expires':p['ExpirationDate'].isoformat()+'Z','devices':p.get('ProvisionedDevices',[]),'certs':[hashlib.sha1(x).hexdigest().upper() for x in p['DeveloperCertificates']]}))`,o.profile],{encoding:'utf8'}));
   const entitlement=entitlementsFor(profile,o);
+  if(o['watch-app']&&!symbols.includes('_TCCueCardsStartWatch'))throw Error('addon_has_no_cue_watch_receiver');
+  const watchParentInfo=o['watch-app']?JSON.parse(run('plutil',['-convert','json','-o','-',path.join(source,'Info.plist')],{encoding:'utf8'})):null;
+  const watchApp=prepareCueWatch(o['watch-app'],o.bundle,entitlement['com.apple.developer.team-identifier'],watchParentInfo);
   fs.mkdirSync(destination,{mode:0o700});
   const app=path.join(destination,'Payload','Runner.app');
   run(process.execPath,[path.join(here,'macho-embed.mjs'),source,app,o.addon,o.bundle]);
@@ -104,6 +109,7 @@ print(json.dumps({'entitlements':p['Entitlements'],'expires':p['ExpirationDate']
   }
   if(mapResources.length){copyAMapResources(mapResources,app);const plist=path.join(app,'Info.plist');const info=JSON.parse(run('plutil',['-convert','json','-o','-',plist],{encoding:'utf8'}));if(!info.NSLocationWhenInUseUsageDescription)run('plutil',['-insert','NSLocationWhenInUseUsageDescription','-string','用于用户主动选择的地图定位和前台步行导航。',plist]);}
   if(o.product){const plist=path.join(app,'Info.plist');const info=JSON.parse(run('plutil',['-convert','json','-o','-',plist],{encoding:'utf8'}));if(Array.isArray(info.UISupportedDevices)&&!info.UISupportedDevices.includes(o.product))run('plutil',['-insert','UISupportedDevices.0','-string',o.product,plist]);}
+  copyCueWatch(watchApp,app);
   const ep=path.join(destination,'signing-entitlements.plist');
   run('python3',['-c','import sys,json,plistlib; plistlib.dump(json.load(sys.stdin),open(sys.argv[1],"wb"))',ep],{input:JSON.stringify(entitlement)});fs.chmodSync(ep,0o600);
   fs.copyFileSync(o.profile,path.join(app,'embedded.mobileprovision'));
@@ -116,7 +122,7 @@ print(json.dumps({'entitlements':p['Entitlements'],'expires':p['ExpirationDate']
   run('/usr/bin/ditto',['-c','-k','--norsrc','--noextattr','--keepParent',path.join(destination,'Payload'),ipa]);fs.chmodSync(ipa,0o600);
   run('/usr/bin/unzip',['-tq',ipa]);
   const names=run('/usr/bin/unzip',['-Z1',ipa],{encoding:'utf8'}).split('\n');if(names.some(n=>n.split('/').some(x=>x==='__MACOSX'||x.startsWith('._'))))throw Error('unexpected_archive_metadata');
-  const report={status:'SIGNED_NOT_DEVICE_ACCEPTED',signatureVerified:true,officialSourceUploaded:false,privateBootstrapIncluded:false,experimentalOTA:!!otaPatch,flashAuthorized:false,ipaSHA256:createHash('sha256').update(fs.readFileSync(ipa)).digest('hex'),pushEntitled:!!entitlement['aps-environment'],appleSignInEntitled:!!entitlement['com.apple.developer.applesignin']};
+  const report={status:'SIGNED_NOT_DEVICE_ACCEPTED',signatureVerified:true,watchCompanionIncluded:!!watchApp,officialSourceUploaded:false,privateBootstrapIncluded:false,experimentalOTA:!!otaPatch,flashAuthorized:false,ipaSHA256:createHash('sha256').update(fs.readFileSync(ipa)).digest('hex'),pushEntitled:!!entitlement['aps-environment'],appleSignInEntitled:!!entitlement['com.apple.developer.applesignin']};
   fs.writeFileSync(path.join(destination,'report.json'),JSON.stringify(report,null,2)+'\n',{flag:'wx',mode:0o600});console.log(JSON.stringify(report,null,2));
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){try{main();}catch(e){const known=/^[a-z_]+$/.test(e.message);console.error(known?e.message:'Local packaging failed. Check compatible source, profile and signing identity. No subprocess output or credentials are printed.');process.exitCode=1;}}

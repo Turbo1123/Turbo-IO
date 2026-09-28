@@ -46,7 +46,7 @@ fi
 # Keep the normal embedded build unchanged until the device comparison passes.
 if [[ ${TIO_DISPLAY_PHONE:-0} == 1 ]]; then
   [[ ${TIO_IMAGE_RX_LAB:-0} == 1 && "$mode" == embedded ]] || exit 2
-  image_options+=(-DTIO_DISPLAY_PHONE=1 -DTIO_DISPLAY_DIAGNOSTICS=1 -DTIO_NATIVE_NAV=1 nav_runtime.c NativeNavigation.m TNVTransport.m NativeNavigationUI.m display_runtime.c display_client.c display_carrier.c DisplayDelta.c DisplayNavigation.m DisplayHUDRenderer.m DisplayReplyObserver.m DisplayPhoneSession.m DisplayPhoneTransport.m DisplayPhoneUI.m DisplayDiagnostics.m)
+  image_options+=(-DTIO_DISPLAY_PHONE=1 -DTIO_DISPLAY_DIAGNOSTICS=1 -DTIO_NATIVE_NAV=1 -DTIO_HEART_RATE=1 nav_runtime.c NativeNavigation.m TNVTransport.m NativeNavigationUI.m display_runtime.c display_client.c display_carrier.c DisplayDelta.c DisplayNavigation.m DisplayHUDRenderer.m DisplayReplyObserver.m DisplayPhoneSession.m DisplayPhoneTransport.m DisplayPhoneUI.m DisplayDiagnostics.m WorkoutGlasses.m HeartRateWatchBridge.m HeartRatePhoneUI.m WorkoutDashboardCore.m TrainingDashboardRenderer.m CueCardsCore.m CueCards.m CueCardsUI.m -framework WatchConnectivity)
 fi
 if [[ ${TIO_DISPLAY_FLASH:-0} == 1 ]]; then
   [[ ${TIO_DISPLAY_PHONE:-0} == 1 && ${TIO_OTA_FLASH_ENABLED:-0} == 1 && "$mode" == embedded ]] || exit 2

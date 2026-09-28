@@ -10,6 +10,8 @@
 
 **2026-09-25 新增 [FOCUS-04 集成版](focus-edition/README.md)**：新版插件 UI、四项同屏菜单、微信读书本地正文、音乐交互修复与原生番茄时钟。使用独立源码目录及 `--experimental-ota TFP1` 打包入口，固定匹配 FOCUS-04 固件；不要与下方旧版本宏、源码或固件混用。普通插件开发无需刷固件。
 
+**2026-09-28 提词卡与户外跑步看板进入集成源码**：iPhone 提词卡与 Watch companion 共享卡组和翻页状态；HealthKit 室外跑步数据经手机中继为眼镜 TWK1 看板。功能规格、所需开关、固件前提和验收边界见[专题文档](../docs/IOS_CUE_CARDS_AND_OUTDOOR_RUN.md)。本次仅增源码和固件研究覆盖层，不分发 IPA、Watch 安装包或可刷固件；旧 FOCUS-04 Release 并不包含提词卡菜单或 TWK1。
+
 **另有无需刷固件的 [iOS 26+ 本地翻译与英语离线字幕](local-translation/README.md)**：Apple / Hy-MT2、Parakeet 英语 ASR、手机/蓝牙麦克风、快速预译与镜片文字同步。`TIO_LOCAL_TRANSLATION=1` 显式编译；需自行下载模型、准备系统语言包、打包签名，不包含维护者配置。前台采集、20分钟保护，不等于眼镜前方/四周定向收音或全面替换官方翻译页。
 
 **微信读书 TWR1：** [原创 AP、书架/本地阅读手机模块、固件与构建说明](../firmware-research/strix-1.0.4.12/native-navigation/weread/README.md) · [架构与参考项目](../docs/WEREAD_RESEARCH.md)。不含网页正文适配或 Cookie；公开手机模块尚未接入本页默认构建与 TWR1 打包门禁。长按旋钮返回可能异常；没有匹配手机集成请先别刷，不要使用下面的音乐/导航授权代替阅读固件。
