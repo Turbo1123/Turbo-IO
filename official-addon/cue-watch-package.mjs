@@ -70,3 +70,14 @@ export function copyCueWatch(source,app) {
   fs.mkdirSync(path.dirname(destination));
   fs.cpSync(source,destination,{recursive:true,errorOnExist:true,force:false});
 }
+
+// Keep every Watch-specific failure ahead of output creation, including the
+// ordinary packaging path where no companion app was supplied.
+export function prepareCueWatchForOutput(options,addonSymbols,team,parentInfo,dependencies={}) {
+  if(options['watch-app']&&!addonSymbols.includes('_TCCueCardsStartWatch'))throw Error('addon_has_no_cue_watch_receiver');
+  const prepare=dependencies.prepare||prepareCueWatch;
+  const mkdir=dependencies.mkdir||fs.mkdirSync;
+  const watchApp=prepare(options['watch-app'],options.bundle,team,options['watch-app']?parentInfo:null);
+  mkdir(options.out,{mode:0o700});
+  return watchApp;
+}

@@ -2,7 +2,7 @@
 
 本文记录 Turbo IO FOCUS-04 iOS 集成版中的提词卡、Apple Watch 户外跑步和眼镜运动看板。源码适配雷鸟 AI iOS 1.0.5（Build 201），手表工程目标为 watchOS 11.0；镜片端需要 Strix OS 1.0.4.12 的兼容实验候选，其中包含提词卡菜单与独立 TWK1 运动看板协议。
 
-**状态边界：** 本次 PR 加入源码、Watch companion 构建工程与固件研究覆盖层，不含签名 IPA、可安装 Watch 包或可刷写眼镜固件。当前没有随本 PR 发布的精确候选固件 ZIP；固件覆盖层仍需在匹配的研究构建中生成和设备验收。使用者需自行准备有权使用的原厂宿主副本、Apple 开发签名与兼容眼镜固件。项目许可证仍为 PolyForm Noncommercial 1.0.0。
+**状态边界：** 本次 PR 加入源码、Watch companion 构建工程与固件研究覆盖层。本分支已通过无签名编译和离线回归；没有签名 IPA、可安装 Watch 包或可刷写眼镜固件，也没有随本 PR 发布的精确候选固件 ZIP。固件覆盖层仍需生成匹配研究候选并在设备上验收。使用者需自行准备有权使用的原厂宿主副本、Apple 开发签名与兼容眼镜固件。项目许可证仍为 PolyForm Noncommercial 1.0.0。
 
 ## 提词卡
 
@@ -27,11 +27,23 @@
 
 本 PR 没有生成或分发个人签名产物，也没有把原厂 IPA、证书、密钥、个人账号数据、模型服务凭据或固件 ZIP 加入仓库。宿主的旧 OTA 打包入口目前不包含 TWK1 更新目标；不要使用其他协议的 OTA 授权代替它。
 
+## 本分支离线构建与回归
+
+2026-09-28 在 macOS 的 Xcode 27.0、iPhoneOS/watchOS 27.0 SDK 下，从仓库根目录执行：
+
+```sh
+TIO_DISPLAY_PHONE=1 TIO_IMAGE_RX_LAB=1 TIO_SKIP_CODESIGN=1 bash official-addon/focus-edition/build.sh embedded com.rayneo.venus.pub
+TIO_DEVELOPMENT_TEAM= TIO_WATCH_DESTINATION='generic/platform=watchOS' bash apps/CueCardsWatch/build.sh com.rayneo.venus.pub
+bash official-addon/test.sh
+```
+
+手机命令生成本地未签名 arm64 插件；Watch 命令使用 `CODE_SIGNING_ALLOWED=NO`，生成未签名的 arm64/arm64_32 Watch app。两个构建均完成。测试脚本通过了原有插件回归，并补测无 Watch 参数的打包、合成的合法/不匹配 Watch 元数据、提词卡越界和翻页、Watch 消息字段与时效路由。固件测试在临时目录把 13 项提词菜单、TWK1 协议和 14 项运动菜单依次覆盖到 FOCUS 源码，再编译生成的原生协议与运动看板模拟界面，核对 TNV1/TWK1 互斥、文件名/魔数路由、实时数值和过期占位显示。新增测试没有使用证书、健康数据或设备，也没有生成固件镜像或 OTA ZIP。
+
 ## 验收范围
 
 此前的设备验收记录包括：提词卡新增内容保存有效、手机/手表/眼镜翻页同步、眼镜启动提词卡、运动期间眼镜心率和右侧数据更新，以及室外跑步出现在健身 App。上述记录是本项目已有的用户设备反馈，不代表本 PR 分支重新编译、安装或复测。
 
-本 PR 工作目录未运行构建或测试。合并前后仍应由构建者检查 Watch 签名与权限、匹配固件、前后台传输、HealthKit 保存与健身记录，并在实际设备确认眼镜显示；单独编译成功不能替代这些设备验收。
+本分支现已完成上节的无签名构建和离线测试。仍需用本分支的签名 iPhone/Watch 包和匹配固件，逐项检查三端翻页、结束与运动保存、锁屏后台传输、断连恢复及眼镜显示；本轮没有安装或刷写当前提交。离线测试中的 Watch 元数据为合成输入，尚未验证真实证书、描述文件与嵌入后的 IPA。
 
 ## 变更记录
 
@@ -43,3 +55,12 @@
 - **影响范围：** 仅 `TIO_DISPLAY_PHONE` 可选集成构建、Watch companion 和 Strix 1.0.4.12 研究源码路径；不改变旧 addon 默认构建、Android/HarmonyOS、既有提醒事项同步 Issue/PR 或现有 OTA 发布。
 - **验证结果：** 对本 PR 的源码与变更进行静态核对；没有在本分支运行构建或测试，也没有安装 IPA/Watch app 或生成固件包。
 - **未决项：** 精确 TWK1 固件候选 ZIP、公开可下载的个人签名安装产物、锁屏期间持续传输和不同配置的设备回归。
+
+### 2026-09-28 · PR #38 审查修复与离线验证
+
+- **涉及模块：** iOS 打包器、Watch companion 校验、提词卡与 Watch 消息路由、阅读占用判断、手机/Watch 构建脚本及固件研究覆盖层测试。
+- **修改前后差异：** 打包入口调用了未导入的 Watch helper，普通无 Watch 打包也会在输出目录创建前抛出 `ReferenceError`；现由明确导入的预检函数统一处理有/无 Watch 路径，校验失败时输出目录仍不存在。提词卡启动所需的阅读空闲判断此前未定义，现按阅读会话、传输和加载状态返回结果。新增实际路由使用的 Watch 命令校验、提词卡页码边界和协议/菜单覆盖层回归，并提供显式跳过临时签名的构建开关。
+- **原因与依据：** [Turbo1123 对 PR #38 的审查](https://github.com/Turbo1123/Turbo-IO/pull/38#pullrequestreview-5338883761)指出了打包阻断项，并要求无 Watch/Watch 元数据、提词翻页、消息路由、TNV1/TWK1 互斥、固件覆盖层及可复现构建记录；实际无签名编译又发现阅读空闲函数缺失。
+- **影响范围：** iOS FOCUS-04 可选集成分支及本地构建/测试入口；正常构建仍执行原有临时签名，只有 `TIO_SKIP_CODESIGN=1` 跳过。Watch 与眼镜固件研究范围保持本页所述边界。
+- **验证结果：** `node --test official-addon/package.test.mjs` 10/10 通过；`bash official-addon/test.sh` 通过，包含新增提词卡核心和固件覆盖层测试；上述 Xcode 27.0 手机/Watch 无签名构建成功。未在当前提交上安装 IPA、Watch app 或刷写固件。
+- **未决项：** 真实签名/描述文件的 Watch 嵌入打包、精确固件候选构建与校验、三端翻页和结束保存、前后台及断连恢复的本分支设备验收。

@@ -37,6 +37,18 @@ BOOL TCCueCommandFresh(NSDictionary *message,NSTimeInterval now) {
     id timestamp=message[@"issuedAt"];if(![timestamp isKindOfClass:NSNumber.class])return NO;
     double age=now-[timestamp doubleValue];return isfinite(age)&&age>=-5&&age<=15;
 }
+NSString *TCCueWatchRouteAction(NSDictionary *message,NSTimeInterval now) {
+    if(![message isKindOfClass:NSDictionary.class]||![message[@"action"] isKindOfClass:NSString.class])return nil;
+    NSString *action=message[@"action"];
+    if([@[@"refresh",@"listProjects"] containsObject:action])return action;
+    if([action isEqual:@"showCard"]&&[message[@"projectID"] isKindOfClass:NSString.class]&&[message[@"index"] isKindOfClass:NSNumber.class])return action;
+    BOOL fresh=TCCueCommandFresh(message,now);
+    if([action isEqual:@"addCard"]&&fresh&&[message[@"projectID"] isKindOfClass:NSString.class]&&[message[@"title"] isKindOfClass:NSString.class]&&[message[@"copy"] isKindOfClass:NSString.class]&&[message[@"afterCardID"] isKindOfClass:NSString.class]&&[message[@"requestID"] isKindOfClass:NSString.class])return action;
+    if([action isEqual:@"start"]&&fresh&&[message[@"projectID"] isKindOfClass:NSString.class])return action;
+    if([action isEqual:@"stop"]&&fresh)return action;
+    if([@[@"next",@"previous"] containsObject:action]&&fresh&&[message[@"session"] isKindOfClass:NSString.class]&&[message[@"card"] isKindOfClass:NSString.class]&&[message[@"revision"] isKindOfClass:NSNumber.class])return action;
+    return nil;
+}
 NSDictionary *TCCueProject(id input, NSString **error) {
     if(error)*error=nil;
     if(![input isKindOfClass:NSDictionary.class] || !Text(input[@"title"],96) || Cells(input[@"title"])>48 || ![input[@"cards"] isKindOfClass:NSArray.class] || [input[@"cards"] count]>1000) { Fail(error,@"项目需要标题和卡片列表；标题最多显示 24 个汉字的宽度。"); return nil; }

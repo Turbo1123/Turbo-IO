@@ -10,6 +10,7 @@ FOUNDATION_EXPORT NSArray<NSString *> *TCCueLines(NSDictionary *card, NSString *
 FOUNDATION_EXPORT NSData *TCCueBody(NSDictionary *project, NSUInteger index, uint32_t token);
 FOUNDATION_EXPORT NSString *TCCuePrompt(NSString *source);
 FOUNDATION_EXPORT BOOL TCCueCommandFresh(NSDictionary *message,NSTimeInterval now);
+FOUNDATION_EXPORT NSString *TCCueWatchRouteAction(NSDictionary *message,NSTimeInterval now);
 FOUNDATION_EXPORT NSDictionary *TCCueImport(NSData *data, NSString *extension, NSString *fallbackTitle, NSString **error);
 
 // Main-thread presentation cursor. Commands carry the displayed card and session,

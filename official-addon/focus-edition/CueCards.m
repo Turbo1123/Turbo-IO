@@ -181,17 +181,18 @@ static NSMutableDictionary *TCCueWatchState(NSUInteger offset) {
         if(TIOHeartRateWatchHandleMessage(message,reply))return;
 #endif
         BOOL accepted=NO;NSString *note=@"";TCCuePresentation *p=TCCuePresentation.shared;
-        NSString *action=[message[@"action"] isKindOfClass:NSString.class]?message[@"action"]:@"";
+        NSString *requestedAction=[message[@"action"] isKindOfClass:NSString.class]?message[@"action"]:@"";
+        NSString *action=TCCueWatchRouteAction(message,NSDate.date.timeIntervalSince1970)?:@"";
         NSUInteger offset=[message[@"offset"] isKindOfClass:NSNumber.class]?[message[@"offset"] unsignedIntegerValue]:0;
         NSMutableDictionary *state=TCCueWatchState(offset);
         if([action isEqual:@"refresh"]){accepted=YES;}
         else if([action isEqual:@"listProjects"]){accepted=YES;}
-        else if([action isEqual:@"showCard"]&&[message[@"projectID"] isKindOfClass:NSString.class]&&[message[@"index"] isKindOfClass:NSNumber.class]){
+        else if([action isEqual:@"showCard"]){
             NSDictionary *project=nil;for(NSDictionary *candidate in TCCueLibrary.shared.projects)if([candidate[@"id"] isEqual:message[@"projectID"]]){project=candidate;break;}
             NSDictionary *card=project?TCCueWatchCard(project,[message[@"index"] unsignedIntegerValue]):nil;
             if(card){state[@"browseCard"]=card;accepted=YES;}else note=@"找不到这张卡，请刷新项目列表。";
         }
-        else if([action isEqual:@"addCard"]&&TCCueCommandFresh(message,NSDate.date.timeIntervalSince1970)&&[message[@"projectID"] isKindOfClass:NSString.class]&&[message[@"title"] isKindOfClass:NSString.class]&&[message[@"copy"] isKindOfClass:NSString.class]&&[message[@"afterCardID"] isKindOfClass:NSString.class]&&[message[@"requestID"] isKindOfClass:NSString.class]){
+        else if([action isEqual:@"addCard"]){
             NSString *error=nil;accepted=[TCCueLibrary.shared insertWatchCardWithTitle:message[@"title"] copy:message[@"copy"] projectID:message[@"projectID"] afterCardID:message[@"afterCardID"] requestID:message[@"requestID"] error:&error];
             if(accepted){
                 NSDictionary *project=nil;for(NSDictionary *candidate in TCCueLibrary.shared.projects)if([candidate[@"id"] isEqual:message[@"projectID"]]){project=candidate;break;}
@@ -202,17 +203,17 @@ static NSMutableDictionary *TCCueWatchState(NSUInteger offset) {
             }
             else note=error?:@"添加失败，请检查标题和文案。";
         }
-        else if([action isEqual:@"start"]&&TCCueCommandFresh(message,NSDate.date.timeIntervalSince1970)&&[message[@"projectID"] isKindOfClass:NSString.class]){
+        else if([action isEqual:@"start"]){
             NSDictionary *project=nil;for(NSDictionary *candidate in TCCueLibrary.shared.projects)if([candidate[@"id"] isEqual:message[@"projectID"]]){project=candidate;break;}
             if(project&&[p.cursor.project[@"id"] isEqual:project[@"id"]])accepted=YES;
             else if(p.cursor)note=@"请先结束另一组眼镜提词卡。";
             else if(project){accepted=[p start:project];if(!accepted)note=p.note;}
             else note=@"找不到这个项目，请刷新项目列表。";
         }
-        else if([action isEqual:@"stop"]&&TCCueCommandFresh(message,NSDate.date.timeIntervalSince1970)){
+        else if([action isEqual:@"stop"]){
             if(p.cursor){[p stop];accepted=YES;}else accepted=YES;
         }
-        else if([@[@"next",@"previous"] containsObject:action]&&TCCueCommandFresh(message,NSDate.date.timeIntervalSince1970)&&[message[@"session"] isKindOfClass:NSString.class]&&[message[@"card"] isKindOfClass:NSString.class]&&[message[@"revision"] isKindOfClass:NSNumber.class]) {
+        else if([@[@"next",@"previous"] containsObject:action]) {
             accepted=[p move:[action isEqual:@"next"]?1:-1 session:message[@"session"] card:message[@"card"] revision:[message[@"revision"] unsignedIntegerValue]];
         }
         // Return the state after the command. A pre-command reply can overwrite
@@ -222,7 +223,7 @@ static NSMutableDictionary *TCCueWatchState(NSUInteger offset) {
         if(browseCard)state[@"browseCard"]=browseCard;
         state[@"accepted"]=@(accepted);
         if(note.length)state[@"note"]=note;
-        else if(!accepted&&![action isEqual:@"refresh"]&&![action isEqual:@"listProjects"]&&![action isEqual:@"showCard"])state[@"note"]=@"操作未完成，当前项目没有变化。";
+        else if(!accepted&&![requestedAction isEqual:@"refresh"]&&![requestedAction isEqual:@"listProjects"]&&![requestedAction isEqual:@"showCard"])state[@"note"]=@"操作未完成，当前项目没有变化。";
         reply(state);
     });
 }
