@@ -15,6 +15,10 @@ FOUNDATION_EXPORT BOOL TIOAppleHasPendingReminderCompletion(void);
 FOUNDATION_EXPORT NSString * _Nullable TIOAppleCompletionTitleFromUtterance(NSString *utterance);
 FOUNDATION_EXPORT BOOL TIOAppleIsCompletionConfirmation(NSString *utterance);
 FOUNDATION_EXPORT BOOL TIOAppleHasLinkedReminder(NSString *sourceID);
+FOUNDATION_EXPORT BOOL TIOAppleNeedsRelink(NSString *sourceID);
+// Offline-testable recovery decision: only a unique stable external ID may restore a link.
+FOUNDATION_EXPORT NSDictionary *TIOAppleRecoveryMatch(NSString * _Nullable savedExternalIdentifier,
+    NSString *expectedTitle, NSArray<NSDictionary *> *candidates);
 // Exact-title candidate picker for a user-confirmed link to an observed glasses task.
 FOUNDATION_EXPORT void TIOAppleFindPendingReminders(NSString *title,void (^completion)(NSDictionary *result));
 FOUNDATION_EXPORT void TIOAppleLinkReminder(NSString *sourceID,NSString *identifier,NSString *expectedTitle,void (^completion)(NSDictionary *result));

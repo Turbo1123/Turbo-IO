@@ -48,19 +48,43 @@ static NSString *SourceKey(NSString *sourceID){
 }
 static NSString *SourceExternalIdentifierKey(NSString *sourceID){return [SourceKey(sourceID) stringByAppendingString:@".externalIdentifier"];}
 static NSString *SourceCalendarIdentifierKey(NSString *sourceID){return [SourceKey(sourceID) stringByAppendingString:@".calendarIdentifier"];}
+static NSString *SourceNeedsRelinkKey(NSString *sourceID){return [SourceKey(sourceID) stringByAppendingString:@".needsRelink"];}
+static void MarkNeedsRelink(NSString *sourceID){
+    [NSUserDefaults.standardUserDefaults setBool:YES forKey:SourceNeedsRelinkKey(sourceID)];
+    [NSUserDefaults.standardUserDefaults synchronize];
+}
 static void PersistReminderLink(NSString *sourceID,EKReminder *reminder){
     if(!sourceID.length||!reminder.calendarItemIdentifier.length)return;
     NSUserDefaults *defaults=NSUserDefaults.standardUserDefaults;
     [defaults setObject:reminder.calendarItemIdentifier forKey:SourceKey(sourceID)];
     NSString *external=Text(reminder.calendarItemExternalIdentifier),*calendar=Text(reminder.calendar.calendarIdentifier);
     if(external.length)[defaults setObject:external forKey:SourceExternalIdentifierKey(sourceID)];
+    else [defaults removeObjectForKey:SourceExternalIdentifierKey(sourceID)];
     if(calendar.length)[defaults setObject:calendar forKey:SourceCalendarIdentifierKey(sourceID)];
+    else [defaults removeObjectForKey:SourceCalendarIdentifierKey(sourceID)];
+    [defaults removeObjectForKey:SourceNeedsRelinkKey(sourceID)];
     [defaults synchronize];
+}
+BOOL TIOAppleNeedsRelink(NSString *sourceID){
+    return sourceID.length&&sourceID.length<=300&&[NSUserDefaults.standardUserDefaults boolForKey:SourceNeedsRelinkKey(sourceID)];
 }
 BOOL TIOAppleHasLinkedReminder(NSString *sourceID){
     if(!sourceID.length||sourceID.length>300)return NO;
     NSString *identifier=[NSUserDefaults.standardUserDefaults stringForKey:SourceKey(sourceID)];
-    return identifier.length&&![identifier isEqual:@"saved"];
+    return identifier.length&&![identifier isEqual:@"saved"]&&!TIOAppleNeedsRelink(sourceID);
+}
+NSDictionary *TIOAppleRecoveryMatch(NSString *savedExternalIdentifier,NSString *expectedTitle,NSArray<NSDictionary *> *candidates){
+    if(!savedExternalIdentifier.length)return @{@"status":@"needs_relink"};
+    NSMutableArray<NSDictionary *> *matches=[NSMutableArray array];
+    for(NSDictionary *row in candidates){
+        if(![row isKindOfClass:NSDictionary.class])continue;
+        NSString *identifier=Text(row[@"identifier"]),*external=Text(row[@"externalIdentifier"]);
+        if(identifier.length&&[external isEqualToString:savedExternalIdentifier])[matches addObject:row];
+    }
+    if(matches.count!=1)return @{@"status":@"needs_relink"};
+    NSDictionary *match=matches.firstObject;
+    if(![Text(match[@"title"]) isEqualToString:expectedTitle])return @{@"status":@"changed"};
+    return @{@"status":@"matched",@"identifier":match[@"identifier"]};
 }
 static void ReminderAccess(EKEventStore *store,void (^done)(BOOL));
 void TIOAppleFindPendingReminders(NSString *title,void (^completion)(NSDictionary *)){
@@ -83,7 +107,7 @@ void TIOAppleLinkReminder(NSString *sourceID,NSString *identifier,NSString *expe
     if(!NSThread.isMainThread){dispatch_async(dispatch_get_main_queue(),^{TIOAppleLinkReminder(sourceID,identifier,expectedTitle,completion);});return;}
     if(!completion)return;expectedTitle=CleanTitle(expectedTitle);
     if(!sourceID.length||sourceID.length>300||!identifier.length||identifier.length>300||!expectedTitle){completion(@{@"status":@"invalid"});return;}
-    NSString *key=SourceKey(sourceID),*prior=[NSUserDefaults.standardUserDefaults stringForKey:key];if(prior.length&&![prior isEqual:@"saved"]){completion(@{@"status":@"already_linked"});return;}
+    NSString *key=SourceKey(sourceID),*prior=[NSUserDefaults.standardUserDefaults stringForKey:key];if(prior.length&&![prior isEqual:@"saved"]&&!TIOAppleNeedsRelink(sourceID)){completion(@{@"status":@"already_linked"});return;}
     EKEventStore *store=[EKEventStore new];ReminderAccess(store,^(BOOL granted){
         if(!granted){completion(@{@"status":@"permission_denied"});return;}
         EKCalendarItem *found=[store calendarItemWithIdentifier:identifier];
@@ -128,7 +152,8 @@ static EKReminder *NewReminder(EKEventStore *store,NSString *title,NSDate *due){
 void TIOAppleCreateReminder(NSString *title,NSString *sourceID,void (^completion)(NSDictionary *)){
     if(!NSThread.isMainThread){dispatch_async(dispatch_get_main_queue(),^{TIOAppleCreateReminder(title,sourceID,completion);});return;}
     title=CleanTitle(title);if(!title||!sourceID.length||sourceID.length>300||!completion){if(completion)completion(@{@"status":@"invalid"});return;}
-    NSString *key=SourceKey(sourceID);if([NSUserDefaults.standardUserDefaults stringForKey:key].length){completion(@{@"status":@"created",@"deduplicated":@YES});return;}
+    NSString *key=SourceKey(sourceID);if(TIOAppleNeedsRelink(sourceID)){completion(@{@"status":@"needs_relink"});return;}
+    if([NSUserDefaults.standardUserDefaults stringForKey:key].length){completion(@{@"status":@"created",@"deduplicated":@YES});return;}
     EKEventStore *store=[EKEventStore new];
     ReminderAccess(store,^(BOOL granted){
         if(!granted){completion(@{@"status":@"permission_denied"});return;}
@@ -151,22 +176,28 @@ static NSDictionary *CompleteReminder(EKEventStore *store,NSString *sourceID,NSS
     if(reminder.isCompleted)return @{@"status":@"completed"};
     return @{@"status":@"verification_failed"};
 }
-static void FindReplacementReminder(EKEventStore *store,NSString *sourceID,NSString *expectedTitle,void (^completion)(NSDictionary *)){
+static void FindReplacementReminder(EKEventStore *store,NSString *sourceID,NSString *expectedTitle,NSString *originalID,void (^completion)(NSDictionary *)){
     NSArray<EKCalendar *> *lists=[store calendarsForEntityType:EKEntityTypeReminder];
-    if(!lists.count){completion(@{@"status":@"missing"});return;}
+    if(!lists.count){MarkNeedsRelink(sourceID);completion(@{@"status":@"needs_relink"});return;}
     NSString *external=[NSUserDefaults.standardUserDefaults stringForKey:SourceExternalIdentifierKey(sourceID)];
-    NSString *calendarID=[NSUserDefaults.standardUserDefaults stringForKey:SourceCalendarIdentifierKey(sourceID)];
     NSPredicate *predicate=[store predicateForRemindersInCalendars:lists];
     [store fetchRemindersMatchingPredicate:predicate completion:^(NSArray<EKReminder *> *items){dispatch_async(dispatch_get_main_queue(),^{
-        NSMutableArray<EKReminder *> *titleMatches=[NSMutableArray array];
-        for(EKReminder *item in items)if(item.calendarItemIdentifier.length&&[item.title isEqualToString:expectedTitle])[titleMatches addObject:item];
-        NSArray<EKReminder *> *(^matchesBy)(BOOL (^)(EKReminder *))=^NSArray<EKReminder *> *(BOOL (^test)(EKReminder *)){NSMutableArray *rows=[NSMutableArray array];for(EKReminder *item in titleMatches)if(test(item))[rows addObject:item];return rows;};
+        NSString *currentID=[NSUserDefaults.standardUserDefaults stringForKey:SourceKey(sourceID)];
+        if(![currentID isEqualToString:originalID]||TIOAppleNeedsRelink(sourceID)){completion(@{@"status":@"needs_relink"});return;}
+        NSMutableArray<NSDictionary *> *rows=[NSMutableArray array];
+        for(EKReminder *item in items){
+            if(!item.calendarItemIdentifier.length)continue;
+            [rows addObject:@{@"identifier":item.calendarItemIdentifier,@"externalIdentifier":Text(item.calendarItemExternalIdentifier),@"title":Text(item.title),@"calendarIdentifier":Text(item.calendar.calendarIdentifier)}];
+        }
+        NSDictionary *decision=TIOAppleRecoveryMatch(external,expectedTitle,rows);
+        if(![decision[@"status"] isEqual:@"matched"]){
+            if([decision[@"status"] isEqual:@"needs_relink"])MarkNeedsRelink(sourceID);
+            completion(@{@"status":decision[@"status"]?:@"needs_relink"});return;
+        }
+        NSString *replacementID=decision[@"identifier"];
         EKReminder *replacement=nil;
-        if(external.length){NSArray *matches=matchesBy(^BOOL(EKReminder *item){return [item.calendarItemExternalIdentifier isEqualToString:external];});if(matches.count==1)replacement=matches.firstObject;else if(matches.count>1){completion(@{@"status":@"ambiguous"});return;}}
-        if(!replacement&&calendarID.length){NSArray *matches=matchesBy(^BOOL(EKReminder *item){return [item.calendar.calendarIdentifier isEqualToString:calendarID];});if(matches.count==1)replacement=matches.firstObject;else if(matches.count>1){completion(@{@"status":@"ambiguous"});return;}}
-        if(!replacement){if(titleMatches.count==1)replacement=titleMatches.firstObject;else if(titleMatches.count>1){completion(@{@"status":@"ambiguous"});return;}}
-        if(!replacement){completion(@{@"status":@"missing"});return;}
-        PersistReminderLink(sourceID,replacement);
+        for(EKReminder *item in items)if([item.calendarItemIdentifier isEqualToString:replacementID]){replacement=item;break;}
+        if(!replacement){MarkNeedsRelink(sourceID);completion(@{@"status":@"needs_relink"});return;}
         completion(CompleteReminder(store,sourceID,expectedTitle,replacement));
     });}];
 }
@@ -174,6 +205,7 @@ void TIOAppleCompleteLinkedReminder(NSString *sourceID,NSString *expectedTitle,v
     if(!NSThread.isMainThread){dispatch_async(dispatch_get_main_queue(),^{TIOAppleCompleteLinkedReminder(sourceID,expectedTitle,completion);});return;}
     if(!completion)return;expectedTitle=CleanTitle(expectedTitle);
     if(!sourceID.length||sourceID.length>300||!expectedTitle){completion(@{@"status":@"invalid"});return;}
+    if(TIOAppleNeedsRelink(sourceID)){completion(@{@"status":@"needs_relink"});return;}
     NSString *identifier=[NSUserDefaults.standardUserDefaults stringForKey:SourceKey(sourceID)];
     if(!identifier.length||[identifier isEqual:@"saved"]){completion(@{@"status":@"not_linked"});return;}
     EKEventStore *store=[EKEventStore new];
@@ -182,10 +214,12 @@ void TIOAppleCompleteLinkedReminder(NSString *sourceID,NSString *expectedTitle,v
         EKCalendarItem *item=[store calendarItemWithIdentifier:identifier];
         if([item isKindOfClass:EKReminder.class]){
             EKReminder *reminder=(EKReminder *)item;
+            NSString *external=[NSUserDefaults.standardUserDefaults stringForKey:SourceExternalIdentifierKey(sourceID)];
+            if(external.length&&![reminder.calendarItemExternalIdentifier isEqualToString:external]){MarkNeedsRelink(sourceID);completion(@{@"status":@"needs_relink"});return;}
             if(![reminder.title isEqualToString:expectedTitle]){completion(@{@"status":@"changed"});return;}
             completion(CompleteReminder(store,sourceID,expectedTitle,reminder));return;
         }
-        FindReplacementReminder(store,sourceID,expectedTitle,completion);
+        FindReplacementReminder(store,sourceID,expectedTitle,identifier,completion);
     });
 }
 void TIOApplePrepareReminderCompletion(NSString *title,void (^completion)(NSDictionary *)){

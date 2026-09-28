@@ -33,6 +33,7 @@ trap './build/todo-completion-ledger-tests cleanup "$ledger_test_suite"' EXIT
 ./build/todo-completion-ledger-tests write "$ledger_test_suite"
 ./build/todo-completion-ledger-tests read "$ledger_test_suite"
 ./build/todo-completion-ledger-tests verify "$ledger_test_suite"
+./build/todo-completion-ledger-tests cleanup "$ledger_test_suite"
 trap - EXIT
 xcrun clang -fobjc-arc -fmodules -Wall -Wextra -Wno-incompatible-pointer-types -framework Foundation RecordingExports.m RecordingExportsTests.m -o build/recording-export-tests
 ./build/recording-export-tests
@@ -85,11 +86,12 @@ cd focus-edition
 xcrun clang -fobjc-arc -fmodules -Wall -Wextra -framework Foundation TodoProtocol.m TodoProtocolTests.m -o ../build/focus-todo-protocol-tests
 ../build/focus-todo-protocol-tests
 xcrun clang -fobjc-arc -fmodules -Wall -Wextra -framework Foundation TodoCompletionLedger.m TodoCompletionLedgerTests.m -o ../build/focus-todo-completion-ledger-tests
-focus_ledger_suite="io.turboio.todo.focus-ledger-tests.$(uuidgen)"
+focus_ledger_suite="io.turboio.todo.ledger-tests.focus-$(uuidgen)"
 trap '../build/focus-todo-completion-ledger-tests cleanup "$focus_ledger_suite"' EXIT
 ../build/focus-todo-completion-ledger-tests write "$focus_ledger_suite"
 ../build/focus-todo-completion-ledger-tests read "$focus_ledger_suite"
 ../build/focus-todo-completion-ledger-tests verify "$focus_ledger_suite"
+../build/focus-todo-completion-ledger-tests cleanup "$focus_ledger_suite"
 trap - EXIT
 xcrun clang -fobjc-arc -fmodules -Wall -Wextra -framework Foundation -framework EventKit AppleCalendarSync.m AppleCalendarSyncTests.m -o ../build/focus-apple-calendar-sync-tests
 ../build/focus-apple-calendar-sync-tests
