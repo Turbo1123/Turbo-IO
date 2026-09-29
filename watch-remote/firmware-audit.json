@@ -1,0 +1,97 @@
+{
+  "candidate": "TGR1-GLOBAL-01",
+  "auditDate": "2026-09-29",
+  "zipBytes": 9322287,
+  "zipSHA256": "79e56482f4b3688d527ac2ef9c43d7157e6e0767a2d9625aeefe58033808c2ac",
+  "apBytes": 9593544,
+  "apSHA256": "456929643c3e1bba56d5e4bccaceb62c7290fd3f7f3193161dc043b2bc01e528",
+  "apMD5": "79595b836b1fd7a41da7f0e350c20f98",
+  "apBudgetBytes": 9600000,
+  "apBudgetHeadroomBytes": 6456,
+  "unchangedNonAPPayloads": [
+    "nuttx_audio.bin",
+    "cb_fw_venus.bin",
+    "ota_installer_progress.bin",
+    "images.bin",
+    "lotties.bin",
+    "rives.bin",
+    "nuttx_bth.bin",
+    "fac_test_img.bin",
+    "nuttx_apc1.bin",
+    "smf.json",
+    "pil_algo_vad_demo.dll",
+    "pil_algo_wakeup_dll_nand.dll",
+    "pil_algo_up_demo_nand.dll"
+  ],
+  "manifestValid": true,
+  "archiveValid": true,
+  "newSensitivePatternMatches": 0,
+  "members": {
+    "OtaFileInfo.json": {
+      "bytes": 2515,
+      "sha256": "f725f4a4dd09851d551080eb05d200f7a96fac1e8fe3f3d529ba2124d9ad2a29"
+    },
+    "nuttx_audio.bin": {
+      "bytes": 1461920,
+      "sha256": "549a72c032595e3829da7d63b7e1fd13cceda1a55dfefa7a7cad02db5a9b42ab"
+    },
+    "cb_fw_venus.bin": {
+      "bytes": 114592,
+      "sha256": "8799f12071bdac082218e3601c24ab0989275fc2f7db74e37b8314a225c2cf7d"
+    },
+    "nuttx_ap.bin": {
+      "bytes": 9593544,
+      "sha256": "456929643c3e1bba56d5e4bccaceb62c7290fd3f7f3193161dc043b2bc01e528"
+    },
+    "ota_installer_progress.bin": {
+      "bytes": 5616,
+      "sha256": "6fd65d296a667e1a7d94ec129adfd26458a4008ef403b331f855192c36eb3e3f"
+    },
+    "images.bin": {
+      "bytes": 324283,
+      "sha256": "192fefaa70545856884c89a9186e3f86d8f99a0738b201e116a11bc63011c158"
+    },
+    "lotties.bin": {
+      "bytes": 651481,
+      "sha256": "ad66d83a3394034f825a12769aad292fc03e59fa865fe06bc43536b918a0b32b"
+    },
+    "rives.bin": {
+      "bytes": 689431,
+      "sha256": "836bc019f7152890b94cafafe2edaa024f317526318349f7833319e41158b104"
+    },
+    "nuttx_bth.bin": {
+      "bytes": 1160160,
+      "sha256": "a8f4594868bffbd3bc08a38d1f3899571608e2d57869d147de3d06f3e4f7a12a"
+    },
+    "fac_test_img.bin": {
+      "bytes": 1821552,
+      "sha256": "18eb0901c3e0daeae48dd5f015252b6931ea7368f0160c2c985c4e74296d17eb"
+    },
+    "nuttx_apc1.bin": {
+      "bytes": 1420248,
+      "sha256": "97d56ffc6dd575ad3d8bf7739d49e491ad7e4a959db8770b653f5302e171fb5c"
+    },
+    "smf.json": {
+      "bytes": 23510,
+      "sha256": "2713dc3a302a65c101fa981500cd8b217766c526b6045bf02db5e9e6763d076d"
+    },
+    "pil_algo_vad_demo.dll": {
+      "bytes": 433432,
+      "sha256": "7ac5b5191202adea20c62642987fa0049024dde9c386ba6cd08a1f29ddd5c92c"
+    },
+    "pil_algo_wakeup_dll_nand.dll": {
+      "bytes": 287560,
+      "sha256": "d1594cb8658b228e52c2606d02f1eab696d35a11ed42ddcb725e76a745f5550f"
+    },
+    "pil_algo_up_demo_nand.dll": {
+      "bytes": 504388,
+      "sha256": "e266726fe055ac6ec6f785a9440e8da7421402f2b4d3d7889039ad9b94e119c2"
+    }
+  },
+  "validation": {
+    "userReportedFlashComplete": true,
+    "fullInputValidated": false,
+    "knownIssue": "Global paging did not work; unresolved.",
+    "rebuiltOrFlashedForThisPublication": false
+  }
+}

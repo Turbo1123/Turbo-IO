@@ -4,7 +4,11 @@
 
 **先看状态：私用 TGR1 已有用户反馈刷入完成，但随后反馈“翻页翻不了”，尚未定位闭环。公开抽取版只完成下述离线测试与构建，没有安装或真机输入验收。请勿把源码公开理解为全局遥控已经可用。**
 
-本次公开 Watch UI/输入核心、iOS 插件桥与设置页、TGR1 AP 协议/输入适配、公开源码派生脚本及测试。不发布合并 IPA、签名 Watch App、描述文件、证书、设备标识、Cookie、Key、个人诊断或可刷 TGR1 ZIP。沿用 [PolyForm Noncommercial 1.0.0](../LICENSE)；第三方、厂商及 Apple 内容保留各自权利。
+![Apple Watch 遥控实验更新概念图](../docs/screenshots/apple-watch-update-wide-20260929.png)
+
+*imagegen 概念图，不是实机截图。*
+
+本次公开 Watch UI/输入核心、iOS 插件桥与设置页、TGR1 AP 协议/输入适配、公开源码派生脚本及测试；另附[原样 TGR1 实验 OTA 与校验说明](FIRMWARE_RELEASE.md)。不发布合并 IPA、签名 Watch App、描述文件、证书、设备标识、Cookie、Key或个人诊断。原创代码沿用 [PolyForm Noncommercial 1.0.0](../LICENSE)；第三方、厂商及 Apple 内容保留各自权利，完整 OTA 不等于原厂固件源码开源。
 
 ## 功能与边界
 
@@ -93,7 +97,7 @@ python3 watch-remote/stage-firmware.py \
 
 该步骤仅复制原创源码、增加编译单元并扩展既有消息 hook，不生成可刷 ZIP。完整链接还依赖原厂基线、符号和构建输入，见 [TAP1 源码边界](../firmware-research/strix-1.0.4.12/tap1/README.md)。公开 TAP1、FOCUS-04 和原厂固件不能假定已支持 TGR1；不要把其他 Release 的固件当作配套包。
 
-后续候选必须重新核对：仅 `nuttx_ap.bin` 改变，其他 13 个负载逐字节一致，AP 长度、MD5、OTA 清单及 ZIP SHA-256 一致，并检查 AP 分区预算。仅改 AP 仍可能崩溃、失去升级能力或损坏设备，回滚不保证救砖。**当前输入问题未闭环，本次不发布可刷包，不应盲刷。**
+后续候选必须重新核对：仅 `nuttx_ap.bin` 改变，其他 13 个负载逐字节一致，AP 长度、MD5、OTA 清单及 ZIP SHA-256 一致，并检查 AP 分区预算。仅改 AP 仍可能崩溃、失去升级能力或损坏设备，回滚不保证救砖。**当前输入问题未闭环；另附的原样归档包仅供开发研究，不应盲刷。** 公开源码派生脚本不会自动开启 TGR1 OTA，旧版公开 APK 也不能直接刷这个包；详见[发布与兼容条件](FIRMWARE_RELEASE.md)。
 
 协议、内存所有权、时限和逐页验收见 [GLOBAL_REMOTE.md](GLOBAL_REMOTE.md)。`tests/global_arm.py` 供具备完整候选 BIN/ELF 时运行 ARM 模型测试，需要 Unicorn、llvm-nm；不是真机证明，本次抽取没有重新链接候选。
 

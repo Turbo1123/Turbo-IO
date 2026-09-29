@@ -6,6 +6,7 @@ import {createHash} from 'node:crypto';
 
 // Exact, visually reviewed documentation captures, not a blanket PNG exclusion.
 const reviewedScreenshots = new Map([
+  ['docs/screenshots/apple-watch-update-wide-20260929.png', '057d15e60dbc18982058fb59458aba3f860944e4c1721dcd2bb20dd62478e5ab'], // Reviewed imagegen concept art, no account/device capture; experimental-status disclaimer.
   ['firmware-research/strix-1.0.4.12/assets/turbo-photo-on-glasses.png', 'fc40e716e30ad8817aa27482e497b7ab7f23f77b03c884ef3533b2df0b96a49c'], // Owner-authorized glasses photo; EXIF/XMP removed, IDAT pixels unchanged, visually reviewed.
   ['firmware-research/strix-1.0.4.12/assets/turbo-photo.png', '47031ca47ddb044cedc6af2146018556954572311e2dfd58e807354e7ac17251'], // Owner-provided original color illustration; EXIF removed, pixels unchanged; presentation only.
   ['firmware-research/strix-1.0.4.12/assets/turbo-photo-firmware.png', '738169867ec0ca778cd6ce14e803aaa508bf16f8e169d1081db3e622d571db24'], // Exact embedded portrait, owner explicitly authorized publication; deterministic rebuild input.
