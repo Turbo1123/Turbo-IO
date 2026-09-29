@@ -1,0 +1,68 @@
+name: TurboWatchRemote
+options:
+  deploymentTarget:
+    iOS: "18.0"
+    watchOS: "11.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  RayNeoWatchRemote:
+    type: application
+    platform: watchOS
+    sources: [Watch, Shared]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.rayneo.venus.pub.turbowatch
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) TIO_RAYNEO_HOST"
+        INFOPLIST_KEY_CFBundleDisplayName: Turbo 遥控
+        INFOPLIST_KEY_WKApplication: YES
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: com.rayneo.venus.pub
+        INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp: NO
+        INFOPLIST_KEY_NSMotionUsageDescription: 在你开启遥控时识别左右转腕，不保存运动历史。
+        ENABLE_DEBUG_DYLIB: NO
+        MARKETING_VERSION: "1.0.5"
+        CURRENT_PROJECT_VERSION: "201"
+  TurboWatchProbe:
+    type: application
+    platform: iOS
+    sources: [Phone, Shared]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.turboio.watchprobe
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Turbo Watch Probe
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    dependencies:
+      - target: TurboWatchRemote
+        embed: true
+  TurboWatchRemote:
+    type: application
+    platform: watchOS
+    sources: [Watch, Shared]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.turboio.watchprobe.watchapp
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Turbo 遥控
+        INFOPLIST_KEY_WKApplication: YES
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: org.turboio.watchprobe
+        INFOPLIST_KEY_NSMotionUsageDescription: 在你开启遥控时识别左右转腕，不保存运动历史。
+schemes:
+  RayNeoWatchRemote:
+    build:
+      targets:
+        RayNeoWatchRemote: all
+  TurboWatchRemote:
+    build:
+      targets:
+        TurboWatchRemote: all
+  TurboWatchProbe:
+    build:
+      targets:
+        TurboWatchProbe: all

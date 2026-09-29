@@ -8,7 +8,7 @@
 
 原创代码仅供学习、研究与非商业使用，沿用 [PolyForm Noncommercial 1.0.0](LICENSE)，未经授权不得商用或收费分发。除源码及明确列出的依赖，Release 提供原厂砸壳 IPA 作为 iOS 扩展输入，以及下述 **Android 1.0.5 非官方完整插件 APK / 高风险实验固件**。原厂部分版权仍归各自权利人，不因分发修改包而重新许可。**不提供个人密钥、Cookie、账号、签名私钥，亦不提供合并后的 IPA / HAP**；第三方服务由用户自行配置。
 
-**文档更新：2026-09-27** · 日期表示文档整理或所注明的实测记录，不代表当天全量回归。
+**文档更新：2026-09-29** · 日期表示文档整理或所注明的实测记录，不代表当天全量回归。
 
 **[Android APK / 固件下载](https://github.com/Turbo1123/Turbo-IO/releases/tag/android-105-guard07-tap1-test01) · [Android 安装与刷机](android-addon/docs/INSTALL_AND_FLASH.md) · [iOS 源码与构建](official-addon/README.md) · [☕ 自愿支持项目](#support)**
 
@@ -55,6 +55,7 @@ MCP 在**用户自己的 Server** 上运行，眼镜不运行 MCP、浏览器或
 
 | 日期 | 更新 | 公开范围 |
 | --- | --- | --- |
+| 2026-09-29 | [Apple Watch 遥控实验源码](#apple-watch-remote) | Watch 表冠/屏幕/手势、iOS 桥接、TGR1 AP 输入适配与离线测试；已知翻页问题未闭环，不含可刷固件或签名包 |
 | 2026-09-27 | [Android 1.0.5 完整插件与官方流程 OTA](#android-release-update) | 去除网页正文适配的完整APK、扩展源码、TAP1-TEST-01原样实刷固件、校验与逐步教程；高风险实验版 |
 | 2026-09-26 | [开发者生态：应用广场、仪表盘与 App SDK](#developer-ecosystem) | 自托管 API / Python / MCP、20 个离线模板 ZIP、Agent Skill、协议参考源码；配套完整固件不在本次发布内 |
 | 2026-09-25 | [重磅更新：新 UI、四项菜单、原生番茄时钟](#focus-update) | FOCUS-04 原创源码、配套 iOS 插件与精确实刷实验固件；不含私人配置或网页正文适配 |
@@ -67,6 +68,14 @@ MCP 在**用户自己的 Server** 上运行，眼镜不运行 MCP、浏览器或
 > **自定义固件是试验用品，非开发者请勿刷。** AP 改动仍可能导致无法启动或失去 OTA；不要混用不同候选的固件、手机门禁或授权。原厂回滚不是救砖保证。实机成功不等于生产稳定版。
 
 <a id="android-release-update"></a>
+
+<a id="apple-watch-remote"></a>
+
+### 2026-09-29 · Apple Watch 遥控：表冠、手势与屏幕操作
+
+把 Watch 作为眼镜的输入端：经配对 iPhone 的雷鸟插件中转，支持表冠上一项/下一项、屏幕确认/返回、两套手势映射，以及 10 分钟或始终开启的手机授权。[源码、构建与接入](watch-remote/README.md) · [TGR1 协议与验收边界](watch-remote/GLOBAL_REMOTE.md)
+
+**实验源码，不是稳定遥控交付。** 私用 TGR1 虽已有刷入反馈，但“翻页翻不了”仍未闭环；本次公开版仅完成离线回归与构建，没有新真机验收。全局输入需要配套 TGR1，原厂固件与已发布 TAP1/FOCUS-04 不自动支持。不发布私人 IPA、签名材料、个人配置或可刷 TGR1 ZIP；始终开启也不保证 Watch/手机后台可达。
 
 ### 2026-09-27 · Android 1.0.5 完整插件与实验 OTA
 

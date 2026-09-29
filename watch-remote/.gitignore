@@ -1,0 +1,11 @@
+/build*/
+/*.xcodeproj/
+/**/__pycache__/
+*.pyc
+*.ipa
+*.mobileprovision
+*.p12
+*.p8
+*.cer
+*.key
+/private/

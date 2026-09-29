@@ -1,0 +1,27 @@
+name: Apple Watch remote source
+on:
+  pull_request:
+    paths:
+      - 'watch-remote/**'
+      - 'official-addon/focus-edition/**'
+      - 'firmware-research/strix-1.0.4.12/tap1/source/**'
+      - '.github/workflows/watch-remote.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'watch-remote/**'
+      - '.github/workflows/watch-remote.yml'
+permissions:
+  contents: read
+jobs:
+  offline:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash watch-remote/tests/run.sh
+      - run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s watch-remote/tests -p 'test_*.py' -v
+      - name: Public source staging (no signing, device or firmware build)
+        run: |
+          python3 watch-remote/stage-addon.py --base official-addon/focus-edition --out watch-remote/build-ci-phone
+          python3 watch-remote/stage-firmware.py --base firmware-research/strix-1.0.4.12/tap1/source --out watch-remote/build-ci-ap
