@@ -84,6 +84,14 @@ print(json.dumps({'entitlements':p['Entitlements'],'expires':p['ExpirationDate']
     const info=JSON.parse(run('plutil',['-convert','json','-o','-',plist],{encoding:'utf8'}));
     if(!info.NSMicrophoneUsageDescription)run('plutil',['-insert','NSMicrophoneUsageDescription','-string','在用户主动开启英语离线字幕时使用所选麦克风；停止后结束收音。',plist]);
   }
+  const permissionsPlist=path.join(app,'Info.plist');
+  const permissionsInfo=JSON.parse(run('plutil',['-convert','json','-o','-',permissionsPlist],{encoding:'utf8'}));
+  for(const [key,message] of Object.entries({
+    NSRemindersUsageDescription:'将你明确创建的 Turbo IO 待办写入苹果提醒事项。',
+    NSRemindersFullAccessUsageDescription:'将你明确创建的 Turbo IO 待办和日程写入苹果提醒事项。',
+    NSCalendarsUsageDescription:'将你明确创建的 Turbo IO 日程写入苹果日历。',
+    NSCalendarsWriteOnlyAccessUsageDescription:'将你明确创建的 Turbo IO 日程写入苹果日历。'
+  }))if(!permissionsInfo[key])run('plutil',['-insert',key,'-string',message,permissionsPlist]);
   if(otaPatch){
     fs.writeFileSync(path.join(app,'Frameworks/App.framework/App'),otaPatch.output);
     const plist=path.join(app,'Info.plist');

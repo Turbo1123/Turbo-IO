@@ -13,6 +13,7 @@
 #import "AlwaysOnAudio.h"
 #import "WebSearch.h"
 #import "TodoRuntime.h"
+#import "AppleCalendarSync.h"
 #import "TodoProtocol.h"
 #import "NewsReader.h"
 #import "MusicPlayer.h"
@@ -156,6 +157,21 @@ static void Alert(NSString *title,NSString *message) {
 - (BOOL)exitVoice;
 @end
 static TIOController *Controller;
+static NSString *DirectUtterance,*DirectSession;
+static __weak id DirectListener;
+static NSTimeInterval DirectAt;
+static BOOL DirectTurnOwned,DirectWaiting;
+static NSUInteger DirectGeneration;
+// Direct official-voice completion stays disabled until its callback can be
+// verified on glasses. The wrong-create guard below remains active.
+static const BOOL DirectVoiceEnabled=NO;
+static void SaveDirectStage(NSString *stage){
+    NSString *dir=[NSHomeDirectory() stringByAppendingPathComponent:@"Library/Application Support/TurboIOPrivateAddon"];
+    [NSFileManager.defaultManager createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:@{NSFilePosixPermissions:@0700} error:nil];
+    NSDictionary *row=@{@"stage":stage?:@"",@"time":@([NSDate.date timeIntervalSince1970]),@"pending":@(TIOAppleHasPendingReminderCompletion()),@"mode":@([Prefs integerForKey:@"mode"])};
+    NSData *data=[NSJSONSerialization dataWithJSONObject:row options:0 error:nil];
+    [data writeToFile:[dir stringByAppendingPathComponent:@"direct-reminder-voice.json"] atomically:YES];
+}
 
 static id CopyResponse(id source,NSString *answer,BOOL final) {
     // Only use the observed wrapper class. Do not call guessed Swift addresses.
@@ -237,7 +253,15 @@ static id CopyResponse(id source,NSString *answer,BOOL final) {
     }else{
         _request=[TIORequest new];__weak typeof(self) weakSelf=self;
         TIOTodoSetChatContext(listener,response);
-        _request.createTodo=^(NSString *title,void (^completion)(NSDictionary *result)){TIOTodoCreateFromTool(title,completion);};
+        _request.createTodo=^(NSString *title,void (^completion)(NSDictionary *result)){
+            TIOTodoCreateFromTool(title,^(NSDictionary *result){
+                if(![result[@"status"] isEqual:@"created"]||![result[@"source_id"] isKindOfClass:NSString.class]){completion(@{@"status":result[@"status"]?:@"unknown",@"apple_reminder_status":@"not_created"});return;}
+                TIOAppleCreateReminder(title,result[@"source_id"],^(NSDictionary *apple){completion(@{@"status":@"created",@"apple_reminder_status":apple[@"status"]?:@"failed"});});
+            });
+        };
+        _request.createSchedule=^(NSDictionary *schedule,void (^completion)(NSDictionary *result)){TIOAppleCreateSchedule(schedule,completion);};
+        _request.prepareReminderCompletion=^(NSString *title,void (^completion)(NSDictionary *result)){TIOApplePrepareReminderCompletion(title,completion);};
+        _request.confirmReminderCompletion=^(void (^completion)(NSDictionary *result)){TIOAppleConfirmReminderCompletion(completion);};
         _requestQuestion=[_asr copy];_request.history=[_history snapshot];
         _request.update=^(NSString *text,BOOL done,NSString *error){[weakSelf emitText:text done:done error:error generation:gen];};
         [_request startQuestion:_asr];
@@ -267,6 +291,7 @@ static void AsrHook(id self,SEL cmd,id text,BOOL final,id sid) {
     void (^work)(void)=^{
         if(final&&[Prefs boolForKey:@"voiceExitCommands"]&&TIOIsVoiceExitCommand(copy)&&[Controller exitVoice])return;
         if(Controller.voiceExited)return;
+        if(final){DirectUtterance=[copy copy];DirectSession=[session copy];DirectListener=self;DirectAt=[NSDate.date timeIntervalSince1970];DirectTurnOwned=NO;DirectWaiting=NO;DirectGeneration++;if(TIOAppleCompletionTitleFromUtterance(copy)||TIOAppleIsCompletionConfirmation(copy))SaveDirectStage(@"asr_final");}
         // The official app reopens the microphone automatically after a
         // response. Only recognized user speech, not audio-start, is a barge-in.
         if(copy.length&&[Prefs boolForKey:@"ttsEnabled"]){[Prefs setObject:@"user.asr" forKey:@"ttsLastReset"];[VoiceTTS cancel];}
@@ -276,16 +301,74 @@ static void AsrHook(id self,SEL cmd,id text,BOOL final,id sid) {
     if(NSThread.isMainThread)work();else dispatch_async(dispatch_get_main_queue(),work);
 }
 static void AudioStartHook(id self,SEL cmd) {
-    void (^work)(void)=^{TWReaderPauseForVoice();TMMusicPauseForVoice();Controller.voiceExited=NO;[Controller.taskGate beginTurn];OriginalAudioStart(self,cmd);};
+    void (^work)(void)=^{TWReaderPauseForVoice();TMMusicPauseForVoice();Controller.voiceExited=NO;DirectTurnOwned=NO;DirectWaiting=NO;DirectUtterance=nil;DirectSession=nil;DirectListener=nil;DirectGeneration++;[Controller.taskGate beginTurn];OriginalAudioStart(self,cmd);};
     if(NSThread.isMainThread)work();else dispatch_async(dispatch_get_main_queue(),work);
+}
+static NSString *CompletionVoicePhrase(void){return [[DirectUtterance?:@"" stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet] lowercaseString];}
+static BOOL WrongCreationForCompletion(id value){return [CompletionVoicePhrase() hasPrefix:@"完成"]&&[String(Get(value,@"domain")) isEqual:@"task"]&&[String(Get(value,@"intent")) isEqual:@"create_task"]&&[String(Get(Get(value,@"command"),@"name")) isEqual:@"create_task"];}
+static id SafeChatTemplate(id value){
+    id copy=CopyResponse(value,@"",NO);if(!copy)return nil;
+    @try{[copy setValue:@"chat" forKey:@"domain"];[copy setValue:@"chat" forKey:@"intent"];[copy setValue:@"workflow" forKey:@"sub"];[copy setValue:nil forKey:@"command"];[copy setValue:@NO forKey:@"offline"];[copy setValue:@NO forKey:@"hasNextRound"];[copy setValue:@"" forKey:@"rawData"];}@catch(NSException *e){return nil;}
+    return copy;
+}
+static void FinishDirectCompletion(id listener,id template,BOOL confirm,NSDictionary *result,NSUInteger generation){
+    if(generation!=DirectGeneration||!DirectTurnOwned||!DirectWaiting||listener!=DirectListener)return;
+    DirectWaiting=NO;
+    NSString *status=String(result[@"status"]),*answer;
+    SaveDirectStage([@"callback_" stringByAppendingString:status.length?status:@"unknown"]);
+    if(confirm){
+        if([status isEqual:@"completed"])answer=@"对应的苹果提醒事项已完成；雷鸟官方待办未改变。";
+        else if([status isEqual:@"expired"])answer=@"确认已过期，请重新说出要完成的苹果提醒事项。";
+        else answer=@"苹果提醒事项没有完成：原条目、权限或状态已变化。";
+    }else{
+        if([status isEqual:@"confirmation_required"])answer=[NSString stringWithFormat:@"找到苹果提醒事项“%@”。如要完成，请在两分钟内说‘确认完成’。",String(result[@"title"])];
+        else if([status isEqual:@"ambiguous"])answer=@"找到多个同名苹果提醒事项，没有修改，请先区分标题。";
+        else if([status isEqual:@"not_found"])answer=@"没有找到这条未完成的苹果提醒事项，没有修改。";
+        else if([status isEqual:@"permission_denied"])answer=@"没有苹果提醒事项权限，没有修改。";
+        else answer=@"无法确认这条苹果提醒事项，没有修改。";
+    }
+    id reply=CopyResponse(template,answer,YES);
+    if(reply){@try{[reply setValue:@"echo" forKey:@"domain"];[reply setValue:@"echo" forKey:@"intent"];[reply setValue:nil forKey:@"command"];}@catch(NSException *e){reply=nil;}}
+    if(reply)OriginalNlp(listener,NSSelectorFromString(@"onNlpResult:"),reply);
+    SaveDirectStage(reply?@"reply_sent":@"reply_template_failed");
+    OriginalComplete(listener,NSSelectorFromString(@"onResponseComplete"));
+    SaveDirectStage(@"complete_sent");
+    Diagnostic=[NSString stringWithFormat:@"苹果提醒事项语音完成：%@",status.length?status:@"unknown"];
 }
 static void NlpHook(id self,SEL cmd,id value) {
     // Route decisions on the main queue to serialize ASR, cancellation and stream completion.
-    void (^work)(void)=^{if(Controller.voiceExited)return;if(TIOTodoIsToolDispatching()){OriginalNlp(self,cmd,value);return;}TIOTodoObserveNlp(self,value);if(![Controller receiveNlp:value listener:self])OriginalNlp(self,cmd,[Controller observeOfficialVoice:value]);};
+    void (^work)(void)=^{
+        if(Controller.voiceExited)return;
+        if(TIOTodoIsToolDispatching()){OriginalNlp(self,cmd,value);return;}
+        if(DirectTurnOwned&&self==DirectListener)return;
+        BOOL sameSession=!DirectSession.length||![Get(value,@"sessionId") isKindOfClass:NSString.class]||[DirectSession isEqual:String(Get(value,@"sessionId"))];
+        BOOL recent=DirectListener==self&&sameSession&&[NSDate.date timeIntervalSince1970]-DirectAt<20;
+        NSString *title=recent?TIOAppleCompletionTitleFromUtterance(DirectUtterance):nil;
+        BOOL confirm=recent&&TIOAppleIsCompletionConfirmation(DirectUtterance)&&TIOAppleHasPendingReminderCompletion();
+        if(DirectVoiceEnabled&&(title||confirm)){
+            DirectTurnOwned=YES;DirectWaiting=YES;NSUInteger generation=DirectGeneration;
+            SaveDirectStage(confirm?@"confirm_intercepted":@"prepare_intercepted");
+            id template=value;
+            void (^done)(NSDictionary *)=^(NSDictionary *result){dispatch_async(dispatch_get_main_queue(),^{FinishDirectCompletion(self,template,confirm,result,generation);});};
+            if(confirm)TIOAppleConfirmReminderCompletion(done);else TIOApplePrepareReminderCompletion(title,done);
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW,15*NSEC_PER_SEC),dispatch_get_main_queue(),^{FinishDirectCompletion(self,template,confirm,@{@"status":@"timeout"},generation);});
+            return;
+        }
+        if(WrongCreationForCompletion(value)){
+            id notice=SafeChatTemplate(value);
+            if(notice){@try{[notice setValue:@"echo" forKey:@"domain"];[notice setValue:@"echo" forKey:@"intent"];[notice setValue:@"已阻止将完成请求误作新建待办。" forKey:@"answer"];[notice setValue:@YES forKey:@"finished"];}@catch(NSException *e){notice=nil;}}
+            if(notice)OriginalNlp(self,cmd,notice);
+            SaveDirectStage(@"wrong_create_blocked");
+            Diagnostic=@"完成请求被官方误判为新建，已阻止写入";
+            return;
+        }
+        TIOTodoObserveNlp(self,value);
+        if(![Controller receiveNlp:value listener:self])OriginalNlp(self,cmd,[Controller observeOfficialVoice:value]);
+    };
     if(NSThread.isMainThread)work();else dispatch_async(dispatch_get_main_queue(),work);
 }
 static void CompleteHook(id self,SEL cmd) {
-    void (^work)(void)=^{CompletionEvents++;if(Controller.voiceExited)return;[Controller completeOfficialVoice];if(![Prefs integerForKey:@"mode"]||!(Controller.listener==self&&Controller.ownsTurn))OriginalComplete(self,cmd);};
+    void (^work)(void)=^{CompletionEvents++;if(Controller.voiceExited)return;if(DirectTurnOwned&&self==DirectListener){SaveDirectStage(@"official_complete_held");return;}[Controller completeOfficialVoice];if(![Prefs integerForKey:@"mode"]||!(Controller.listener==self&&Controller.ownsTurn))OriginalComplete(self,cmd);};
     if(NSThread.isMainThread)work();else dispatch_async(dispatch_get_main_queue(),work);
 }
 static void AlwaysOnHook(id self,SEL cmd,id value) {
@@ -353,9 +436,9 @@ static void AlwaysOnHook(id self,SEL cmd,id value) {
 - (UITableViewCell *)legacyCell:(UITableView *)tableView at:(NSIndexPath *)ip {
     UITableViewCell *c=[[UITableViewCell alloc]initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:nil];c.detailTextLabel.numberOfLines=0;
     if(ip.section==0){
-        c.textLabel.text=@[@"选择回答模型",@"配置自有 API",@"测试 API（合成问题）",@"DeepSeek：关闭思考扩展参数",@"对话历史（点此清空）",@"查看系统提示词",@"语音退出指令",@"联网搜索 · TinyFish",@"配置 TinyFish Key",@"测试联网搜索（公开问题）",@"待办协议验收",@"模型 Tools",@"AI 新闻订阅"][ip.row];
+        c.textLabel.text=@[@"选择回答模型",@"配置自有 API",@"测试 API（合成问题）",@"DeepSeek：关闭思考扩展参数",@"对话历史（点此清空）",@"查看系统提示词",@"语音退出指令",@"联网搜索 · TinyFish",@"配置 TinyFish Key",@"测试联网搜索（公开问题）",@"待办同步",@"模型 Tools",@"AI 新闻订阅"][ip.row];
         if(ip.row==12)c.detailTextLabel.text=@"默认AI · TinyFish · 提词器匀速阅读 · 不启动录音";
-        if(ip.row==11)c.detailTextLabel.text=TIOKnowledgeEnabled()?@"knowledge_query · knowledge_query_status · create_todo · web_search":@"create_todo · web_search · 知识库工具需开启";
+        if(ip.row==11)c.detailTextLabel.text=TIOKnowledgeEnabled()?@"knowledge_query · knowledge_query_status · create_todo · create_schedule · prepare/confirm_complete_apple_reminder · web_search":@"create_todo · create_schedule · prepare/confirm_complete_apple_reminder · web_search · 知识库工具需开启";
         if(ip.row==0){NSInteger m=[Prefs integerForKey:@"mode"];c.detailTextLabel.text=@[@"官方默认",@"随机字符串验收",@"自定义 OpenAI 兼容接口"][MAX(0,MIN(m,2))];}
         if(ip.row==1)c.detailTextLabel.text=[Prefs stringForKey:@"model"]?:@"尚未配置，未内置任何 Key";
         if(ip.row==3){UISwitch *s=[UISwitch new];s.on=[Prefs boolForKey:@"deepseekDisableThinking"];[s addTarget:self action:@selector(thinking:) forControlEvents:UIControlEventValueChanged];c.accessoryView=s;}
@@ -483,7 +566,7 @@ static void AlwaysOnHook(id self,SEL cmd,id value) {
     else if(ip.section==0&&ip.row==9)[self testSearch];
     else if(ip.section==0&&ip.row==10)TIOOpenTodoRuntime(self);
     else if(ip.section==0&&ip.row==12)TIOOpenNewsReader(self);
-    else if(ip.section==0&&ip.row==11)Alert(@"当前语音模型 Tools",[NSString stringWithFormat:@"knowledge_query / knowledge_query_status：%@。Codex只读检索微信归档、项目与学习资料，引用来源；不修改知识库。\n\ncreate_todo：标题新增，交给官方入口；等待列表新ID才确认，超时不重试。\nweb_search：TinyFish公开搜索，需开启联网。\n\n待办工具不支持修改、删除、完成、提醒时间，暂不写入知识库网页。只有真实语音会话拥有待办执行上下文。",TIOKnowledgeEnabled()?@"已开启":@"未开启，请在知识库配置连接"]);
+    else if(ip.section==0&&ip.row==11)Alert(@"当前语音模型 Tools",[NSString stringWithFormat:@"knowledge_query / knowledge_query_status：%@。Codex只读检索微信归档、项目与学习资料。\n\ncreate_todo：官方待办列表确认新ID后，自动写入苹果提醒事项；不添加日历事件。\ncreate_schedule：有明确起止时间时，分别写入苹果日历和提醒事项；缺少时长先询问。\nprepare_complete_apple_reminder / confirm_complete_apple_reminder：先按准确标题找唯一未完成的苹果提醒事项，再要求下一句明确说“确认完成”；不会修改雷鸟官方待办。\nweb_search：TinyFish公开搜索，需开启联网。\n\n首次写入需允许系统权限；失败或结果未知不自动重试。",TIOKnowledgeEnabled()?@"已开启":@"未开启，请在知识库配置连接"]);
     else if(ip.section==0&&ip.row==4){UIAlertController *a=[UIAlertController alertControllerWithTitle:@"清空自有模型上下文？" message:@"仅清空本扩展内存中的聊天历史，不删除官方记录。正在进行的自有请求会取消并恢复官方模式。" preferredStyle:UIAlertControllerStyleAlert];[a addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];[a addAction:[UIAlertAction actionWithTitle:@"清空" style:UIAlertActionStyleDestructive handler:^(UIAlertAction *x){[Controller cancel];[Controller.history clear];[Prefs setInteger:0 forKey:@"mode"];[self.tableView reloadData];}]];[self presentViewController:a animated:YES completion:nil];}
     else if(ip.section==0&&ip.row==5)TIOOpenProfile(self);
     else if(ip.section==0&&ip.row==2){[_testRequest cancel];_testRequest=[TIORequest new];__weak typeof(self) weakSelf=self;_testRequest.update=^(NSString *text,BOOL done,NSString *error){if(done){Alert(error?@"API 测试失败":@"API 测试结果",error?:text);weakSelf.testRequest=nil;}};[_testRequest startQuestion:@"只回复：私用接口测试通过。"];
