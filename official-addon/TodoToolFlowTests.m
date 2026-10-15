@@ -21,7 +21,7 @@ static NSDictionary *Call(NSString *name,NSUInteger index){return @{@"index":@(i
     else{
         Models++;NSDictionary *sent=Body(self.request);assert(sent);
         if(![Scenario isEqual:@"disabled"]){NSArray *names=[sent[@"tools"] valueForKeyPath:@"function.name"];assert([names containsObject:@"create_todo"]);assert([sent[@"parallel_tool_calls"] isEqual:@NO]);}
-        if(Models>1&&![Scenario isEqual:@"search-write"]){assert([sent[@"tool_choice"] isEqual:@"none"]);NSDictionary *last=[sent[@"messages"] lastObject];assert([last[@"role"] isEqual:@"tool"]);NSDictionary *res=[NSJSONSerialization JSONObjectWithData:[last[@"content"] dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];assert([res[@"status"] isEqual:ResultStatus]);assert(!res[@"wireId"]&&[res[@"glasses_verified"] isEqual:@NO]);}
+        if(Models>1&&![Scenario isEqual:@"search-write"]){assert([sent[@"tool_choice"] isEqual:@"none"]);NSDictionary *last=[sent[@"messages"] lastObject];assert([last[@"role"] isEqual:@"tool"]);NSDictionary *res=[NSJSONSerialization JSONObjectWithData:[last[@"content"] dataUsingEncoding:NSUTF8StringEncoding] options:0 error:nil];assert([res[@"status"] isEqual:ResultStatus]);assert(!res[@"wireId"]&&[res[@"glasses_verified"] isEqual:@NO]);assert([res[@"apple_reminder_status"] isEqual:@"not_created"]);}
         BOOL again=[Scenario isEqual:@"repeat"]||[Scenario isEqual:@"search-write"];
         NSDictionary *delta;NSString *reason;
         if(Models==1||again){NSMutableArray *calls=[NSMutableArray arrayWithObject:Call([Scenario isEqual:@"search-write"]&&Models==1?@"web_search":@"create_todo",0)];if([Scenario isEqual:@"mixed"])[calls addObject:Call(@"web_search",1)];if([Scenario isEqual:@"batch"])[calls addObject:Call(@"create_todo",1)];delta=@{@"tool_calls":calls};reason=@"tool_calls";}
@@ -38,7 +38,7 @@ static NSDictionary *Call(NSString *name,NSUInteger index){return @{@"index":@(i
 static void Run(NSString *scenario){
     Scenario=scenario;Models=Writes=Searches=0;Pending=nil;ResultStatus=[scenario isEqual:@"not-ready"]?@"not_ready":[scenario isEqual:@"unknown"]?@"unknown":@"created";
     TodoRequest *r=[TodoRequest new];__block BOOL done=NO;__block NSUInteger finals=0;__block NSString *error=nil;__weak TodoRequest *weak=r;
-    r.update=^(NSString *text,BOOL final,NSString *e){if(final){done=YES;finals++;error=e;}if([scenario isEqual:@"cancel-before"]&&[text containsString:@"正在提交待办"]){[weak cancel];done=YES;}};
+    r.update=^(NSString *text,BOOL final,NSString *e){if(final){done=YES;finals++;error=e;}if([scenario isEqual:@"cancel-before"]&&[text containsString:@"正在创建并核对日程或待办"]){[weak cancel];done=YES;}};
     if(![scenario isEqual:@"disabled"])r.createTodo=^(NSString *title,void (^completion)(NSDictionary *)){
         assert([title isEqual:@"合成事项"]);Writes++;
         if([scenario isEqual:@"cancel-pending"]){Pending=[completion copy];done=YES;return;}
