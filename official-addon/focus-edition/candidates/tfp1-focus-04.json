@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "codeName": "TFP1-FOCUS-04",
+  "displayName": "TFP1 四项菜单与番茄修正 · FOCUS-04",
+  "confirmToken": "TFP1",
+  "baseVersion": "Strix OS 1.0.4.12",
+  "zip": {
+    "size": 9300112,
+    "sha256": "ad5054e3d7bda90e94d293bea882bd8dd5a125bcc8f42c13a59b2e149313c9e3"
+  },
+  "otaSize": 9300112,
+  "ap": {
+    "name": "nuttx_ap.bin",
+    "size": 9558216,
+    "sha256": "40b08299d66b08a909c9167400f2f660b17904d6b20026477ac470e860942a24",
+    "md5": "2d5c14d7c348d01c333f3561423cb47e"
+  },
+  "apBudgetBytes": 9600000,
+  "manifest": {
+    "name": "OtaFileInfo.json",
+    "size": 2515,
+    "sha256": "21bd0f08234dfdefcad9cea63b8f2ef12cea542a9acc47de1bd832abfc910c24"
+  },
+  "stockAPSHA256": "53afdf5298815849eafca6f315a70606d2a605aff2e563f79050f797d615a988",
+  "payloadPins": [
+    { "name": "OtaFileInfo.json", "size": 2515, "sha256": "21bd0f08234dfdefcad9cea63b8f2ef12cea542a9acc47de1bd832abfc910c24" },
+    { "name": "cb_fw_venus.bin", "size": 114592, "sha256": "8799f12071bdac082218e3601c24ab0989275fc2f7db74e37b8314a225c2cf7d" },
+    { "name": "fac_test_img.bin", "size": 1821552, "sha256": "18eb0901c3e0daeae48dd5f015252b6931ea7368f0160c2c985c4e74296d17eb" },
+    { "name": "images.bin", "size": 324283, "sha256": "192fefaa70545856884c89a9186e3f86d8f99a0738b201e116a11bc63011c158" },
+    { "name": "lotties.bin", "size": 651481, "sha256": "ad66d83a3394034f825a12769aad292fc03e59fa865fe06bc43536b918a0b32b" },
+    { "name": "nuttx_ap.bin", "size": 9558216, "sha256": "40b08299d66b08a909c9167400f2f660b17904d6b20026477ac470e860942a24" },
+    { "name": "nuttx_apc1.bin", "size": 1420248, "sha256": "97d56ffc6dd575ad3d8bf7739d49e491ad7e4a959db8770b653f5302e171fb5c" },
+    { "name": "nuttx_audio.bin", "size": 1461920, "sha256": "549a72c032595e3829da7d63b7e1fd13cceda1a55dfefa7a7cad02db5a9b42ab" },
+    { "name": "nuttx_bth.bin", "size": 1160160, "sha256": "a8f4594868bffbd3bc08a38d1f3899571608e2d57869d147de3d06f3e4f7a12a" },
+    { "name": "ota_installer_progress.bin", "size": 5616, "sha256": "6fd65d296a667e1a7d94ec129adfd26458a4008ef403b331f855192c36eb3e3f" },
+    { "name": "pil_algo_up_demo_nand.dll", "size": 504388, "sha256": "e266726fe055ac6ec6f785a9440e8da7421402f2b4d3d7889039ad9b94e119c2" },
+    { "name": "pil_algo_vad_demo.dll", "size": 433432, "sha256": "7ac5b5191202adea20c62642987fa0049024dde9c386ba6cd08a1f29ddd5c92c" },
+    { "name": "pil_algo_wakeup_dll_nand.dll", "size": 287560, "sha256": "d1594cb8658b228e52c2606d02f1eab696d35a11ed42ddcb725e76a745f5550f" },
+    { "name": "rives.bin", "size": 689431, "sha256": "836bc019f7152890b94cafafe2edaa024f317526318349f7833319e41158b104" },
+    { "name": "smf.json", "size": 23510, "sha256": "2713dc3a302a65c101fa981500cd8b217766c526b6045bf02db5e9e6763d076d" }
+  ]
+}

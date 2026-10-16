@@ -23,12 +23,16 @@ Class TIONavigationManagerClass(NSInteger mode){
 BOOL TIONavigationCalculate(id object,NSInteger mode,BOOL simulated,id start,id end){
     Class cls=TIONavigationManagerClass(mode);if(!cls||![object isKindOfClass:cls]||!end||(simulated&&!start))return NO;
     id<TIONavigationCalculating> m=object;
+    // An explicit start point (voice flow passes its own fresh fix) is honored
+    // for realtime too: the SDK's internal location engine can be paused in
+    // background, and calculate...WithEndPoints would hang waiting for it.
+    BOOL explicitStart=start!=nil;
     switch(mode){
-        case TIONavigationWalk:return simulated?[m calculateWalkRouteWithStartPoints:@[start] endPoints:@[end]]:[m calculateWalkRouteWithEndPoints:@[end]];
-        case TIONavigationRide:return simulated?[m calculateRideRouteWithStartPoint:start endPoint:end]:[m calculateRideRouteWithEndPoint:end];
+        case TIONavigationWalk:return (simulated||explicitStart)?[m calculateWalkRouteWithStartPoints:@[start] endPoints:@[end]]:[m calculateWalkRouteWithEndPoints:@[end]];
+        case TIONavigationRide:return (simulated||explicitStart)?[m calculateRideRouteWithStartPoint:start endPoint:end]:[m calculateRideRouteWithEndPoint:end];
         // Pinned SDK AMapNaviDrivingStrategySingleDefault = 0: one speed-priority route.
         // Do not pretend to select among multiple routes when the UI has no chooser.
-        case TIONavigationDrive:return simulated?[m calculateDriveRouteWithStartPoints:@[start] endPoints:@[end] wayPoints:nil drivingStrategy:0]:[m calculateDriveRouteWithEndPoints:@[end] wayPoints:nil drivingStrategy:0];
+        case TIONavigationDrive:return (simulated||explicitStart)?[m calculateDriveRouteWithStartPoints:@[start] endPoints:@[end] wayPoints:nil drivingStrategy:0]:[m calculateDriveRouteWithEndPoints:@[end] wayPoints:nil drivingStrategy:0];
     }return NO;
 }
 BOOL TIONavigationMayChangeMode(BOOL active,BOOL ready){return !active||ready;}

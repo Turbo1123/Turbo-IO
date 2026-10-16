@@ -3,7 +3,7 @@
 Output is an untested experimental OTA candidate, not a proven bootable release.
 The private PNG is embedded; generated artifacts must not be published.
 """
-import argparse, hashlib, json, os, shutil, struct, subprocess, zipfile
+import argparse, hashlib, json, os, re, shutil, struct, subprocess, zipfile
 from pathlib import Path
 import capstone
 import menu8_native_profile as native_menu
@@ -133,6 +133,40 @@ def build(out,wide=False,native_eight=False,display_runtime=False,navigation_run
     run(['node',SRC/'prepare-menu8-linkcheck.mjs',firmware,png,generated])
     assignments=(generated/'native-symbols.ld').read_text()
     resolved=[]
+    # TLC1 lifelog coexistence (author-validated on device 2026-09-30): relocate
+    # the stock idle predicate with ONLY the isLifeLogEnabled rejection elided, so
+    # nav/music/reader/focus open while the all-day lifelog switch is on. The
+    # extension services bind our module copy; diagnostics keep the stock gate.
+    DISPLAY_IDLE_START,DISPLAY_IDLE_END,LIFELOG_CALL=0x106d334c,0x106d33f6,0x106d336e
+    idle_lines=['.syntax unified','.cpu cortex-m33','.thumb','.section .text.display_idle,"ax",%progbits',
+        '.global nav_business_idle','.type nav_business_idle,%function','.thumb_func','nav_business_idle:']
+    idle_imports={}
+    idle_md=capstone.Cs(capstone.CS_ARCH_ARM,capstone.CS_MODE_THUMB|capstone.CS_MODE_MCLASS)
+    for inst in idle_md.disasm(ap[DISPLAY_IDLE_START-BASE:DISPLAY_IDLE_END-BASE],DISPLAY_IDLE_START):
+        op=inst.op_str
+        idle_lines.append(f'L_{inst.address:x}:')
+        if inst.address==LIFELOG_CALL:
+            assert inst.mnemonic=='bl' and op=='#0x106d308c',(inst.mnemonic,op)
+            idle_lines+=['movs r0, #0','nop']
+        elif inst.mnemonic in ('bl','b','b.w','beq','bne','cbz','cbnz'):
+            m=re.search(r'#(0x[0-9a-f]+)$',op);assert m,(inst.mnemonic,op)
+            dest=int(m.group(1),16)
+            label=f'L_{dest:x}' if DISPLAY_IDLE_START<=dest<DISPLAY_IDLE_END else f'ext_{dest:x}'
+            if label.startswith('ext_'):idle_imports[label]=dest|1
+            idle_lines.append(inst.mnemonic+' '+op[:m.start()]+label)
+        elif '[pc,' in op:
+            m=re.fullmatch(r'(\w+), \[pc, #(0x[0-9a-f]+|\d+)\]',op);assert m,(inst.mnemonic,op)
+            lit=((inst.address+4)&~3)+int(m.group(2),0)
+            idle_lines.append('ldr %s, =%#x'%(m.group(1),struct.unpack_from('<I',ap,lit-BASE)[0]))
+        else:
+            assert 'pc' not in op or inst.mnemonic=='pop',(inst.mnemonic,op)
+            idle_lines.append(inst.mnemonic+' '+op)
+    idle_lines+=['.size nav_business_idle, .-nav_business_idle','.ltorg']
+    put(generated/'display-idle.S','\n'.join(idle_lines)+'\n')
+    for k,v in idle_imports.items():
+        assignments+=f'{k} = {v:#x};\n';resolved.append(dict(alias=k,name='stock-literal',address=hex(v)))
+    aliases.pop('nav_business_idle',None)  # module provides the lifelog-lenient copy
+    aliases['diag_business_idle']='rayneo::service::launcher::LauncherAPI::isBussinessIdle'
     for alias,name in aliases.items():
         if isinstance(name,tuple):
             name,expected=name;addr=symbol(name,expected)
@@ -221,18 +255,22 @@ m8_hook_{name}:
         if music_runtime:units+=['music-runtime-v1/music','music-runtime-v1/music_service']+['diagnostics-v1/'+s for s in ['diagnostics','command','native_light','diagnostics_service']]
     units+=['weread-v1/reader','weread-v1/reader_view','weread-v1/reader_service']
     units+=['focus-v1/focus','focus-v1/focus_view','focus-v1/focus_service','focus-v1/focus_menu','focus-v1/focus_menu_native']
-    units+=['didi-v1/ride','didi-v1/ride_view','didi-v1/ride_service']
-    units+=['dashboard-v1/card','dashboard-v1/native','dashboard-editor-v1/editor','dashboard-editor-v1/editor_native']
-    units += ['app-runtime-v1/app', 'app-runtime-v1/app_view', 'app-runtime-v1/app_store', 'app-runtime-v1/app_runner', 'app-runtime-v1/app_files', 'app-runtime-v1/app_files_native', 'app-runtime-v1/app_lvgl', 'app-runtime-v1/app_command', 'app-runtime-v1/app_shelf', 'app-runtime-v1/app_service']
+    units+=['dashboard-editor-v1/editor','dashboard-editor-v1/editor_native']
+    # dashboard-v1 (author's private TDC1 template card) intentionally excluded:
+    # card.h/icons.inc were never committed and no user card matched that
+    # surface; the dc_text hook now lives in editor_native (TCE1 -> stock).
+    # didi-v1 ride and app-runtime-v1 shelf intentionally excluded; menu is 12.
     animation_units=[]
     if animation_runtime:
         asset=SRC/'animation-runtime-v1/assets/encoded-v1/anime-idle-192x176-l8.bin'
+        # 192*176*12 == 405,504: the 12-frame encoded-v1 container; only the first
+        # 192*176-byte frame is embedded via .incbin (single-pose animation page).
         assert asset.stat().st_size==192*176*12
         assert digest(asset.read_bytes())=='f758dd6e3cdf5fc6550238df26e46111e9d45d098b9d95f649626ea58210ee1d'
         put(generated/'animation-asset.S','.section .rodata.ta_asset,"a",%progbits\n.balign 64\n.global ta_asset\n.type ta_asset,%object\nta_asset:\n.incbin "'+str(asset)+'", 0, 33792\n.size ta_asset, .-ta_asset\n')
         units+=['animation-runtime-v1/animation']
         animation_units=[generated/'animation-asset.S']
-    for source in [SRC/(s+'.c') for s in units]+([] if display_runtime else [generated/'photo-payload.c'])+[generated/'trampolines.S']+animation_units+[SRC/'app-runtime-v1/app_abi.S']:
+    for source in [SRC/(s+'.c') for s in units]+([] if display_runtime else [generated/'photo-payload.c'])+[generated/'trampolines.S',generated/'display-idle.S']+animation_units:
         obj=generated/(source.stem+'.o');run([compiler,*flags,'-c',source,'-o',obj]);objects.append(obj)
     elf=generated/'menu8-experiment.elf'
     run([linker,'-T',generated/'link.ld','--entry=m8_hook_ctor',*objects,'-o',elf])
@@ -318,7 +356,7 @@ m8_hook_{name}:
     report['imageProfile']={'wide':wide,'width':512 if wide else 128,'height':128 if wide else 64,'version':2 if wide else 1}
     report['menuProfile']='native-eight-v1' if native_eight else 'virtual-eight-r4'
     report['sourceInputs']=[{'path':str(p.relative_to(ROOT)),'sha256':digest(p.read_bytes())}
-      for p in sorted({SRC/(s+'.c') for s in units}|set(SRC.glob('*.h'))|set((SRC/'image-upload-test').glob('*.h'))|{Path(__file__),SRC/'menu8_native_profile.py',ROOT/'official-addon/ImageWireFormat.h'})]
+      for p in sorted({SRC/(s+'.c') for s in units}|set(SRC.glob('*.h'))|set((SRC/'image-upload-test').glob('*.h'))|{Path(__file__).resolve(),SRC/'menu8_native_profile.py',ROOT/'official-addon/ImageWireFormat.h'})]
     if native_eight:
         report['readyBlockers'].append('Native eight-slot integration, callbacks and UI allocation failure tests pending')
     if display_runtime:
@@ -367,9 +405,9 @@ m8_hook_{name}:
     report['readerProfile']={'protocol':'TWR1','menuIndex':10,'banksBytes':49152,'cover':[64,88],'booksPerPage':4,'speedMaxCPM':480,'packetMax':512,'leaseMs':90000}
     report['sourceInputs'] += [{'path':str(p.relative_to(ROOT)),'sha256':digest(p.read_bytes())} for p in sorted((SRC/'weread-v1').glob('*.[ch]'))]
     report['readyBlockers']=['Reader native lifecycle/menu/phone verification pending','Fresh explicit flash authorization required']
-    report.update(kind='TAP1-developer-runtime-experimental-candidate',menuProfile='native-fourteen-TAP1')
+    report.update(kind='TAP1-developer-runtime-experimental-candidate',menuProfile='native-twelve-TAP1')
     report['focusProfile']={'menuIndex':11,'protocol':'TFP1','timerOwner':'independent bounded heap service','screenLeaseMs':10000,'compactAfterMs':3000,'noOtherPayloadChanges':True,'physicalSleepValidated':False}
-    report['sourceInputs'] += [{'path':str(p.relative_to(ROOT)),'sha256':digest(p.read_bytes())} for part in ['focus-v1','didi-v1','app-runtime-v1'] for p in sorted((SRC/part).glob('*.[ch]'))]
+    report['sourceInputs'] += [{'path':str(p.relative_to(ROOT)),'sha256':digest(p.read_bytes())} for part in ['focus-v1'] for p in sorted((SRC/part).glob('*.[ch]'))]
     put(out/'report.json',json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps({k:report[k] for k in ['candidateAP','candidateAPBytes','moduleVA','moduleBytes','unchangedPayloads','archive','unresolved']}))
     return report

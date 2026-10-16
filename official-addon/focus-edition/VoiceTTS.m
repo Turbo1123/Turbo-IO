@@ -68,7 +68,7 @@
     NSAssert(NSThread.isMainThread,@"TTS state belongs to the main queue");
     BOOL valid=[text isKindOfClass:NSString.class],prefix=valid&&(!self.full.length||[text hasPrefix:self.full]),wasFinal=self.finalRequested;
     NSUserDefaults *diag=[[NSUserDefaults alloc]initWithSuiteName:@"io.turboio.official-private-addon"];
-    [diag setObject:@{@"textLength":@(text.length),@"fullLength":@(self.full.length),@"prefix":@(prefix),@"wasFinal":@(wasFinal)} forKey:@"ttsAppendEntry"];
+    [diag setObject:@{@"textLength":@(valid?text.length:0),@"fullLength":@(self.full.length),@"prefix":@(prefix),@"wasFinal":@(wasFinal)} forKey:@"ttsAppendEntry"];
     if(!valid||!prefix||wasFinal){self.state=@"TTS 文本未追加";return;}
     NSString *newText=[text substringFromIndex:self.full.length];self.full=[text copy];
     if(newText.length){NSUInteger left=1800>self.totalCharacters?1800-self.totalCharacters:0;

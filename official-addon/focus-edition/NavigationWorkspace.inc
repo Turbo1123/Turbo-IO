@@ -71,7 +71,7 @@
     self.lensStatus.text=on?[NSString stringWithFormat:@"%@ · 已提交 %@ 帧（非镜片回执）",s[@"note"],s[@"frames"]]:[NSString stringWithFormat:@"%@\n%@",s[@"note"]?:@"尚未开启",[runtime[@"available"] boolValue]?@"字幕格式已就绪 · 需确认眼镜空闲":@"等待当前眼镜连接或兼容配置；无需每次预览"];
     if(!running)self.hudLabel.text=self.planning?@"正在规划路线…":self.routeReady?@"路线已就绪\n点击开始后产生指引":@"等待导航指引\n\n转向 · 距离 · 道路";
 }
-- (void)modeChanged{if(![self prepareForSelection])return;self.mapPickRole.selectedSegmentIndex=0;self.routeSummary.text=@"尚未规划路线";self.note=self.travelMode.selectedSegmentIndex==0?@"模拟起点单独保存：切换“选模拟起点”后点地图。":@"实时导航使用手机位置；眼镜字幕暂仅开放模拟。请勿边驾驶边操作。";[self refresh];}
+- (void)modeChanged{if(![self prepareForSelection])return;self.mapPickRole.selectedSegmentIndex=0;self.routeSummary.text=@"尚未规划路线";self.note=self.travelMode.selectedSegmentIndex==0?@"模拟起点单独保存：切换“选模拟起点”后点地图。":@"实时导航使用手机定位；模拟与实时均可投眼镜字幕（实时为20分钟保护会话）。请勿边驾驶边操作。";[self refresh];}
 - (void)transportModeChanged{
     NSInteger mode=self.transportMode.selectedSegmentIndex;if(!TIONavigationModeTitle(mode)||!TIONavigationMayChangeMode(self.active,self.routeReady)){self.transportMode.selectedSegmentIndex=self.selectedTransport;[self alert:@"请先结束当前导航" message:@"结束后再切换出行方式，不会使用旧模式路线。"] ;return;}
     if(![self prepareForSelection])return;self.selectedTransport=mode;self.routeReady=NO;self.routeSummary.text=@"出行方式已更改，请重新规划";
@@ -84,12 +84,44 @@
 - (void)beginRoute{
 #if TIO_AMAP_ENABLED
     if(!self.routeReady||!self.manager||self.planning)return;
-    if(UIApplication.sharedApplication.applicationState!=UIApplicationStateActive){[self alert:@"请在前台开始导航" message:@"后台不会自动开始新的定位会话。"];return;}
+    // Hands-free rule: a voice session starts wherever the user is -- phone
+    // locked in a pocket is the NORMAL voice case, and the alert below is
+    // invisible on a headless panel anyway. Manual starts keep the
+    // foreground requirement.
+    if(UIApplication.sharedApplication.applicationState!=UIApplicationStateActive){
+        if(self.voiceSession)TIOVoiceNavTrace(@"后台/锁屏状态：语音会话照样启动导航");
+        else{[self alert:@"请在前台开始导航" message:@"后台不会自动开始新的定位会话。"];return;}
+    }
     if(!self.simulated&&![self navigationLocationAuthorized]){[self alert:@"需要定位权限" message:@"请允许使用期间定位后重试；不自动申请始终定位。"];return;}
     self.backgroundLocationEnabled=!self.simulated&&[self navigationLocationModeAvailable]&&[self navigationLocationAuthorized];
     self.manager.allowsBackgroundLocationUpdates=self.backgroundLocationEnabled;
     self.manager.pausesLocationUpdatesAutomatically=!self.backgroundLocationEnabled;
-    BOOL ok=self.simulated?[self.manager startEmulatorNavi]:[self.manager startGPSNavi];if(!ok){[self fail:@"导航启动失败，可停止后重新规划"];return;}self.routeReady=NO;self.navigationStarted=YES;self.lastInfo=NSProcessInfo.processInfo.systemUptime;self.note=self.simulated?@"模拟已开始；可单独开启眼镜显示，不会自动抢占眼镜。":(self.backgroundLocationEnabled?@"实时导航已开始，可退后台或锁屏；不要强退App。请以手机地图及实际路况为准。":@"实时导航已开始，但宿主缺少location后台模式，只能前台运行。");[self refresh];
+     BOOL ok=self.simulated?[self.manager startEmulatorNavi]:[self.manager startGPSNavi];if(!ok){[self fail:@"导航启动失败，可停止后重新规划"];if(self.voiceSession)TIOVoiceNavTrace(@"中止：SDK启动导航失败");return;}self.routeReady=NO;self.navigationStarted=YES;
+     if(self.voiceSession)TIOVoiceNavTrace(@"第4步：导航已开始，等待转向指引上眼镜");
+     // Locked phones: hold runtime through the exitVoice handoff so the HUD
+     // retry loop stays schedulable until the lens engages (see NavigationBackground.inc).
+     [self beginVoiceBridgeTask];
+     // Navigation is running: the candidate dialog (if any) is over, close the
+     // assistant session so the chat window yields the lens to the nav page.
+     if(self.voiceSession){NSUInteger g=self.generation;dispatch_after(dispatch_time(DISPATCH_TIME_NOW,(int64_t)(2*NSEC_PER_SEC)),dispatch_get_main_queue(),^{if(g==self.generation)TIOVoiceCloseAssistantSession();});}
+#if TIO_AMAP_ENABLED
+     // AMap emits turn guidance only once the device MOVES; standing at the
+     // origin the lens would stay empty. Synthesize the first frame from the
+     // route itself (origin + next 3 segments, heading-up) so the route shows
+     // immediately -- and the HUD auto-engage has a valid frame to start from.
+     if(!self.simulated&&self.manager.naviRoute){
+      AMapNaviRoute *route=self.manager.naviRoute;NSMutableArray *coords=TIONavAheadCoords(route.routeSegments,0,0,0);
+      if(coords.count>=2){
+       NSMutableDictionary *first=[TIONavDisplay(@"navigating",9,@"出发",MIN((NSInteger)route.routeLength,(NSInteger)999999),(NSInteger)route.routeLength,(NSInteger)route.routeTime,NO) mutableCopy];
+       [first addEntriesFromDictionary:TNVNormalizeCoordinates(coords)];self.lastInfo=NSProcessInfo.processInfo.systemUptime;
+       [self setFrame:[first copy]];TIOVoiceNavTrace(@"首帧已发送：静止时镜片也显示前方路线");
+      }
+     }
+#endif
+#if TIO_DISPLAY_PHONE
+     self.autoNativeHUD=!self.simulated;self.autoNativeHUDAttempts=0;self.autoNativeHUDNextAt=0; // Realtime: the native HUD engages itself on first guidance (with retries while the glasses are briefly busy).
+#endif
+     self.lastInfo=NSProcessInfo.processInfo.systemUptime;self.note=self.simulated?@"模拟已开始；可单独开启眼镜显示，不会自动抢占眼镜。":(self.backgroundLocationEnabled?@"实时导航已开始，可退后台或锁屏；不要强退App。请以手机地图及实际路况为准。眼镜原生导航将在出现转向指引后自动开启。":@"实时导航已开始，但宿主缺少location后台模式，只能前台运行。眼镜原生导航将在出现转向指引后自动开启。");[self refresh];
 #endif
 }
 - (void)toggleLens{if([self.subtitleHUD.status[@"enabled"] boolValue]){[self.subtitleHUD stop:@"用户停止眼镜显示，手机导航继续"];[self refresh];}else [self enableSubtitleHUD];}
@@ -163,7 +195,11 @@
 }
 #if TIO_AMAP_ENABLED
 - (void)mapView:(MAMapView *)map didUpdateUserLocation:(MAUserLocation *)user updatingLocation:(BOOL)updating{
-    if(!self.locating||!updating||!user.location||user.location.horizontalAccuracy<0||user.location.horizontalAccuracy>200||fabs(user.location.timestamp.timeIntervalSinceNow)>15)return;self.locating=NO;self.locationGeneration++;[map setCenterCoordinate:user.coordinate animated:YES];if(!self.active){map.showsUserLocation=NO;if(self.travelMode.selectedSegmentIndex==0)[self selectSimulationStart:user.coordinate name:@"本次手机位置"];}self.note=@"地图已定位；模拟模式同时设为本次起点，尚未开始导航。";[self refresh];
+    if(!updating||!user.location||user.location.horizontalAccuracy<0||user.location.horizontalAccuracy>200||fabs(user.location.timestamp.timeIntervalSinceNow)>15)return;
+    if(self.voiceLocating){ // Step 1 complete: fresh fix confirmed. Step 2: search destination.
+        self.voiceLocating=NO;self.note=[NSString stringWithFormat:@"第1步完成：已确认当前位置（±%.0f米）。",user.location.horizontalAccuracy];[self refresh];[self voiceSearchDestination];return;
+    }
+    if(!self.locating)return;self.locating=NO;self.locationGeneration++;[map setCenterCoordinate:user.coordinate animated:YES];if(!self.active){map.showsUserLocation=NO;if(self.travelMode.selectedSegmentIndex==0)[self selectSimulationStart:user.coordinate name:@"本次手机位置"];}self.note=@"地图已定位；模拟模式同时设为本次起点，尚未开始导航。";[self refresh];
 }
 #endif
 - (void)demoRoute{
@@ -174,9 +210,14 @@
 #endif
 }
 - (void)showDiagnostic{[self refresh];[self alert:@"导航状态 · v3" message:self.statusLabel.text];}
+- (void)voiceNavToggle{
+    NSUserDefaults *d=NSUserDefaults.standardUserDefaults;BOOL disabled=[d boolForKey:@"voiceNavDisabled"];
+    if(disabled){[d setBool:NO forKey:@"voiceNavDisabled"];[self alert:@"语音导航已开启" message:@"对眼镜说“导航去+地点”（如：导航去天安门）即可免手开始实时导航；到达或停止后自动恢复智记录音。说“打开导航”只打开本页。"] ;return;}
+    [d setBool:YES forKey:@"voiceNavDisabled"];[self alert:@"语音导航已关闭" message:@"语音不再触发导航；手动操作不受影响。"] ;
+}
 - (void)navigationMore{
     UIAlertController *a=[UIAlertController alertControllerWithTitle:@"导航设置与诊断" message:@"主要流程留在地图页；实验入口不会自动执行。" preferredStyle:UIAlertControllerStyleActionSheet];
-    NSArray *items=@[@[@"字幕格式与退出检查",@"subtitleCheck"],@[@"北京演示路线",@"demoRoute"],@[@"路线详情",@"routeDetails"],@[@"读取连接状态",@"refreshConnection"],@[@"详细诊断",@"showDiagnostic"],@[@"高德 Key 设置",@"configureKey"],@[@"备用显示通道",@"fallbackMenu"]];
+    NSArray *items=@[@[@"字幕格式与退出检查",@"subtitleCheck"],@[@"北京演示路线",@"demoRoute"],@[@"路线详情",@"routeDetails"],@[@"读取连接状态",@"refreshConnection"],@[@"详细诊断",@"showDiagnostic"],@[@"高德 Key 设置",@"configureKey"],@[@"语音导航：说“导航去+地点”",@"voiceNavToggle"],@[@"备用显示通道",@"fallbackMenu"]];
     for(NSArray *item in items)[a addAction:[UIAlertAction actionWithTitle:item[0] style:UIAlertActionStyleDefault handler:^(UIAlertAction *x){[self performSelector:NSSelectorFromString(item[1])];}]];[a addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];a.popoverPresentationController.barButtonItem=self.navigationItem.rightBarButtonItem;[self presentViewController:a animated:YES completion:nil];
 }
 - (void)fallbackMenu{

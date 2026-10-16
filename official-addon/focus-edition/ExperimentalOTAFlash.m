@@ -3,6 +3,9 @@
 #import "ReaderTransport.h"
 #import "FocusTransport.h"
 #import "TDTransport.h"
+#if TIO_APP_SDK
+#import "AppTransport.h"
+#endif
 #import "ExperimentalOTA.h"
 #import "ExperimentalOTAGuard.h"
 #include <TargetConditionals.h>
@@ -70,13 +73,13 @@ BOOL TIOPhoneOTAReadAllowed(NSData *data){
         // recovery loop can establish that no glasses transfer is active.
         if((t==1||t==2||t==11)&&empty)return YES;
         NSUInteger n=0;
-        if(t==3&&dict&&[j count]==1&&Number(j[@"OtaSize"],&n)&&n==9300112&&!binary.length)return YES;
+        if(t==3&&dict&&[j count]==1&&Number(j[@"OtaSize"],&n)&&TIOOTACandidate()&&n==(NSUInteger)[TIOOTACandidate()[@"otaSize"] unsignedLongLongValue]&&!binary.length)return YES;
         if(!_stage){if(t==4)_failure=@"TFP1 试刷尚未授权；开始指令未发送。请先在实验固件页完成 TFP1 风险确认。";return NO;}
         if(_stage==3||!isfinite(now)||now<0)return NO;
         if(_stage==1&&now>=_deadline){[self cancel];return NO;}
         BOOL ok=[device isEqual:_device];
         if(t==4)ok=ok&&_stage==1&&dict&&[j count]==1&&Number(j[@"Mode"],&n)&&n==2&&!binary.length;
-        else if(t==5)ok=ok&&_stage==2&&dict&&[j isEqual:@{@"OtaVersion":@"Strix OS 1.0.4.12"}]&&!binary.length;
+        else if(t==5)ok=ok&&_stage==2&&dict&&TIOOTACandidate()&&[j isEqual:@{@"OtaVersion":TIOOTACandidate()[@"baseVersion"]}]&&!binary.length;
         else if(t==6)ok=ok&&_stage==2&&_versionSent&&[j isKindOfClass:NSArray.class]&&[j isEqual:_manifest]&&!binary.length;
         else if(t==7){
             NSUInteger start=0,size=0;NSString *name=dict?j[@"Name"]:nil;NSData *file=[name isKindOfClass:NSString.class]?_files[name]:nil;
@@ -132,6 +135,22 @@ void TIOOTAFlashDisableAutoUpdateIfRequested(void){
     else if([v isKindOfClass:NSNumber.class]&&CFGetTypeID((__bridge CFTypeRef)v)==CFBooleanGetTypeID())[p setBool:NO forKey:keys[0]];
     [p synchronize];
 }
+// Second layer of the update-check silence (see TIOOTAUpdateCheckBlockCall):
+// force the official "firmware auto-update" switch off, so a version cached
+// before the block existed cannot trigger a background download or prompt.
+// Default ON (TIOUpdateCheckSilence=NO restores official behavior and stops
+// touching the switch). The experimental flash flow REQUIRES this switch off,
+// so forcing it is compatible with flashing.
+void TIOOTAAutoUpdateDisableForSilence(void){
+    id toggle=[NSUserDefaults.standardUserDefaults objectForKey:@"TIOUpdateCheckSilence"];if(toggle&&![toggle boolValue])return;
+    NSUserDefaults *p=NSUserDefaults.standardUserDefaults;NSMutableArray *keys=[NSMutableArray new];
+    for(NSString *key in p.dictionaryRepresentation)if([key hasSuffix:@"_ota_firmware_auto_update"])[keys addObject:key];
+    if(keys.count!=1)return;id v=[p objectForKey:keys[0]];
+    if([v isKindOfClass:NSString.class]&&[v isEqual:@"true"])[p setObject:@"false" forKey:keys[0]];
+    else if([v isKindOfClass:NSNumber.class]&&CFGetTypeID((__bridge CFTypeRef)v)==CFBooleanGetTypeID()&&[v boolValue])[p setBool:NO forKey:keys[0]];
+    else return;
+    [p synchronize];
+}
 static id Get(id obj,NSString *key){@try{return [obj valueForKey:key];}@catch(NSException *e){return nil;}}
 BOOL TIOOTAFlashBlockCall(id call){
     if(!TIOOTAFlashBuild())return NO;
@@ -150,8 +169,11 @@ BOOL TIOOTAFlashBlockCall(id call){
     }
     // The pinned files path uses business 9 frames, never sendFile / ZIP mode.
     BOOL scopedImage=NO;
+#if TIO_APP_SDK
+    scopedImage=TAPIsScopedCall(method,args);
+#endif
 #if TIO_IMAGE_RX_LAB
-    scopedImage=TIOImageUploadIsScopedCall(method,args);
+    scopedImage=scopedImage||TIOImageUploadIsScopedCall(method,args);
 #if TIO_DISPLAY_PHONE
     scopedImage=scopedImage||TDPPhoneIsScopedCall(method,args);
 #if TIO_NATIVE_NAV
@@ -166,7 +188,7 @@ void TIOOTAFlashObserveEvent(NSDictionary *event){
     NSDictionary *m=event[@"message"];NSUInteger business=0;if(![m isKindOfClass:NSDictionary.class]||!Number(m[@"businessId"],&business)||business!=9)return;
     NSDictionary *f=TIOOTAFrame(m[@"payload"]);id j=f[@"json"];
     if([f[@"type"] isEqual:@1]){@synchronized(NSProcessInfo.processInfo){ObservedDevice=nil;ObservedAt=0;}}
-    if([f[@"type"] isEqual:@1]&&[j isKindOfClass:NSDictionary.class]&&[j[@"OsVersion"] isEqual:@"Strix OS 1.0.4.12"]&&[j[@"OtaValidationConfirmed"] isEqual:@YES]&&[m[@"deviceId"] isKindOfClass:NSString.class]){
+    if([f[@"type"] isEqual:@1]&&[j isKindOfClass:NSDictionary.class]&&TIOOTACandidate()&&[j[@"OsVersion"] isEqual:TIOOTACandidate()[@"baseVersion"]]&&[j[@"OtaValidationConfirmed"] isEqual:@YES]&&[m[@"deviceId"] isKindOfClass:NSString.class]){
         @synchronized(NSProcessInfo.processInfo){ObservedDevice=[m[@"deviceId"] copy];ObservedAt=NSProcessInfo.processInfo.systemUptime;}
     }
 }
