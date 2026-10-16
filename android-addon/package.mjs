@@ -5,18 +5,19 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {profileFor,verifyHost} from './host-profiles.mjs';
-import {queueHook,fileHook,EVENT_GUARD} from './ota-hooks.mjs';
+import {queueHook,fileHook,EVENT_GUARD,OTA_105,OTA_106} from './ota-hooks.mjs';
 
 const root=path.dirname(new URL(import.meta.url).pathname);
 const source=process.argv[2];
 if(!source) throw new Error('Usage: node android-addon/package.mjs /path/to/supported-RayNeo.apk');
 const sha=crypto.createHash('sha256').update(fs.readFileSync(source)).digest('hex');
 const profile=profileFor(sha),host=path.join(root,'build',profile.directory);
-if(profile.version!=='1.0.5')throw new Error('INTEGRATION-07 OTA adapter only supports pinned 1.0.5 (201); use the prior builder for 1.0.4');
+if(profile.version!=='1.0.5'&&profile.version!=='1.0.6')throw new Error('INTEGRATION-07 OTA adapter only supports pinned 1.0.5 (201) / 1.0.6 (216); use the prior builder for 1.0.4');
 if(!fs.existsSync(host)) execFileSync('apktool',['d','--no-res','--output',host,source],{stdio:'inherit'});
 // No writes until every required callback/transport descriptor has been checked.
 const abi=verifyHost(host,profile);
-if(abi.ota){fs.writeFileSync(abi.ota.queue,queueHook(fs.readFileSync(abi.ota.queue,'utf8')));fs.writeFileSync(abi.ota.sender,fileHook(fs.readFileSync(abi.ota.sender,'utf8')));}
+const otaAbi=profile.version==='1.0.6'?OTA_106:OTA_105;
+if(abi.ota){fs.writeFileSync(abi.ota.queue,queueHook(fs.readFileSync(abi.ota.queue,'utf8'),otaAbi));fs.writeFileSync(abi.ota.sender,fileHook(fs.readFileSync(abi.ota.sender,'utf8'),otaAbi));}
 
 function wrap(file,name,signature,args,returnMode) {
   let text=fs.readFileSync(file,'utf8');
@@ -74,6 +75,20 @@ ${abi.ota?EVENT_GUARD:''}
     .catch Ljava/lang/Throwable; {:turboio_nav_try .. :turboio_nav_end} :turboio_nav_error
 .end method\n`;
 fs.writeFileSync(eventFile,eventText);
+// 1.0.6 classes2.dex sits at the 64K reference ceiling, so the hooked classes move to
+// one new contiguous DEX; vendor bodies stay byte-for-byte apart from the wrappers.
+if(profile.version==='1.0.6'){
+  const dexDirs=fs.readdirSync(host).filter(n=>/^smali(?:_classes\d+)?$/.test(n));
+  let hookDir=dexDirs.find(n=>fs.existsSync(path.join(host,n,'.turboio-hooks')));
+  if(!hookDir){hookDir='smali_classes'+(dexDirs.length+1);fs.mkdirSync(path.join(host,hookDir));fs.writeFileSync(path.join(host,hookDir,'.turboio-hooks'),'');}
+  for(const file of [listener,abi.activity,eventFile,...(abi.ota?[abi.ota.queue,abi.ota.sender]:[])]){
+    const rel=path.relative(host,file),parts=rel.split(path.sep);
+    if(parts[0]===hookDir)continue;
+    if(parts[0]!=='smali_classes2')throw new Error('Unexpected hook DEX: '+rel);
+    const dest=path.join(host,hookDir,...parts.slice(1));
+    fs.mkdirSync(path.dirname(dest),{recursive:true});fs.renameSync(file,dest);
+  }
+}
 const output=path.join(root,'build/TurboIO-RayNeo-'+profile.version+'-unsigned.apk');
 const assembled=path.join(root,'build/TurboIO-RayNeo-'+profile.version+'-assembled.apk');
 execFileSync('apktool',['b',host,'-o',assembled],{stdio:'inherit'});

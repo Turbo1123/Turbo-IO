@@ -24,7 +24,7 @@ java -cp build/test TransferGateTest
 mkdir -p build/test-host-events
 javac -encoding UTF-8 -d build/test src/com/turboio/addon/LauncherMeta.java tests/LauncherMetaTest.java
 java -cp build/test com.turboio.addon.LauncherMetaTest
-javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-host-events tests/hostevents/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/NativeTransfer.java
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-host-events tests/hostevents/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/NativeTransfer.java src/com/turboio/addon/HostAbi.java
 java -cp build/test-host-events:build/test com.turboio.addon.HostEventTest
 "${TURBO_SDK_PYTHON:-python3}" tests/app_golden.py
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/{BoundedJson,AppCodec,FocusCodec,CustomEnvelope}.java tests/AppCodecTest.java
@@ -44,7 +44,7 @@ java -cp build/test com.turboio.addon.OfficialOtaGateTest "$ota_candidate"
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/OfficialOtaPreflightPoll.java tests/OfficialOtaPreflightPollTest.java
 java -cp build/test com.turboio.addon.OfficialOtaPreflightPollTest
 mkdir -p build/test-ota-flow
-javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-ota-flow tests/otaflow/*.java src/com/turboio/addon/OtaController.java
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-ota-flow tests/otaflow/*.java src/com/turboio/addon/OtaController.java src/com/turboio/addon/HostAbi.java
 java -cp build/test-ota-flow:build/test com.turboio.addon.OtaControllerTest "$ota_candidate"
 java -cp build/test-ota-flow:build/test com.turboio.addon.OtaControllerTest unused recovery
 java -cp build/test-ota-flow:build/test com.turboio.addon.OtaInstallGuardTest "$ota_candidate"

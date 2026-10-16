@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
-import {patchAndroidSource,slots} from '../official-ota-source.mjs';
-const original=fs.readFileSync(new URL('../build/host-105/lib/arm64-v8a/libapp.so',import.meta.url));
+import crypto from 'node:crypto';
+import {patchAndroidSource,SOURCES} from '../official-ota-source.mjs';
+const host=['host-106','host-105'].map(d=>new URL('../build/'+d+'/lib/arm64-v8a/libapp.so',import.meta.url)).find(u=>fs.existsSync(u));
+const original=fs.readFileSync(host),slots=SOURCES[crypto.createHash('sha256').update(original).digest('hex')];
 const {output,report}=patchAndroidSource(original);
 assert.equal(output.length,original.length);assert.equal(report.changes.length,2);
 for(const s of slots)assert.equal(output[s.offset-1],original[s.offset-1]);

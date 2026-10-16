@@ -24,10 +24,10 @@ final class EntryProbe {
   try{
    byte[] payload=OtaFrame.encode(11,null,null);
    if(!OtaFrame.readOnly(payload))throw new IllegalStateException();
-   Object manager=NavReflect.field(NavReflect.type("E3.u"),"h"),business=NavReflect.call(NavReflect.type("P3.h"),"valueOf","MARS_FOTA"),priority=NavReflect.call(NavReflect.type("E3.b"),"valueOf","NORMAL");
-   Object message=NavReflect.make("E3.Q",payload,UUID.randomUUID().toString(),peer,business,null,priority,false,false,null,null);
+   Object manager=NavReflect.field(NavReflect.type(HostAbi.manager()),"h"),business=NavReflect.call(NavReflect.type(HostAbi.business()),"valueOf","MARS_FOTA"),priority=NavReflect.call(NavReflect.type(HostAbi.priority()),"valueOf","NORMAL");
+   Object message=NavReflect.make(HostAbi.message(),payload,UUID.randomUUID().toString(),peer,business,null,priority,false,false,null,null);
    Object callback=NavReflect.proxy("kotlin.jvm.functions.Function2",(name,args)->{if(args.length>1&&args[1]!=null)NativeTransfer.MAIN.post(()->finish(token,"状态查询发送失败"));});
-   NavReflect.call(manager,"u",message,callback);
+   NavReflect.call(manager,HostAbi.send(),message,callback);
    NativeTransfer.MAIN.postDelayed(()->finish(token,"状态查询超时；未重试、未改变业务"),5000);
   }catch(Exception e){finish(token,"状态查询不可用；未改变业务");}
  }
