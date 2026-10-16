@@ -33,6 +33,12 @@ iOS 插件（FOCUS-04 集成版）的高德语音导航：手机侧语音说出�
 - **三类标记**：测速环（限速数字）、交通事件三角、红绿灯架，按沿路距离落在标记带。
 - **红绿灯距离是近似真数据**：高德免费 SDK 无灯距字段（付费 `setIsOpenTrafficLight` 才有），取**最近闯红灯摄像头**（`AMapNaviCameraTypeTrafficLight`）的沿路距离——标出的每个灯口位置都是真的，覆盖随摄像头分布；数量仍走官方字段。
 
+真机实拍（墙投；可见徽章箭头、 ETA 行、路况标记带的电子眼/红绿灯距离、栅格小地图）：
+
+![TNV1 HUD 真机实拍](screenshots/tnv1-hud-real-20261016.jpg)
+
+布局设计稿：
+
 ![TNV1 HUD 布局设计稿](design/navigation-hud-preview.svg)
 
 ## 全天智记共存（TLC1）
