@@ -11,7 +11,9 @@ final class HostAbi {
     private static volatile HostAbi current;
     static HostAbi get(){
         HostAbi a=current;if(a!=null)return a;
-        a=matches(V106)?V106:V105;current=a;return a;
+        // JVM test hook only: Android never sets this property for the app process.
+        String forced=System.getProperty("turboio.host");
+        a="1.0.6".equals(forced)?V106:"1.0.5".equals(forced)?V105:matches(V106)?V106:V105;current=a;return a;
     }
     private static boolean matches(HostAbi a){
         try{Class<?> m=Class.forName(a.manager);return m.getField("h").getType()==m&&Class.forName(a.business).isEnum();}catch(Throwable e){return false;}

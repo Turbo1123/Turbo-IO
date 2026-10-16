@@ -34,7 +34,7 @@ public final class OfficialOtaPreparation {
  static String status(){String counts="";for(int i=1;i<types.length;i++)if(types[i].get()>0)counts+=" type"+i+"="+types[i].get();return "ANDROID · OFFICIAL-OTA-PREPARE-01\n"+note+"\n"+(feed==null?"本机源未启动":feed.status())+"\n发送隔离：永久开启（此构建无刷写授权入口）\n只读放行："+reads.get()+" · 拦截："+blocked.get()+counts+"\n候选："+OtaPackage.NAME+"\n"+directoryResult;}
  private static void exportStatus(String text){try{File root=app.getExternalFilesDir(null);if(root==null)return;File tmp=new File(root,"official-ota-preparation-status.tmp"),dest=new File(root,"official-ota-preparation-status.txt");try(FileOutputStream out=new FileOutputStream(tmp)){out.write(text.getBytes("UTF-8"));out.getFD().sync();}tmp.renameTo(dest);}catch(Exception ignored){}}
  private static void checkDirectory(){directoryResult="官方准备目录：只读核对中";new Thread(()->{
-  File root=app.getFilesDir();File[] candidates={new File(root,"ota/Strix_OS_1.0.4.12"),new File(root.getParentFile(),"app_flutter/ota/Strix_OS_1.0.4.12")};int found=0,valid=0;
+  File root=app.getFilesDir();File[] candidates={new File(root,"ota/"+OtaPackage.DIRECTORY),new File(root.getParentFile(),"app_flutter/ota/"+OtaPackage.DIRECTORY)};int found=0,valid=0;
   for(File dir:candidates)if(dir.exists()){found++;try{OtaPackage.verifyDirectory(dir.toPath());valid++;}catch(Exception ignored){}}
   directoryResult=valid==1&&found==1?"官方准备目录：15/15 成员固定摘要通过（仅磁盘快照，不代表已刷写）":"官方准备目录：发现 "+found+" 处，匹配 "+valid+" 处；尚未确认唯一候选";
  },"TurboIO-ota-directory-readonly").start();}

@@ -31,7 +31,7 @@ javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/{B
 java -cp build/test AppCodecTest ../app-gallery build/test/app-golden
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test tests/CustomEnvelopeTest.java
 java -cp build/test CustomEnvelopeTest
-javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{OtaFrame,OtaPackage,OtaRecoveryGuard,OtaSession}.java tests/OtaTest.java tests/OtaRecoveryGuardTest.java
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{HostAbi,OtaFrame,OtaPackage,OtaRecoveryGuard,OtaSession}.java tests/OtaTest.java tests/OtaRecoveryGuardTest.java
 java -cp build/test com.turboio.addon.OtaRecoveryGuardTest
 ota_candidate=../official-addon/build/app-ap-20260927-test-01/StrixOS-1.0.4.12-TAP1-TEST-01-CANDIDATE-NOT-APPROVED.zip
 java -cp build/test com.turboio.addon.OtaTest "$ota_candidate"
@@ -41,6 +41,14 @@ javac -encoding UTF-8 -cp build/test -d build/test tests/OfficialOtaDirectoryTes
 java -cp build/test com.turboio.addon.OfficialOtaDirectoryTest "$ota_candidate"
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/OfficialOtaGate.java tests/OfficialOtaGateTest.java
 java -cp build/test com.turboio.addon.OfficialOtaGateTest "$ota_candidate"
+# Host 1.0.6 candidate (TMIG1, same pinned ZIP as the iOS 1.0.6 edition); stock 1.0.5.5 ZIP must be refused.
+tmig1_dir=../official-addon/build/strix-1.0.5.5-tmig1
+tmig1_candidate=$tmig1_dir/StrixOS-1.0.5.5-TurboIO-TMIG1-CANDIDATE-NOT-APPROVED.zip
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test tests/Tmig1CandidateTest.java
+java -Dturboio.host=1.0.6 -cp build/test com.turboio.addon.Tmig1CandidateTest "$tmig1_candidate" "$tmig1_dir/Strix-OS-1.0.5.5-original.zip" "$ota_candidate"
+java -Dturboio.host=1.0.6 -cp build/test com.turboio.addon.OfficialOtaFeedTest "$tmig1_candidate"
+java -Dturboio.host=1.0.6 -cp build/test com.turboio.addon.OfficialOtaDirectoryTest "$tmig1_candidate"
+java -Dturboio.host=1.0.6 -cp build/test com.turboio.addon.OfficialOtaGateTest "$tmig1_candidate"
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/OfficialOtaPreflightPoll.java tests/OfficialOtaPreflightPollTest.java
 java -cp build/test com.turboio.addon.OfficialOtaPreflightPollTest
 mkdir -p build/test-ota-flow
