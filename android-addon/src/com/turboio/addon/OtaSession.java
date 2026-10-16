@@ -23,7 +23,7 @@ final class OtaSession {
  private byte[] frame(int type,Object j){return OtaFrame.encode(type,j,null);}
  private byte[] query(State next,int type,long now){state=next;deadline=now+15000;return frame(type,null);}
  byte[] prepare(String device,long now){if(state!=State.LOCKED||firmware==null||device==null||device.isEmpty())throw new IllegalStateException("prepare denied");peer=device;preparation=now+900000;error="";return query(State.CHECK_VERSION,1,now);}
- void authorize(String token,String current,long now){check(current,now);if(state!=State.READY||!"TAP1".equals(token)||now-fresh>120000)throw new IllegalStateException("fresh checks and TAP1 required");state=State.AUTHORIZED;grant=Math.min(preparation,now+900000);}
+ void authorize(String token,String current,long now){check(current,now);if(state!=State.READY||!OtaPackage.candidate().confirmToken.equals(token)||now-fresh>120000)throw new IllegalStateException("fresh checks and "+OtaPackage.candidate().confirmToken+" required");state=State.AUTHORIZED;grant=Math.min(preparation,now+900000);}
  void validateStart(String current,long now){check(current,now);if(state!=State.AUTHORIZED||now>=grant||now-fresh>120000||battery<50)throw new IllegalStateException("authorization expired");}
  byte[] start(String current,long now){validateStart(current,now);started=true;state=State.STARTING;deadline=now+30000;grant=0;return frame(4,OtaFrame.object("Mode",2));}
  void fail(String reason,long now){error=reason;state=started||recovering?State.UNKNOWN:State.LOCKED;deadline=0;grant=0;bootValidated=false;if(state==State.UNKNOWN&&recoveryGuard==null)recoveryGuard=new OtaRecoveryGuard(peer,now,true);}
@@ -41,20 +41,20 @@ final class OtaSession {
    switch(state){
     case CHECK_VERSION:case READ_VERSION:
      require(f.type==1,"expected version");version=BoundedJson.text(j.get("OsVersion"),80);
-     require(OtaPackage.VERSION.equals(version),"版本不匹配，仅支持 1.0.4.12");
+     require(OtaPackage.candidate().baseVersion.equals(version),"版本不匹配，仅支持 1.0.4.12");
      require("idle".equals(j.get("OtaValidationState"))&&Boolean.TRUE.equals(j.get("OtaValidationConfirmed")),"启动校验尚未确认");
      require(BoundedJson.list(j.get("PackageTypes")).contains("files"),"files 模式不支持");
      if(state==State.READ_VERSION){bootValidated=true;return query(State.READ_IDLE,11,now);}
      return query(State.CHECK_BATTERY,2,now);
     case CHECK_BATTERY:
-     require(f.type==2,"expected battery");battery=BoundedJson.number(j.get("BatteryLevel"),0,100);require(battery>=50,"眼镜电量不足 50%");state=State.CHECK_SPACE;deadline=now+15000;return frame(3,OtaFrame.object("OtaSize",OtaPackage.ZIP_SIZE));
+     require(f.type==2,"expected battery");battery=BoundedJson.number(j.get("BatteryLevel"),0,100);require(battery>=50,"眼镜电量不足 50%");state=State.CHECK_SPACE;deadline=now+15000;return frame(3,OtaFrame.object("OtaSize",OtaPackage.candidate().zipSize));
     case CHECK_SPACE:require(f.type==3&&Boolean.TRUE.equals(j.get("Result")),"存储预检拒绝");return query(State.CHECK_IDLE,11,now);
     case CHECK_IDLE:case READ_IDLE:require(f.type==11&&Boolean.TRUE.equals(j.get("Result")),"眼镜不是空闲状态");state=state==State.READ_IDLE?State.READBACK:State.READY;fresh=now;deadline=0;return null;
     case STARTING:require(f.type==4&&Boolean.TRUE.equals(j.get("Result")),"眼镜未接受开始升级");state=State.VERSION;deadline=now+30000;return null;
-    case VERSION:require(f.type==5&&j.isEmpty(),"expected version request");state=State.MANIFEST;deadline=now+30000;return frame(5,OtaFrame.object("OtaVersion",OtaPackage.VERSION));
-    case MANIFEST:require(f.type==6&&OtaPackage.VERSION.equals(j.get("OtaVersion")),"expected manifest request");state=State.TRANSFER;deadline=now+60000;return frame(6,firmware.manifest());
+    case VERSION:require(f.type==5&&j.isEmpty(),"expected version request");state=State.MANIFEST;deadline=now+30000;return frame(5,OtaFrame.object("OtaVersion",OtaPackage.candidate().baseVersion));
+    case MANIFEST:require(f.type==6&&OtaPackage.candidate().baseVersion.equals(j.get("OtaVersion")),"expected manifest request");state=State.TRANSFER;deadline=now+60000;return frame(6,firmware.manifest());
     case TRANSFER:
-     if(f.type==9){require(j.isEmpty()&&apCovered==OtaPackage.AP_SIZE,"安装信号提前或 AP 传输不完整");state=State.INSTALLING;deadline=0;recoveryGuard=new OtaRecoveryGuard(peer,now,false);return null;}
+     if(f.type==9){require(j.isEmpty()&&apCovered==OtaPackage.candidate().apSize,"安装信号提前或 AP 传输不完整");state=State.INSTALLING;deadline=0;recoveryGuard=new OtaRecoveryGuard(peer,now,false);return null;}
      require(f.type==7,"expected slice request");BoundedJson.keys(j,"Name","Start","Size");String name=BoundedJson.text(j.get("Name"),64);int start=BoundedJson.number(j.get("Start"),0,Integer.MAX_VALUE),size=BoundedJson.number(j.get("Size"),1,51200);byte[] data=firmware.slice(name,start,size);
      require(chunks<2000&&sent+size<=64000000,"重复传输超过预算");chunks++;sent+=size;if(name.equals("nuttx_ap.bin"))cover(start,start+size);deadline=now+60000;return OtaFrame.encode(7,j,data);
     case INSTALLING:return null;

@@ -31,7 +31,7 @@ final class OfficialOtaGate {
   peer=device;Arrays.fill(requested,-1);Arrays.fill(fresh,-1);Arrays.fill(good,false);
  }
  void arm(OtaPackage candidate,String device,String token,long now){
-  if(phase!=Phase.LOCKED||candidate==null||!peer.equals(device)||!"TAP1-TEST-01".equals(token))throw new IllegalStateException("arm denied");
+  if(phase!=Phase.LOCKED||candidate==null||!peer.equals(device)||!OtaPackage.candidate().confirmToken.equals(token))throw new IllegalStateException("arm denied");
   firmware=candidate;grant=now+900000;last=now;phase=Phase.ARMED;error="";
  }
  void revoke(){if(started)return;phase=Phase.LOCKED;grant=0;firmware=null;}
@@ -67,7 +67,7 @@ final class OfficialOtaGate {
     requested[f.type]=now;return true;
    }
    if(f.type==3&&!started){
-    require(f.binary.length==0&&same(f.json,OtaFrame.object("OtaSize",OtaPackage.ZIP_SIZE)),"space request differs");
+    require(f.binary.length==0&&same(f.json,OtaFrame.object("OtaSize",OtaPackage.candidate().zipSize)),"space request differs");
     requested[3]=now;return true;
    }
    if(f.type==4){
@@ -80,7 +80,7 @@ final class OfficialOtaGate {
     started=true;phase=Phase.STARTING;grant=0;deadline=now+30000;return true;
    }
    require(started&&firmware!=null,"no live transfer");
-   if(f.type==5){require(phase==Phase.VERSION&&wantVersion&&f.binary.length==0&&same(f.json,OtaFrame.object("OtaVersion",OtaPackage.VERSION)),"version response differs");wantVersion=false;phase=Phase.MANIFEST;deadline=now+30000;return true;}
+   if(f.type==5){require(phase==Phase.VERSION&&wantVersion&&f.binary.length==0&&same(f.json,OtaFrame.object("OtaVersion",OtaPackage.candidate().baseVersion)),"version response differs");wantVersion=false;phase=Phase.MANIFEST;deadline=now+30000;return true;}
    if(f.type==6){require(phase==Phase.MANIFEST&&wantManifest&&f.binary.length==0&&same(f.json,firmware.manifest()),"manifest differs");wantManifest=false;phase=Phase.TRANSFER;deadline=now+60000;return true;}
    if(f.type==7){
     require(phase==Phase.TRANSFER&&requestedSlice!=null&&same(f.json,requestedSlice),"slice not requested");
@@ -102,7 +102,7 @@ final class OfficialOtaGate {
    if(f.type==1||f.type==2||f.type==3||f.type==11){
     if(requested[f.type]<0||now-requested[f.type]>15000)return;
     requested[f.type]=-1;fresh[f.type]=now;good[f.type]=false;
-    if(f.type==1)good[1]=OtaPackage.VERSION.equals(j.get("OsVersion"))&&"idle".equals(j.get("OtaValidationState"))&&Boolean.TRUE.equals(j.get("OtaValidationConfirmed"))&&BoundedJson.list(j.get("PackageTypes")).contains("files");
+    if(f.type==1)good[1]=OtaPackage.candidate().baseVersion.equals(j.get("OsVersion"))&&"idle".equals(j.get("OtaValidationState"))&&Boolean.TRUE.equals(j.get("OtaValidationConfirmed"))&&BoundedJson.list(j.get("PackageTypes")).contains("files");
     else if(f.type==2)good[2]=BoundedJson.number(j.get("BatteryLevel"),0,100)>=50;
     else good[f.type]=Boolean.TRUE.equals(j.get("Result"));
     return;
@@ -110,9 +110,9 @@ final class OfficialOtaGate {
    if(!started||phase==Phase.UNKNOWN||phase==Phase.INSTALLING)return;
    if(f.type==4){require(phase==Phase.STARTING&&Boolean.TRUE.equals(j.get("Result")),"official start rejected");phase=Phase.VERSION;deadline=now+30000;return;}
    if(f.type==5){require(phase==Phase.VERSION&&j.isEmpty(),"unexpected version request");wantVersion=true;return;}
-   if(f.type==6){require(phase==Phase.MANIFEST&&same(j,OtaFrame.object("OtaVersion",OtaPackage.VERSION)),"unexpected manifest request");wantManifest=true;return;}
+   if(f.type==6){require(phase==Phase.MANIFEST&&same(j,OtaFrame.object("OtaVersion",OtaPackage.candidate().baseVersion)),"unexpected manifest request");wantManifest=true;return;}
    if(f.type==7){require(phase==Phase.TRANSFER&&requestedSlice==null,"overlapping slice request");BoundedJson.keys(j,"Name","Start","Size");firmware.slice(BoundedJson.text(j.get("Name"),64),BoundedJson.number(j.get("Start"),0,Integer.MAX_VALUE),BoundedJson.number(j.get("Size"),1,51200));requestedSlice=j;deadline=now+60000;return;}
-   if(f.type==9){require(phase==Phase.TRANSFER&&requestedSlice==null&&j.isEmpty()&&apCovered==OtaPackage.AP_SIZE,"premature install signal");phase=Phase.INSTALLING;firmware=null;deadline=0;return;}
+   if(f.type==9){require(phase==Phase.TRANSFER&&requestedSlice==null&&j.isEmpty()&&apCovered==OtaPackage.candidate().apSize,"premature install signal");phase=Phase.INSTALLING;firmware=null;deadline=0;return;}
    // Progress is observation only; it cannot unlock or complete a session.
    if(f.type==8||f.type==10)return;
    throw new IllegalArgumentException("unsupported incoming OTA type");

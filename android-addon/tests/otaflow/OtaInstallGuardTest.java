@@ -13,11 +13,12 @@ public final class OtaInstallGuardTest {
  static OtaSession state()throws Exception{return OtaControllerTest.state();}
  static void noQueries(int count){for(int i=0;i<3;i++){OtaController.readback();OtaController.releaseAfterInspection();Handler.drain();}ok(NavReflect.sent.size()==count);ok(OtaController.critical());}
  public static void main(String[] args)throws Exception{
+  OtaTestSupport.holdCandidate();
   Application app=new Application();OtaController.init(app);OtaController.importPackage(Files.readAllBytes(Paths.get(args[0])));
   for(int i=0;i<500&&!OtaController.status().contains("候选校验通过");i++){Thread.sleep(10);Handler.drain();}
-  ok(NavReflect.sent.isEmpty());OtaControllerTest.ready();OtaController.authorize("TAP1");OtaService.ready=true;OtaController.start();Handler.drain();
-  event(4,OtaFrame.object("Result",true));event(5,null);event(6,OtaFrame.object("OtaVersion",OtaPackage.VERSION));
-  for(int at=0;at<OtaPackage.AP_SIZE;at+=51200)event(7,OtaFrame.object("Name","nuttx_ap.bin","Start",at,"Size",Math.min(51200,OtaPackage.AP_SIZE-at)));
+  ok(NavReflect.sent.isEmpty());OtaControllerTest.ready();OtaController.authorize(OtaPackage.candidate().confirmToken);OtaService.ready=true;OtaController.start();Handler.drain();
+  event(4,OtaFrame.object("Result",true));event(5,null);event(6,OtaFrame.object("OtaVersion",OtaPackage.candidate().baseVersion));
+  for(int at=0;at<OtaPackage.candidate().apSize;at+=51200)event(7,OtaFrame.object("Name","nuttx_ap.bin","Start",at,"Size",Math.min(51200,OtaPackage.candidate().apSize-at)));
   event(9,null);ok(state().state()==OtaSession.State.INSTALLING);ok("INSTALLING".equals(app.prefs.disk.get("phase")));
   int before=NavReflect.sent.size();noQueries(before);OtaController.confirmRecoveryHome("已回首页");noQueries(before);
   // Unsolicited old-version/idle responses cannot manufacture READBACK.

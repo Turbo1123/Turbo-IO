@@ -5,16 +5,17 @@ public final class OfficialOtaGateTest {
  static OtaPackage pkg;static int checks,commits;static long now=1000;
  static void yes(boolean b){checks++;if(!b)throw new AssertionError("check "+checks);}
  static byte[] f(int t,Object j){return OtaFrame.encode(t,j,null);}
- static Object version(){return OtaFrame.object("OsVersion",OtaPackage.VERSION,"OtaValidationState","idle","OtaValidationConfirmed",true,"PackageTypes",Arrays.asList("files"));}
+ static Object version(){return OtaFrame.object("OsVersion",OtaPackage.candidate().baseVersion,"OtaValidationState","idle","OtaValidationConfirmed",true,"PackageTypes",Arrays.asList("files"));}
  static OfficialOtaGate gate(boolean durable){OfficialOtaGate g=new OfficialOtaGate(p->{commits++;return durable;});g.bind("peer");return g;}
  static void read(OfficialOtaGate g,int type,Object req,Object reply){yes(g.outbound("peer",f(type,req),now++,true,true));g.inbound("peer",f(type,reply),now++);}
- static void checks(OfficialOtaGate g){read(g,1,null,version());read(g,2,null,OtaFrame.object("BatteryLevel",80));read(g,3,OtaFrame.object("OtaSize",OtaPackage.ZIP_SIZE),OtaFrame.object("Result",true));read(g,11,null,OtaFrame.object("Result",true));}
+ static void checks(OfficialOtaGate g){read(g,1,null,version());read(g,2,null,OtaFrame.object("BatteryLevel",80));read(g,3,OtaFrame.object("OtaSize",OtaPackage.candidate().zipSize),OtaFrame.object("Result",true));read(g,11,null,OtaFrame.object("Result",true));}
  static void arm(OfficialOtaGate g){g.arm(pkg,"peer","TAP1-TEST-01",now++);}
  static void start(OfficialOtaGate g){yes(g.outbound("peer",f(4,OtaFrame.object("Mode",2)),now++,true,true));g.inbound("peer",f(4,OtaFrame.object("Result",true)),now++);}
- static void manifest(OfficialOtaGate g){g.inbound("peer",f(5,null),now++);yes(g.outbound("peer",f(5,OtaFrame.object("OtaVersion",OtaPackage.VERSION)),now++,true,true));g.inbound("peer",f(6,OtaFrame.object("OtaVersion",OtaPackage.VERSION)),now++);yes(g.outbound("peer",f(6,pkg.manifest()),now++,true,true));}
+ static void manifest(OfficialOtaGate g){g.inbound("peer",f(5,null),now++);yes(g.outbound("peer",f(5,OtaFrame.object("OtaVersion",OtaPackage.candidate().baseVersion)),now++,true,true));g.inbound("peer",f(6,OtaFrame.object("OtaVersion",OtaPackage.candidate().baseVersion)),now++);yes(g.outbound("peer",f(6,pkg.manifest()),now++,true,true));}
  static OfficialOtaGate transfer(){OfficialOtaGate g=gate(true);checks(g);arm(g);start(g);manifest(g);return g;}
  static void chunk(OfficialOtaGate g,int at,int size){Object r=OtaFrame.object("Name","nuttx_ap.bin","Start",at,"Size",size);g.inbound("peer",f(7,r),now++);yes(g.outbound("peer",OtaFrame.encode(7,r,pkg.slice("nuttx_ap.bin",at,size)),now++,true,true));}
  public static void main(String[] args)throws Exception{
+  OtaTestSupport.holdCandidate();
   pkg=OtaPackage.verify(Files.readAllBytes(Paths.get(args[0])));
   OfficialOtaGate pre=gate(true);yes(!pre.readyToArm(now));
   read(pre,1,null,version());read(pre,11,null,OtaFrame.object("Result",true));yes(!pre.readyToArm(now));
@@ -49,7 +50,7 @@ public final class OfficialOtaGateTest {
   g=gate(true);checks(g);read(g,2,null,OtaFrame.object("BatteryLevel",49));arm(g);yes(!g.outbound("peer",f(4,OtaFrame.object("Mode",2)),now++,true,true));
   g=gate(true);checks(g);arm(g);start(g);yes(!g.outbound("peer",f(4,OtaFrame.object("Mode",2)),now++,true,true));yes(g.pending()&&g.phase()==OfficialOtaGate.Phase.UNKNOWN);
   g=gate(true);checks(g);arm(g);start(g);g.inbound("peer",f(5,null),now++);yes(!g.outbound("peer",f(5,OtaFrame.object("OtaVersion","wrong")),now++,true,true));
-  g=gate(true);checks(g);arm(g);start(g);g.inbound("peer",f(5,null),now++);yes(g.outbound("peer",f(5,OtaFrame.object("OtaVersion",OtaPackage.VERSION)),now++,true,true));g.inbound("peer",f(6,OtaFrame.object("OtaVersion",OtaPackage.VERSION)),now++);List<Object> bad=BoundedJson.list(pkg.manifest());BoundedJson.map(bad.get(0)).put("BurnAddr",1);yes(!g.outbound("peer",f(6,bad),now++,true,true));
+  g=gate(true);checks(g);arm(g);start(g);g.inbound("peer",f(5,null),now++);yes(g.outbound("peer",f(5,OtaFrame.object("OtaVersion",OtaPackage.candidate().baseVersion)),now++,true,true));g.inbound("peer",f(6,OtaFrame.object("OtaVersion",OtaPackage.candidate().baseVersion)),now++);List<Object> bad=BoundedJson.list(pkg.manifest());BoundedJson.map(bad.get(0)).put("BurnAddr",1);yes(!g.outbound("peer",f(6,bad),now++,true,true));
   g=transfer();Object r=OtaFrame.object("Name","nuttx_ap.bin","Start",0,"Size",100);g.inbound("peer",f(7,r),now++);byte[] data=pkg.slice("nuttx_ap.bin",0,100);data[2]^=1;yes(!g.outbound("peer",OtaFrame.encode(7,r,data),now++,true,true));
   g=transfer();yes(!g.outbound("peer",OtaFrame.encode(7,r,pkg.slice("nuttx_ap.bin",0,100)),now++,true,true));
   g=transfer();g.inbound("peer",f(7,OtaFrame.object("Name","../nuttx_ap.bin","Start",0,"Size",1)),now++);yes(g.phase()==OfficialOtaGate.Phase.UNKNOWN);
@@ -61,7 +62,7 @@ public final class OfficialOtaGateTest {
   g=gate(true);yes(g.outbound("peer",f(1,null),now++,true,true));now+=15001;g.inbound("peer",f(1,version()),now++);read(g,11,null,OtaFrame.object("Result",true));yes(!g.freshBoot(now));
   g=transfer();chunk(g,0,10);g.tick("peer",now-100);yes(g.phase()==OfficialOtaGate.Phase.UNKNOWN);
   g=transfer();g.inbound("peer",f(7,r),now++);g.inbound("peer",f(7,r),now++);yes(g.phase()==OfficialOtaGate.Phase.UNKNOWN);
-  g=transfer();for(int at=0;at<OtaPackage.AP_SIZE;at+=51200)chunk(g,at,Math.min(51200,OtaPackage.AP_SIZE-at));yes(g.covered()==OtaPackage.AP_SIZE);g.inbound("peer",f(9,null),now++);yes(g.phase()==OfficialOtaGate.Phase.INSTALLING&&g.pending());g.tick("",now++);yes(g.phase()==OfficialOtaGate.Phase.INSTALLING);
+  g=transfer();for(int at=0;at<OtaPackage.candidate().apSize;at+=51200)chunk(g,at,Math.min(51200,OtaPackage.candidate().apSize-at));yes(g.covered()==OtaPackage.candidate().apSize);g.inbound("peer",f(9,null),now++);yes(g.phase()==OfficialOtaGate.Phase.INSTALLING&&g.pending());g.tick("",now++);yes(g.phase()==OfficialOtaGate.Phase.INSTALLING);
   System.out.println("Official OTA passive gate: "+checks+" assertions passed. Simulated wire only; no hardware sends.");
  }
 }
