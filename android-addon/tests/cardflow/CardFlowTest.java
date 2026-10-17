@@ -18,6 +18,11 @@ public class CardFlowTest {
         CardTransport.publish(doc,true);NativeTransfer.fail.run();yes(!CardTransport.busy()&&NativeTransfer.lease.isEmpty());
         Map<String,Object> conflict=object("widgets_v2",Arrays.asList(weather,object("id","turbo_ui_card_test","type","native")));CardTransport.publish(doc,true);n=NativeTransfer.packets.size();config(conflict);yes(!CardTransport.busy()&&NativeTransfer.packets.size()==n);
         CardTransport.publish(doc,false);config(baseline);Map<String,Object> equivalent=copy(own);equivalent.put("extras",((String)equivalent.get("extras")).replace("\":","\": "));reply(object("code",0));config(object("widgets_v2",Arrays.asList(weather,todo,equivalent),"simple_mode",true));yes(!CardTransport.busy()&&CardTransport.status().contains("其他卡片保留"));
+        // Firmware may re-encode the stored widget (extras as object, name dropped); iOS TMIG1 accepts this too.
+        CardTransport.publish(doc,false);config(baseline);Map<String,Object> reencoded=copy(own);reencoded.put("extras",BoundedJson.read(((String)reencoded.get("extras")).getBytes(StandardCharsets.UTF_8)));reencoded.remove("name");reply(object("code",0));config(object("widgets_v2",Arrays.asList(weather,todo,reencoded),"simple_mode",true));yes(!CardTransport.busy()&&CardTransport.status().contains("其他卡片保留"));
+        // A correlated reply without the expected cmd/code is ignored, not treated as a mismatch.
+        CardTransport.publish(doc,false);n=NativeTransfer.packets.size();reply(object("cmd","other"));yes(CardTransport.busy()&&NativeTransfer.packets.size()==n);config(baseline);reply(object("cmd","ack"));yes(CardTransport.busy());reply(object("code",0));config(after);yes(!CardTransport.busy()&&CardTransport.status().contains("其他卡片保留"));
+        CardTransport.publish(doc,false);config(baseline);reply(object("code",0));config(changed);yes(CardTransport.status().contains("回读安装结果"));
         CardTransport.inspect();int readPackets=NativeTransfer.packets.size();config(baseline);yes(!CardTransport.busy()&&NativeTransfer.packets.size()==readPackets&&CardTransport.status().contains("未修改"));
         System.out.println("CardFlowTest: "+checks+" assertions, targeted install/readback/order/remove and fault paths");
     }
