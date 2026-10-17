@@ -9,7 +9,7 @@ typedef struct {TDDiagnostics d;TDLightOwner owner;TNNavSlot *slot;void *timer;u
 extern void *stream_memalign(size_t,size_t),stream_free(void *),*stream_timer_create(void (*)(void *),uint32_t,void *);
 extern void stream_timer_delete(void *),*nav_monitors(void),*nav_link(void *);
 extern uint32_t stream_tick(void);
-extern bool nav_bonded(void *),nav_business_idle(void);
+extern bool nav_bonded(void *),diag_business_idle(void);
 extern int nav_connection(unsigned),td_gettid(void),tdp_rnlink_send(unsigned,const uint8_t *,unsigned,void *);
 extern void *nav_ensure_menu(void *);
 extern const char *nav_top_app(void);
@@ -32,7 +32,7 @@ static void tick(void *timer){
  Control *c=*(Control **)((uint8_t *)timer+12);if(!c)return;
  if(td_gettid()!=c->owner.owner_tid)return; /* fail closed; never read LVGL cross-thread */
  uint32_t now=stream_tick();
- if(!paired()||!launcher()||!nav_business_idle()||!td_active(&c->d,now)){discard(c);return;}
+ if(!paired()||!launcher()||!diag_business_idle()||!td_active(&c->d,now)){discard(c);return;}
  TDSample s;if(td_sample(&c->d,now,true,td_stock_light,clock_ms,&c->owner,&s))emit(&s);
  if(!c->d.enabled)discard(c);
 }
@@ -46,12 +46,12 @@ bool td_message_is_ours(const TIONativeMessage *m){return m&&m->id==TD_MESSAGE;}
 void td_message_dispatch(const TIONativeMessage *m){
  TDCommand q;if(!td_message_is_ours(m)||m->mode||m->reserved||m->context||m->padding[0]||m->padding[1]||m->padding[2]||!td_command_decode(m->data,m->bytes,&q)||!paired()||!launcher())return;
  void *vm=manager(),*app=ptr(vm,0x10);if(!vm)return;
- if(!app&&q.op==TDQ_START&&launcher()&&nav_business_idle())app=nav_ensure_menu(vm);
+ if(!app&&q.op==TDQ_START&&launcher()&&diag_business_idle())app=nav_ensure_menu(vm);
  TNNavSlot *s=app?((M8NativeTail *)((uint8_t *)app+0xdc))->navigation:NULL;if(!s)return;
  Control *c=s->diagnostics;
  if(q.op==TDQ_STOP){if(c&&c->d.session==q.session&&q.sequence>c->command_seq)discard(c);return;}
  if(c)return; /* active START replay does not extend lifetime */
- if(!launcher()||!nav_business_idle())return;int tid=td_gettid();if(tid<0)return;
+ if(!launcher()||!diag_business_idle())return;int tid=td_gettid();if(tid<0)return;
  c=stream_memalign(8,sizeof *c);if(!c)return;memset(c,0,sizeof *c);c->slot=s;c->owner.owner_tid=tid;c->command_seq=q.sequence;
  td_init(&c->d,TD_BUILD);if(!td_start(&c->d,q.session,stream_tick(),q.lease_ms)){stream_free(c);return;}
  /* Count only this instrumented diagnostic object, not the whole extension. */

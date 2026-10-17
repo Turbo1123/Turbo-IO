@@ -17,7 +17,7 @@ int main(void){@autoreleasepool{
     for(NSDictionary *e in sent){NSData *p=TIOSubtitlePacket([e[@"type"] unsignedIntegerValue],e[@"json"]);NSDictionary *decoded=TIOSubtitleEnvelope(p);assert([decoded[@"json"] isEqual:e[@"json"]]);}
     assert([sent[1][@"json"][@"mode"] isEqual:@3]);assert([sent[1][@"json"][@"status"] isEqual:@0]);
     [t tick:249];assert([t.phase isEqual:@"ready"]);[t tick:250];assert([t.phase isEqual:@"stopping"]);assert([sent.lastObject[@"type"] isEqual:@3]);assert([sent.lastObject[@"json"][@"reason_code"] isEqual:@10]);
-    [t tick:258];assert([t.phase isEqual:@"uncertain"]);assert(![t startWithPreview:preview stop:stop now:259]);
+    [t tick:258];assert([t.phase isEqual:@"idle"]);assert(t.sid==nil);assert([t startWithPreview:preview stop:stop now:259]);assert([t.phase isEqual:@"starting"]);
     // Audio type4 with binary payload and no JSON must not be silently ignored.
     uint8_t audio[]={8,1,16,4,34,3,0xff,0,0x80};NSDictionary *ae=TIOSubtitleEnvelope([NSData dataWithBytes:audio length:sizeof(audio)]);assert([ae[@"type"] isEqual:@4]&&[ae[@"binaryBytes"] isEqual:@3]);
     t.phase=@"idle";assert([t startWithPreview:preview stop:stop now:300]);[t receive:ae now:301];assert(t.audioPackets==1&&[t.phase isEqual:@"stopping"]);NSUInteger count=sent.count;[t receive:ae now:302];assert(sent.count==count&&t.audioPackets==2);

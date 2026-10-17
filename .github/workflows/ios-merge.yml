@@ -1,0 +1,302 @@
+name: iOS Merge Build
+
+# 在 GitHub 免费的 macOS runner 上完成 Windows 做不了的两步：
+#   1. official-addon/build.sh 编译 TurboIOPrivateAddon.dylib（需要 Xcode iOS SDK）
+#   2. 嵌入原厂砸壳 IPA 并打包（需要 plutil/codesign 等 macOS 工具）
+#
+# 两种签名模式：
+#   adhoc   —— 产出合并后的 ad-hoc 签名 IPA，回 Windows 用 Sideloadly
+#              以自己的 Apple ID（免费或付费）重签安装。推荐先用这个。
+#   devcert —— 在 CI 上用开发者证书完整签名（需付费账号 + 3 个 Secrets），
+#              产出可直接安装的 TurboIO-local-only.ipa。
+#
+# 注意：bundle_id 必须与签名描述文件覆盖的 ID 一致，且与最终安装值一致，
+# 否则扩展拒绝加载。默认值为官方 com.rayneo.venus.pub；使用自己的证书签名时
+# 改成描述文件写死的 ID。
+#
+# 2026-10 更新：
+#   - 实时导航眼镜字幕修复已随源码进入所有构建（模拟/实时均可投屏）
+#   - enable_app_sdk（默认开，随 FOCUS 版）：TCE1 仪表盘卡片，
+#     需眼镜已刷含对应运行时的实验固件
+
+on:
+  workflow_dispatch:
+    inputs:
+      bundle_id:
+        description: 'Bundle ID：默认=官方 ID；用自己的证书签名时改成描述文件覆盖的 ID'
+        required: true
+        default: 'com.rayneo.venus.pub'
+      signing_mode:
+        description: '签名模式'
+        type: choice
+        default: 'adhoc'
+        options:
+          - 'adhoc'
+          - 'devcert'
+      device_udid:
+        description: 'iPhone UDID（仅 devcert 模式使用；填描述文件登记的设备）'
+        required: false
+        default: ''
+      product:
+        description: 'iPhone 机型标识（按目标机型填写，如 iPhone18,2）'
+        required: false
+        default: 'iPhone18,2'
+      enable_amap:
+        description: '构建带高德SDK的导航版（联网下载固定版本SDK；入口在 App 的 TurboIO→资料→导航）'
+        type: boolean
+        required: false
+        default: false
+      enable_focus:
+        description: 'FOCUS-04 集成版（仅adhoc，默认开；不勾则退化为不带导航的普通扩展）。注意：实验刷机入口的运行时门禁要求宿主 Bundle ID 与签名材料匹配，按实际情况选择'
+        type: boolean
+        required: false
+        default: true
+      enable_app_sdk:
+        description: 'TCE1 仪表盘卡片（随FOCUS版编译，需眼镜已刷含TCE1运行时的实验固件）。实时导航眼镜字幕修复已随源码包含在所有构建中'
+        type: boolean
+        required: false
+        default: true
+
+permissions:
+  contents: read
+
+env:
+  # 项目 Release 公开的原厂砸壳输入；打包前严格校验哈希
+  UPSTREAM_IPA_URL: https://github.com/Turbo1123/Turbo-IO/releases/download/rayneo-ios-1.0.5-201/RayNeo_AI_1.0.5_201_decrypted_original.ipa
+  EXPECTED_IPA_SHA256: 39d12aff8f2b312dc3b40ce784a444e52c536e61378434005255177548df966a
+
+jobs:
+  merge:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      # 有实际行为的校验：必错的输入直接失败，不浪费 10 分钟构建
+      - name: 校验 Bundle ID 输入
+        run: |
+          BUNDLE='${{ inputs.bundle_id }}'
+          if [[ "$BUNDLE" == "io.turboio.change-me.rayneo" ]]; then
+            echo "::error::填了占位 Bundle ID。改成描述文件覆盖的 ID（默认为官方 com.rayneo.venus.pub）"
+            exit 1
+          fi
+          if [[ "${{ inputs.enable_focus }}" == 'true' && "${{ inputs.signing_mode }}" == 'devcert' ]]; then
+            echo "::error::FOCUS-04 仅支持 adhoc 模式（上游 package.mjs 的 OTA 门禁要求官方 Bundle ID，与固定 ID 描述文件冲突）"
+            exit 1
+          fi
+          if [[ "${{ inputs.enable_app_sdk }}" == 'true' && "${{ inputs.enable_focus }}" != 'true' ]]; then
+            echo "::warning::已勾 enable_app_sdk 但未勾 enable_focus：仪表盘只随 FOCUS 版编译，本次将静默跳过，装出来的包没有这个入口"
+          fi
+          echo "Bundle ID 校验通过：$BUNDLE"
+
+      - name: 下载高德导航 SDK（优先 fork 的 amap-sdk-cache Release，回退官方源）
+        if: inputs.enable_amap || inputs.enable_focus
+        run: |
+          # 手动缓存：把两个官方 zip 上传到本仓库 tag=amap-sdk-cache 的 Release
+          # （文件名必须一字不差），CI 从 GitHub CDN 秒取；没传则回退官方源长超时下载。
+          # 无论哪个来源，setup-amap.mjs 都按固定 SHA-256 校验，不静默换版本。
+          mkdir -p amap-archives
+          CACHE_URL="https://github.com/${{ github.repository }}/releases/download/amap-sdk-cache"
+          fetch_zip() { # $1=文件名 $2=官方URL $3=超时秒
+            if curl --fail --location --max-time 600 --output "amap-archives/$1" "$CACHE_URL/$1"; then
+              echo "$1 ← fork Release 缓存"
+            else
+              echo "$1 缓存不存在/失败，回退官方源（最长 $3 秒）"
+              curl --fail --location --proto '=https' --proto-redir '=https' --max-time "$3" \
+                --output "amap-archives/$1" "$2"
+            fi
+          }
+          fetch_zip AMap_iOS_Navi_ALL.zip https://a.amap.com/lbs/static/zip/AMap_iOS_Navi_ALL.zip 1800
+          fetch_zip search-9.8.1.zip https://a.amap.com/lbs/static/zip/AMap_iOS_Search_Lib_V9.8.1.zip 600
+          node official-addon/setup-amap.mjs --accept-sdk-terms --archives-dir "$PWD/amap-archives"
+
+      - name: 下载 FOCUS-04 固件（上游 Release，精确哈希与大小校验）
+        if: inputs.enable_focus
+        run: |
+          curl -L --fail -o focus-firmware.zip \
+            https://github.com/Turbo1123/Turbo-IO/releases/download/firmware-strix-1.0.4.12-tfp1-focus04/StrixOS-1.0.4.12-TurboFocus-TFP1-FOCUS04-EXPERIMENTAL.zip
+          echo "ad5054e3d7bda90e94d293bea882bd8dd5a125bcc8f42c13a59b2e149313c9e3  focus-firmware.zip" | shasum -a 256 -c -
+          SIZE=$(stat -f%z focus-firmware.zip)
+          [[ "$SIZE" == "9300112" ]] || { echo "::error::固件大小不符：$SIZE（期望 9300112）"; exit 1; }
+          echo "FOCUS-04 固件校验通过（9,300,112 字节）"
+
+      - name: 编译 TurboIO 扩展 dylib
+        run: |
+          if [[ "${{ inputs.enable_focus }}" == 'true' ]]; then
+            # FOCUS-04 集成版：独立源码树与构建脚本，强制启用高德导航
+            export TIO_AMAP_ENABLED=1 TIO_AMAP_SDK_ROOT="$PWD/official-addon/build/amap-sdk" \
+              TIO_OTA_FLASH_ENABLED=1 TIO_IMAGE_RX_LAB=1 TIO_IMAGE_RX_WIDE=1 \
+              TIO_DISPLAY_PHONE=1 TIO_DISPLAY_FLASH=1
+            # TCE1 卡片模块（AppBridge/app*.c/Editor*）
+            if [[ "${{ inputs.enable_app_sdk }}" == 'true' ]]; then
+              export TIO_APP_SDK=1
+              echo "已启用 TIO_APP_SDK：TCE1 仪表盘卡片"
+            fi
+            bash official-addon/focus-edition/build.sh embedded "${{ inputs.bundle_id }}"
+            ADDON=official-addon/focus-edition/build/image-rx-lab/TurboIOPrivateAddon.dylib
+          else
+            if [[ "${{ inputs.enable_amap }}" == 'true' ]]; then export TIO_AMAP_ENABLED=1; fi
+            bash official-addon/build.sh embedded "${{ inputs.bundle_id }}"
+            # 导航版产物在 build/navigation，普通版在 build/embedded
+            if [[ -f official-addon/build/navigation/TurboIOPrivateAddon.dylib ]]; then
+              ADDON=official-addon/build/navigation/TurboIOPrivateAddon.dylib
+            else
+              ADDON=official-addon/build/embedded/TurboIOPrivateAddon.dylib
+            fi
+          fi
+          # 同一步骤内先用 shell 变量；GITHUB_ENV 只对后续步骤生效
+          echo "ADDON=$ADDON" >> "$GITHUB_ENV"
+          # dylib 必须真的带上了 App SDK 符号，勾了开关却没编进去时立刻失败
+          if [[ "${{ inputs.enable_app_sdk }}" == 'true' ]]; then
+            nm -g "$ADDON" | grep -q '_TCEEditorController' || { echo "::error::dylib 缺少 _TCEEditorController：TCE1 卡片模块没有编入"; exit 1; }
+            echo "App SDK 符号核验通过（_TCEEditorController）"
+          fi
+          echo "使用扩展：$ADDON"
+
+      - name: 下载并校验原厂砸壳 IPA
+        run: |
+          curl -L --fail -o original.ipa "$UPSTREAM_IPA_URL"
+          echo "$EXPECTED_IPA_SHA256  original.ipa" | shasum -a 256 -c -
+          rm -rf input && mkdir input
+          unzip -q original.ipa -d input
+          test -d input/Payload/Runner.app
+
+      # ---------- 模式一：合并 + ad-hoc 签名，回本机用 Sideloadly 重签 ----------
+      - name: 合并并打包（ad-hoc）
+        if: inputs.signing_mode == 'adhoc'
+        run: |
+          rm -rf merged && mkdir -p merged
+          node official-addon/macho-embed.mjs \
+            "$PWD/input/Payload/Runner.app" \
+            "$PWD/merged/Payload/Runner.app" \
+            "$PWD/$ADDON" \
+            "${{ inputs.bundle_id }}"
+          # 导航版/FOCUS版：复制高德资源 bundle 并补定位用途说明（等价 package.mjs --amap-sdk-root）
+          if [[ "${{ inputs.enable_amap }}" == 'true' || "${{ inputs.enable_focus }}" == 'true' ]]; then
+            node --input-type=module -e "
+              import {amapResources,copyAMapResources} from './official-addon/amap-resources.mjs';
+              copyAMapResources(amapResources(process.argv[1]), process.argv[2]);
+            " "$PWD/official-addon/build/amap-sdk" "$PWD/merged/Payload/Runner.app"
+            PLIST="merged/Payload/Runner.app/Info.plist"
+            plutil -convert json -o - "$PLIST" | grep -q NSLocationWhenInUseUsageDescription || \
+              plutil -insert NSLocationWhenInUseUsageDescription -string '用于用户主动选择的地图定位和前台步行导航。' "$PLIST"
+            echo "高德资源已复制（AMap/AMapNavi/AMapSearch.bundle）"
+          fi
+          # FOCUS-04：OTA 回环补丁 + 美术资源 + 固件嵌入 + plist 注入
+          # （复刻 package.mjs focus 分支；固件哈希在脚本内再次精确校验）
+          if [[ "${{ inputs.enable_focus }}" == 'true' ]]; then
+            node .github/scripts/focus-adhoc-package.mjs \
+              "$PWD/merged/Payload/Runner.app" \
+              "$PWD/focus-firmware.zip" \
+              "$PWD/official-addon/build/amap-sdk" \
+              "$PWD/merged/experimental-ota-routing.json"
+          fi
+          # 原厂砸壳包被商店按机型裁剪（列表只到 iPhone16,2），新机型会报
+          # DeviceNotSupportedByThinning；把目标机型补进 UISupportedDevices
+          PLIST="merged/Payload/Runner.app/Info.plist"
+          if plutil -convert json -o - "$PLIST" | grep -q UISupportedDevices \
+             && ! plutil -convert json -o - "$PLIST" | grep -q "\"${{ inputs.product }}\""; then
+            plutil -insert UISupportedDevices.0 -string "${{ inputs.product }}" "$PLIST"
+            echo "已把 ${{ inputs.product }} 加入 UISupportedDevices"
+          else
+            echo "机型列表已包含 ${{ inputs.product }} 或未裁剪，无需修改"
+          fi
+          # ad-hoc 签名仅为让包结构完整；最终签名由 Sideloadly 在本机完成
+          find merged/Payload/Runner.app/Frameworks -name '*.framework' -type d | while read -r fw; do
+            codesign -f -s - "$fw"
+          done
+          find merged/Payload/Runner.app/Frameworks -name '*.dylib' -type f | while read -r lib; do
+            codesign -f -s - "$lib"
+          done
+          codesign -f -s - --generate-entitlement-der merged/Payload/Runner.app
+          ditto -c -k --norsrc --keepParent merged/Payload merged/TurboIO-merged-adhoc.ipa
+
+      - name: 上传合并产物（ad-hoc）
+        if: inputs.signing_mode == 'adhoc'
+        uses: actions/upload-artifact@v5
+        with:
+          name: TurboIO-merged-adhoc-ipa
+          path: merged/TurboIO-merged-adhoc.ipa
+          if-no-files-found: error
+
+      # 签名对账信息：Bundle ID 不一致 = 扩展不加载 / 装不上
+      - name: 签名提示（安装前必读）
+        if: inputs.signing_mode == 'adhoc'
+        run: |
+          echo "=============================================="
+          echo "IPA 已生成。本包 Bundle ID："
+          echo "  ${{ inputs.bundle_id }}"
+          echo ""
+          echo "爱思助手操作要点："
+          echo "  1. 签名方式选「导入证书」，用你的 证书文件.p12 + 描述文件.mobileprovision"
+          echo "  2. Bundle ID 保持包内原值，不要修改"
+          echo "  3. 目标设备：${{ inputs.device_udid }}（须在描述文件登记的设备列表内）"
+          echo "  4. 安装后：设置→通用→VPN与设备管理→信任"
+          if [[ "${{ inputs.enable_focus }}" == 'true' ]]; then
+            echo "  5. FOCUS-04 版已内置 TFP1 刷机门禁：App内 诊断→FOCUS-04"
+            echo "     刷机流程：只下载验收→核对15成员→输入TFP1授权→手动点安装"
+            echo "     刷机前：眼镜电量≥50%、结束所有任务；接受'短期无法回官方'的风险"
+            if [[ "${{ inputs.enable_app_sdk }}" == 'true' ]]; then
+              echo "  6. TCE1 卡片已编入：需眼镜已刷含 TCE1 运行时的固件"
+              echo "     导航：模拟与实时导航均可开眼镜字幕；实时为20分钟保护会话，"
+              echo "     需保持导航页前台；先运行官方App一次建立连接再进扩展"
+            fi
+          elif [[ "${{ inputs.enable_amap }}" == 'true' ]]; then
+            echo "  5. 导航版：高德控制台建 iOS 平台 Key 时，绑定本包实际 Bundle ID"
+            echo "     ${{ inputs.bundle_id }}"
+            echo "     App内 TurboIO→资料→导航→右上角更多→高德Key设置 填入"
+          fi
+          echo "=============================================="
+          echo "IPA SHA-256："
+          shasum -a 256 merged/TurboIO-merged-adhoc.ipa
+
+      # ---------- 模式二：开发者证书完整签名 ----------
+      - name: 合并并用开发者证书签名
+        if: inputs.signing_mode == 'devcert'
+        env:
+          P12_BASE64: ${{ secrets.IOS_P12_BASE64 }}
+          P12_PASSWORD: ${{ secrets.IOS_P12_PASSWORD }}
+          PROVISION_BASE64: ${{ secrets.IOS_PROVISION_BASE64 }}
+        run: |
+          test -n "$P12_BASE64"      || { echo '缺少 Secret: IOS_P12_BASE64'; exit 1; }
+          test -n "$P12_PASSWORD"    || { echo '缺少 Secret: IOS_P12_PASSWORD'; exit 1; }
+          test -n "$PROVISION_BASE64" || { echo '缺少 Secret: IOS_PROVISION_BASE64'; exit 1; }
+          test -n "${{ inputs.device_udid }}" || { echo '缺少输入: device_udid'; exit 1; }
+          printf '%s' "$P12_BASE64" | python3 -c 'import base64,sys;open("dev.p12","wb").write(base64.b64decode(sys.stdin.read()))'
+          printf '%s' "$PROVISION_BASE64" | python3 -c 'import base64,sys;open("dev.mobileprovision","wb").write(base64.b64decode(sys.stdin.read()))'
+          security create-keychain -p "" build.keychain-db
+          security default-keychain -s build.keychain-db
+          security unlock-keychain -p "" build.keychain-db
+          security import dev.p12 -k build.keychain-db -P "$P12_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" build.keychain-db
+          IDENTITY=$(security find-identity -v -p codesigning build.keychain-db | grep -oE '[A-F0-9]{40}' | head -n1)
+          test -n "$IDENTITY" || { security find-identity -v -p codesigning; echo '未找到可用的 codesigning 证书'; exit 1; }
+          rm -rf signed && mkdir signed
+          AMAP_ARGS=()
+          if [[ "${{ inputs.enable_amap }}" == 'true' ]]; then
+            AMAP_ARGS+=(--amap-sdk-root "$PWD/official-addon/build/amap-sdk")
+          fi
+          node official-addon/package.mjs \
+            --app "$PWD/input/Payload/Runner.app" \
+            --addon "$PWD/$ADDON" \
+            --profile "$PWD/dev.mobileprovision" \
+            --identity "$IDENTITY" \
+            --device "${{ inputs.device_udid }}" \
+            --bundle "${{ inputs.bundle_id }}" \
+            --product "${{ inputs.product }}" \
+            "${AMAP_ARGS[@]}" \
+            --out "$PWD/signed"
+
+      - name: 上传签名产物（devcert）
+        if: inputs.signing_mode == 'devcert'
+        uses: actions/upload-artifact@v5
+        with:
+          name: TurboIO-signed
+          path: |
+            signed/TurboIO-local-only.ipa
+            signed/report.json
+          if-no-files-found: error

@@ -3,7 +3,7 @@
  * disguised as telemetry. Double buffers change only with the renderer idle. */
 #include "focus_menu.h"
 #include <string.h>
-static const char *const names[]={"录音","实时字幕","实时提示","待办","提词器","全天智记","勿扰模式","显示测试","导航","网易云音乐","微信读书","番茄时钟","滴滴出行","我的应用"};
+static const char *const names[]={"录音","实时字幕","实时提示","待办","提词器","全天智记","勿扰模式","显示测试","导航","网易云音乐","微信读书","番茄时钟"};
 static int abs_i(int n){return n<0?-n:n;}
 static void dot(uint8_t *p,int x,int y,unsigned gray){for(int yy=0;yy<2;yy++)for(int xx=0;xx<2;xx++)if(x+xx>=0&&x+xx<64&&y+yy>=0&&y+yy<64)p[(y+yy)*64+x+xx]=(uint8_t)gray;}
 static void line(uint8_t *p,int x,int y,int a,int b,unsigned gray){int dx=abs_i(a-x),dy=-abs_i(b-y),sx=x<a?1:-1,sy=y<b?1:-1,e=dx+dy;for(unsigned i=0;i<128;i++){dot(p,x,y,gray);if(x==a&&y==b)break;int z=2*e;if(z>=dy){e+=dy;x+=sx;}if(z<=dx){e+=dx;y+=sy;}}}
@@ -22,8 +22,6 @@ static void icon(uint8_t *p,unsigned kind,unsigned g){memset(p,0,4096);
  case 8:line(p,32,8,52,48,g);line(p,52,48,32,39,g);line(p,32,39,12,48,g);line(p,12,48,32,8,g);break;
  case 9:line(p,24,12,24,46,g);line(p,24,12,47,8,g);line(p,47,8,47,42,g);ring(p,18,47,6,g);ring(p,41,43,6,g);break;
  case 10:box(p,8,11,46,40,g);line(p,31,11,31,54,g);line(p,15,21,24,21,g);line(p,38,21,47,21,g);line(p,15,30,24,30,g);line(p,38,30,47,30,g);break;
- case 13:box(p,10,10,18,18,g);box(p,35,10,18,18,g);box(p,10,35,18,18,g);box(p,35,35,18,18,g);break;
- case 12:box(p,10,25,43,23,g);box(p,18,13,27,12,g);box(p,16,49,8,5,g);box(p,40,49,8,5,g);line(p,17,35,25,35,g);line(p,38,35,46,35,g);break;
  case 11:ring(p,31,35,21,g);line(p,31,17,32,6,g);line(p,31,17,22,11,g);line(p,31,17,43,10,g);line(p,20,28,17,36,g);break;
  }
 }
@@ -38,12 +36,12 @@ bool fm_view_open(FMView *v,const TNWidgets *api,void *parent,bool (*attach)(voi
  return true;
 failed:api->destroy(api->ctx,v->root);v->root=NULL;return false;
 }
-bool fm_view_update(FMView *v,int selected,int64_t local,int battery){if(!v||!v->root||selected<0||selected>=14||!v->api.idle(v->api.ctx))return false;unsigned b=v->bank^1;char *h=v->header[b];memset(h,0,48);memcpy(h,"--:--   --%",11);
+bool fm_view_update(FMView *v,int selected,int64_t local,int battery){if(!v||!v->root||selected<0||selected>=12||!v->api.idle(v->api.ctx))return false;unsigned b=v->bank^1;char *h=v->header[b];memset(h,0,48);memcpy(h,"--:--   --%",11);
  if(local>=946684800&&local<=4102444800LL){unsigned secs=(unsigned)((uint64_t)local%86400),hour=secs/3600,min=secs/60%60;h[0]='0'+hour/10;h[1]='0'+hour%10;h[3]='0'+min/10;h[4]='0'+min%10;}
  if(battery>=0&&battery<=100){unsigned at=8;if(battery==100)h[at++]='1';if(battery>=10)h[at++]='0'+battery/10%10;h[at++]='0'+battery%10;h[at++]='%';h[at]=0;}
- v->pages[b][0]='1'+selected/4;v->pages[b][1]='/';v->pages[b][2]='4';v->pages[b][3]=0;
+ v->pages[b][0]='1'+selected/4;v->pages[b][1]='/';v->pages[b][2]='3';v->pages[b][3]=0;
  v->api.text_static(v->api.ctx,v->status,h);v->api.text_static(v->api.ctx,v->page,v->pages[b]);v->api.place(v->api.ctx,v->frame,14+128*(selected%4),34,124,122);
- for(unsigned i=0;i<4;i++){unsigned index=(unsigned)selected/4*4+i;bool show=index<14;v->api.visible(v->api.ctx,v->icons[i],show);v->api.visible(v->api.ctx,v->labels[i],show);if(!show)continue;icon(v->pixels[b][i],index,index==(unsigned)selected?255:150);v->api.buffer(v->api.ctx,v->icons[i],v->pixels[b][i],64,64);v->api.text_static(v->api.ctx,v->labels[i],names[index]);}
+ for(unsigned i=0;i<4;i++){unsigned index=(unsigned)selected/4*4+i;bool show=index<12;v->api.visible(v->api.ctx,v->icons[i],show);v->api.visible(v->api.ctx,v->labels[i],show);if(!show)continue;icon(v->pixels[b][i],index,index==(unsigned)selected?255:150);v->api.buffer(v->api.ctx,v->icons[i],v->pixels[b][i],64,64);v->api.text_static(v->api.ctx,v->labels[i],names[index]);}
  v->api.visible(v->api.ctx,v->root,true);v->selected=selected;v->bank=b;return true;
 }
 bool fm_view_close(FMView *v){if(!v||!v->root)return true;if(!v->api.idle(v->api.ctx))return false;void *root=v->root;v->root=NULL;v->api.destroy(v->api.ctx,root);return true;}

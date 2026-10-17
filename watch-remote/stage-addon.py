@@ -20,8 +20,8 @@ def replace(name,old,new):
 for f in (root/'Addon').iterdir():
     if f.suffix in ('.m','.h'):shutil.copy2(f,a.out/f.name)
 for name in ['remote.c','remote.h']:shutil.copy2(root/'Firmware'/name,a.out/name)
-replace('build.sh','LocalTranslationEntry.m ExperimentalOTA.m',
-        '-framework WatchConnectivity WatchRemoteGate.m WatchGlobalBridge.m remote.c WatchRemoteAddon.m LocalTranslationEntry.m ExperimentalOTA.m')
+replace('build.sh','ExperimentalOTA.m ExperimentalOTAGuard.m',
+        '-framework WatchConnectivity WatchRemoteGate.m WatchGlobalBridge.m remote.c WatchRemoteAddon.m ExperimentalOTA.m ExperimentalOTAGuard.m')
 replace('DisplayPhoneUI.m','#import "DisplayPhoneUI.h"','#import "DisplayPhoneUI.h"\n#import "WatchGlobalBridge.h"')
 replace('DisplayPhoneUI.m',' if(TDDiagnosticsConsume(e))return YES;',' if(TIOWatchGlobalConsume(e))return YES;\n if(TDDiagnosticsConsume(e))return YES;')
 replace('DisplayPhoneUI.m','if(!TFDecodeReply(event)&&','if(!TIOWatchGlobalIsReply(event)&&!TFDecodeReply(event)&&')

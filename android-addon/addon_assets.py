@@ -21,6 +21,7 @@ def assets():
         result[f'assets/turboio/art/{name}.png'] = HOME / f'{name}.png'
     result['assets/turboio/gallery/catalog.json'] = GALLERY / 'catalog.json'
     result['assets/turboio/card.schema.json'] = ROOT / 'android-addon/assets/card.schema.json'
+    result['assets/turboio/otacandidate.json'] = ROOT / 'android-addon/assets/otacandidate.json'
     catalog = json.loads((GALLERY / 'catalog.json').read_text())
     import hashlib
     if len(catalog['entries']) != 20:

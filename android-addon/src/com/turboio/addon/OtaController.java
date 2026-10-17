@@ -27,7 +27,16 @@ public final class OtaController {
  private static int sdkConfirmed;
  private static int savedChunks=-1;
  private static OtaSession.State recorded;
- static synchronized void init(Context c){if(initialized)return;app=c.getApplicationContext();journal=app.getSharedPreferences("turboio_ota_journal_v1",0);pending=journal.getBoolean("pending",false);savedPeer=journal.getString("peerSha256","");exclusive=pending;if(pending)note="上轮已开始升级，连接历史不完整；保持锁定，等待自然重启回首页后人工确认";initialized=true;if(pending)MAIN.postDelayed(tick,1000);
+ static boolean candidateMissing(){return candidateMissing;}
+ private static boolean candidateMissing;
+ private static byte[] readCandidateAsset(Context app){
+  try{java.io.InputStream in=app.getAssets().open("turboio/otacandidate.json");java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream();byte[] b=new byte[4096];int n;
+   while((n=in.read(b))>0)out.write(b,0,n);in.close();return out.toByteArray();
+  }catch(Exception e){return null;}
+ }
+ static synchronized void init(Context c){if(initialized)return;app=c.getApplicationContext();
+  try{OtaCandidate.hold(readCandidateAsset(app));}catch(RuntimeException e){candidateMissing=true;note="候选描述缺失或无效；OTA 功能关闭";}
+  journal=app.getSharedPreferences("turboio_ota_journal_v1",0);pending=journal.getBoolean("pending",false);savedPeer=journal.getString("peerSha256","");exclusive=pending;if(pending)note="上轮已开始升级，连接历史不完整；保持锁定，等待自然重启回首页后人工确认";initialized=true;if(pending)MAIN.postDelayed(tick,1000);
   ((Application)app).registerActivityLifecycleCallbacks(new Application.ActivityLifecycleCallbacks(){public void onActivityResumed(Activity a){if(host(a))foreground=true;}public void onActivityStopped(Activity a){if(host(a)&&!a.isChangingConfigurations()){foreground=false;if(session!=null&&!session.started())cancelPreparation();}}private boolean host(Activity a){return a.getClass().getName().equals("com.rayneo.venus.MainActivity");}public void onActivityCreated(Activity a,Bundle b){}public void onActivityStarted(Activity a){}public void onActivityPaused(Activity a){}public void onActivitySaveInstanceState(Activity a,Bundle b){}public void onActivityDestroyed(Activity a){}});
  }
  private static boolean bootstrap(){if(initialized)return true;try{Object c=Class.forName("android.app.ActivityThread").getMethod("currentApplication").invoke(null);if(c instanceof Context)init((Context)c);}catch(Exception ignored){}return initialized;}
@@ -36,16 +45,16 @@ public final class OtaController {
  static boolean critical(){return pending;}
  private static String fingerprint(String peer){return OtaPackage.hash("SHA-256",peer.getBytes(StandardCharsets.UTF_8));}
  private static void record(String event){if(log.size()==96)log.remove(0);log.add(SystemClock.elapsedRealtime()+" "+event);}
- static String status(){String base="ANDROID 1.0.5 · OTA-02 / INTEGRATION-08k\n"+note+"\n候选："+(firmware==null?"未载入":OtaPackage.NAME+" · 15/15 校验通过")+"\nAP：9,590,856 字节 · 只有 AP 与原厂不同\n";
-  if(session!=null)base+="阶段："+session.state()+"\n电量："+(session.battery()<0?"待读取":session.battery()+"%")+"\n授权："+(session.state()==OtaSession.State.AUTHORIZED?"1":"0")+"\n请求片数："+session.chunks()+" · SDK 已确认消息："+sdkConfirmed+"\nAP 请求覆盖："+session.covered()+" / "+OtaPackage.AP_SIZE+" 字节\n";
+ static String status(){if(candidateMissing)return "ANDROID 1.0.5 · OTA-02 / INTEGRATION-08k\n"+note;String base="ANDROID 1.0.5 · OTA-02 / INTEGRATION-08k\n"+note+"\n候选："+(firmware==null?"未载入":OtaPackage.candidate().displayName+" · 15/15 校验通过")+"\nAP："+String.format(java.util.Locale.ROOT,"%,d",OtaPackage.candidate().apSize)+" 字节 · 只有 AP 与原厂不同\n";
+  if(session!=null)base+="阶段："+session.state()+"\n电量："+(session.battery()<0?"待读取":session.battery()+"%")+"\n授权："+(session.state()==OtaSession.State.AUTHORIZED?"1":"0")+"\n请求片数："+session.chunks()+" · SDK 已确认消息："+sdkConfirmed+"\nAP 请求覆盖："+session.covered()+" / "+OtaPackage.candidate().apSize+" 字节\n";
   return base+"结果保护："+(pending?"待回读，不可重试":"未开始刷写")+"\n"+(session==null&&pending&&journal!=null?"上次记录："+journal.getString("phase","UNKNOWN")+" · "+journal.getString("chunks","0")+" 片":"")+"\n"+(session==null?"":session.recoveryStatus(SystemClock.elapsedRealtime())+"\n"+session.error());
  }
- static String diagnostic(){return status()+"\nZIP SHA-256 "+OtaPackage.ZIP_SHA+"\nAP SHA-256 "+OtaPackage.AP_SHA+"\n"+String.join("\n",log);}
- static void importPackage(byte[] data){if(busy()||importing){note="请先结束准备或核对上轮结果，未替换固件";return;}importing=true;firmware=null;note="本机核对 ZIP、15 个成员和 AP-only 清单；不连接眼镜";new Thread(()->{OtaPackage checked=null;try{checked=OtaPackage.verify(data);}catch(Exception ignored){}OtaPackage result=checked;MAIN.post(()->{importing=false;if(busy())return;firmware=result;session=null;note=result==null?"导入拒绝：只支持指定 TAP1 原样包；没有发送数据":"候选校验通过：13 个非 AP 负载与原厂一致，AP/清单使用新摘要";record(result==null?"IMPORT_REJECTED":"IMPORT_VERIFIED");});},"TurboIO-ota-verify").start();}
- static synchronized void prepare(){if(!initialized||importing||firmware==null||busy()||SystemClock.elapsedRealtime()<officialBusyUntil){note="无法准备：检查已导入候选、上轮升级保护与官方升级状态";return;}String peer=NativeTransfer.connected();String owner="ota-"+UUID.randomUUID();if(peer.isEmpty()||!NativeTransfer.acquireMessages(owner)){note="眼镜未连接或其他任务未退出；没有发送";return;}
+ static String diagnostic(){return status()+"\nZIP SHA-256 "+OtaPackage.candidate().zipSHA+"\nAP SHA-256 "+OtaPackage.candidate().apSHA+"\n"+String.join("\n",log);}
+ static void importPackage(byte[] data){if(candidateMissing||busy()||importing){note=candidateMissing?"候选描述缺失，拒绝导入":"请先结束准备或核对上轮结果，未替换固件";return;}importing=true;firmware=null;note="本机核对 ZIP、15 个成员和 AP-only 清单；不连接眼镜";new Thread(()->{OtaPackage checked=null;try{checked=OtaPackage.verify(data);}catch(Exception ignored){}OtaPackage result=checked;MAIN.post(()->{importing=false;if(busy())return;firmware=result;session=null;note=result==null?"导入拒绝：只支持指定 TAP1 原样包；没有发送数据":"候选校验通过：13 个非 AP 负载与原厂一致，AP/清单使用新摘要";record(result==null?"IMPORT_REJECTED":"IMPORT_VERIFIED");});},"TurboIO-ota-verify").start();}
+ static synchronized void prepare(){if(!initialized||candidateMissing||importing||firmware==null||busy()||SystemClock.elapsedRealtime()<officialBusyUntil){note=candidateMissing?"候选描述缺失，拒绝准备":"无法准备：检查已导入候选、上轮升级保护与官方升级状态";return;}String peer=NativeTransfer.connected();String owner="ota-"+UUID.randomUUID();if(peer.isEmpty()||!NativeTransfer.acquireMessages(owner)){note="眼镜未连接或其他任务未退出；没有发送";return;}
   lease=owner;preparing=true;exclusive=false;sending=false;generation++;inbound.clear();sdkConfirmed=0;savedChunks=-1;installSeen=0;session=new OtaSession(firmware);recorded=null;note="15 分钟本机准备：读取版本、电量、空间及空闲状态；不刷写";record("PREPARE");send(session.prepare(peer,SystemClock.elapsedRealtime()));MAIN.removeCallbacks(tick);MAIN.postDelayed(tick,250);
  }
- static void authorize(String token){try{if(session==null||!foreground||sending)throw new IllegalStateException();session.authorize(token,NativeTransfer.connected(),SystemClock.elapsedRealtime());note="授权：1 · 尚未开始；请核对包和电量后单独点开始";record("AUTHORIZED");}catch(RuntimeException e){note="授权未通过；请使用 TAP1，并在完整预检后两分钟内操作";settle();}}
+ static void authorize(String token){try{if(candidateMissing||session==null||!foreground||sending)throw new IllegalStateException();session.authorize(token,NativeTransfer.connected(),SystemClock.elapsedRealtime());note="授权：1 · 尚未开始；请核对包和电量后单独点开始";record("AUTHORIZED");}catch(RuntimeException e){note=candidateMissing?"候选描述缺失，拒绝授权":"授权未通过；请使用 "+OtaPackage.candidate().confirmToken+"，并在完整预检后两分钟内操作";settle();}}
  static void start(){if(session==null||!foreground||sending||pending||session.state()!=OtaSession.State.AUTHORIZED){note="开始条件未满足；未发送 Mode 2";return;}
   if(!OtaService.alive()){try{app.startForegroundService(new Intent(app,OtaService.class));note="正在开启升级保障服务；服务就绪后再次点「开始一次升级」";}catch(RuntimeException e){note="系统拒绝前台服务，未开始升级";}return;}
   String peer=NativeTransfer.connected();long now=SystemClock.elapsedRealtime();
@@ -54,7 +63,7 @@ public final class OtaController {
   try{session.validateStart(peer,now);}catch(RuntimeException e){session.revoke();settle();note="预检已过期或连接变化；未发送升级指令，请重新只读预检和授权";record("START_PREFLIGHT_REJECTED_NO_SEND");return;}
   // Durable intent BEFORE creating/sending Mode2. A crash here stays locked even
   // if not a single firmware byte reached the glasses. Never infer safe retry.
-  savedPeer=fingerprint(peer);if(!journal.edit().putBoolean("pending",true).putString("peerSha256",savedPeer).putString("candidateSha256",OtaPackage.ZIP_SHA).putString("phase","START_INTENT").putString("recoveryPolicy","reconnect-or-manual-v1").commit()){note="本机保护记录未落盘，禁止开始";return;}
+  savedPeer=fingerprint(peer);if(!journal.edit().putBoolean("pending",true).putString("peerSha256",savedPeer).putString("candidateSha256",OtaPackage.candidate().zipSHA).putString("phase","START_INTENT").putString("recoveryPolicy","reconnect-or-manual-v1").commit()){note="本机保护记录未落盘，禁止开始";return;}
   pending=true;byte[] start;try{start=session.start(peer,now);}catch(RuntimeException e){session.recover(peer,now);fail("开始条件变化；已保留保护，请等待并人工确认");return;}
   record("MODE2_INTENT");note="开始请求已提交；保持蓝牙、供电，不要强退、切换官方升级或重复点击";send(start);settle();
  }

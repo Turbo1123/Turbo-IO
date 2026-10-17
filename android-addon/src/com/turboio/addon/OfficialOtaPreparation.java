@@ -8,6 +8,11 @@ public final class OfficialOtaPreparation {
  private static volatile String note="仅验证官方检测、下载与解压；此包不能刷眼镜";
  private static volatile String directoryResult="官方准备目录：尚未核对";
  private static boolean reporting;
+ private static byte[] readCandidateAsset(Context app){
+  try{InputStream in=app.getAssets().open("turboio/otacandidate.json");ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] b=new byte[4096];int n;
+   while((n=in.read(b))>0)out.write(b,0,n);in.close();return out.toByteArray();
+  }catch(Exception e){return null;}
+ }
  private static final AtomicInteger blocked=new AtomicInteger(),reads=new AtomicInteger();
  private static final AtomicInteger[] types=new AtomicInteger[12];
  static{for(int i=0;i<types.length;i++)types[i]=new AtomicInteger();}
@@ -18,6 +23,7 @@ public final class OfficialOtaPreparation {
   }catch(Exception e){return true;}return mode;
  }
  static synchronized void init(Context c){if(!enabled()||feed!=null)return;app=c.getApplicationContext();
+  try{OtaCandidate.hold(readCandidateAsset(app));}catch(RuntimeException e){note="候选描述缺失或无效；禁止开放下载源";return;}
   if(OtaController.critical()){note="旧实验结果保护尚未解除，禁止开放新下载源";return;}
   try{OfficialOtaFeed f=new OfficialOtaFeed(SystemClock::elapsedRealtime,()->enabled()&&!OtaController.critical());f.start(18794);feed=f;}
   catch(Exception e){note="本机来源无法启动；保持禁止刷写，不切换其他地址";}
@@ -31,7 +37,7 @@ public final class OfficialOtaPreparation {
    return ok;
   }catch(Exception e){blocked.incrementAndGet();return false;}
  }
- static String status(){String counts="";for(int i=1;i<types.length;i++)if(types[i].get()>0)counts+=" type"+i+"="+types[i].get();return "ANDROID · OFFICIAL-OTA-PREPARE-01\n"+note+"\n"+(feed==null?"本机源未启动":feed.status())+"\n发送隔离：永久开启（此构建无刷写授权入口）\n只读放行："+reads.get()+" · 拦截："+blocked.get()+counts+"\n候选："+OtaPackage.NAME+"\n"+directoryResult;}
+ static String status(){String counts="";for(int i=1;i<types.length;i++)if(types[i].get()>0)counts+=" type"+i+"="+types[i].get();String cand;try{cand=OtaPackage.candidate().displayName;}catch(RuntimeException e){cand="描述缺失";}return "ANDROID · OFFICIAL-OTA-PREPARE-01\n"+note+"\n"+(feed==null?"本机源未启动":feed.status())+"\n发送隔离：永久开启（此构建无刷写授权入口）\n只读放行："+reads.get()+" · 拦截："+blocked.get()+counts+"\n候选："+cand+"\n"+directoryResult;}
  private static void exportStatus(String text){try{File root=app.getExternalFilesDir(null);if(root==null)return;File tmp=new File(root,"official-ota-preparation-status.tmp"),dest=new File(root,"official-ota-preparation-status.txt");try(FileOutputStream out=new FileOutputStream(tmp)){out.write(text.getBytes("UTF-8"));out.getFD().sync();}tmp.renameTo(dest);}catch(Exception ignored){}}
  private static void checkDirectory(){directoryResult="官方准备目录：只读核对中";new Thread(()->{
   File root=app.getFilesDir();File[] candidates={new File(root,"ota/Strix_OS_1.0.4.12"),new File(root.getParentFile(),"app_flutter/ota/Strix_OS_1.0.4.12")};int found=0,valid=0;
@@ -41,7 +47,7 @@ public final class OfficialOtaPreparation {
  static void show(Activity a){init(a);EditorialUI.Screen s=new EditorialUI.Screen(a,"官方升级 · 只下载验收");
   s.body.addView(EditorialUI.text(a,"使用 Android 官方更新页、下载器、校验和解压流程。此测试包禁止 OTA 开始/清单/分片发送，不能刷眼镜。",15,EditorialUI.INK));
   TextView status=EditorialUI.text(a,status(),14,EditorialUI.LIME);s.body.addView(status);
-  EditorialUI.button(a,s.body,"选择指定 ZIP，开启 15 分钟只下载",true,()->{if(feed==null||OtaController.critical()){EditorialUI.notice(a,"发送保护或本机来源未就绪");return;}DocumentPicker.pick(a,OtaPackage.ZIP_SIZE,bytes->{note="正在核对候选，尚未开放下载";new Thread(()->{try{feed.arm(bytes);note="候选校验通过；请返回官方设置 → 固件更新，检查并下载。不要开始安装。";}catch(Exception e){note="候选或保护校验失败，没有开放下载";}},"TurboIO-ota-prepare").start();});});
+  EditorialUI.button(a,s.body,"选择指定 ZIP，开启 15 分钟只下载",true,()->{if(feed==null||OtaController.critical()){EditorialUI.notice(a,"发送保护、候选描述或本机来源未就绪");return;}int zipSize;try{zipSize=OtaPackage.candidate().zipSize;}catch(RuntimeException ex){EditorialUI.notice(a,"候选描述缺失，拒绝操作");return;}DocumentPicker.pick(a,zipSize,bytes->{note="正在核对候选，尚未开放下载";new Thread(()->{try{feed.arm(bytes);note="候选校验通过；请返回官方设置 → 固件更新，检查并下载。不要开始安装。";}catch(Exception e){note="候选或保护校验失败，没有开放下载";}},"TurboIO-ota-prepare").start();});});
   EditorialUI.button(a,s.body,"关闭下载来源",false,()->{if(feed!=null)feed.disarm();note="来源已关闭，发送隔离仍永久生效";});
   EditorialUI.button(a,s.body,"下载后：只读核对官方解压目录",false,OfficialOtaPreparation::checkDirectory);
   EditorialUI.button(a,s.body,"返回官方 App",false,()->s.dialog.dismiss());

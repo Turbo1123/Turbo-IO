@@ -31,15 +31,17 @@ javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/{B
 java -cp build/test AppCodecTest ../app-gallery build/test/app-golden
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test tests/CustomEnvelopeTest.java
 java -cp build/test CustomEnvelopeTest
-javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{OtaFrame,OtaPackage,OtaRecoveryGuard,OtaSession}.java tests/OtaTest.java tests/OtaRecoveryGuardTest.java
+javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/{BoundedJson,OtaCandidate}.java tests/OtaTestSupport.java tests/OfficialOtaCandidateTest.java
+java -cp build/test com.turboio.addon.OfficialOtaCandidateTest
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{OtaFrame,OtaPackage,OtaRecoveryGuard,OtaSession,OtaCandidate}.java tests/OtaTest.java tests/OtaRecoveryGuardTest.java
 java -cp build/test com.turboio.addon.OtaRecoveryGuardTest
 ota_candidate=../official-addon/build/app-ap-20260927-test-01/StrixOS-1.0.4.12-TAP1-TEST-01-CANDIDATE-NOT-APPROVED.zip
 java -cp build/test com.turboio.addon.OtaTest "$ota_candidate"
-javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/OfficialOtaFeed.java tests/OfficialOtaFeedTest.java
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{OfficialOtaFeed,OtaCandidate}.java tests/OfficialOtaFeedTest.java
 java -cp build/test com.turboio.addon.OfficialOtaFeedTest "$ota_candidate"
 javac -encoding UTF-8 -cp build/test -d build/test tests/OfficialOtaDirectoryTest.java
 java -cp build/test com.turboio.addon.OfficialOtaDirectoryTest "$ota_candidate"
-javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/OfficialOtaGate.java tests/OfficialOtaGateTest.java
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{OfficialOtaGate,OtaCandidate}.java tests/OfficialOtaGateTest.java
 java -cp build/test com.turboio.addon.OfficialOtaGateTest "$ota_candidate"
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/OfficialOtaPreflightPoll.java tests/OfficialOtaPreflightPollTest.java
 java -cp build/test com.turboio.addon.OfficialOtaPreflightPollTest
