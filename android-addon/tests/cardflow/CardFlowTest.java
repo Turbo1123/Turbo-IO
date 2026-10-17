@@ -30,7 +30,15 @@ public class CardFlowTest {
         CardTransport.publish(doc,true);config(real);yes(request().json.get("cmd").equals("widget_install"));Map<String,Object> realOwn=BoundedJson.map(BoundedJson.map(request().json.get("payload")).get("data"));reply(object("code",0));Map<String,Object> realAfter=copy(real);List<Object> rr=new ArrayList<>(BoundedJson.list(realAfter.get("widgets_v2")));rr.add(realOwn);realAfter.put("widgets_v2",rr);config(realAfter);yes(request().json.get("cmd").equals("dashboard_update"));
         Map<String,Object> sent=BoundedJson.map(BoundedJson.readDevice(((String)BoundedJson.map(request().json.get("payload")).get("data")).getBytes(StandardCharsets.UTF_8)));yes(sent.get("brightness").equals(new java.math.BigDecimal("0.75")));reply(object("cmd","dashboard_update","payload",object("value",0)));config(sent);yes(!CardTransport.busy()&&CardTransport.status().contains("置顶"));
         // Missing widgets_v2 names the keys the glasses actually sent.
-        CardTransport.inspect();config(object("widgets",new ArrayList<>()));yes(CardTransport.status().contains("读取原配置")&&CardTransport.status().contains("widgets"));
+        CardTransport.inspect();config(object("cards",new ArrayList<>()));yes(CardTransport.status().contains("读取原配置")&&CardTransport.status().contains("cards"));
+        // Strix 1.0.5.5 legacy reply: no widgets_v2. Weather data may change between reads; native list/simple_mode may not.
+        Map<String,Object> legacy=BoundedJson.map(BoundedJson.readDevice("{\"simple_mode\":false,\"widgets\":[1,3,5],\"widgets_data\":{\"weather\":{\"temp\":21.5},\"clock\":{}}}".getBytes(StandardCharsets.UTF_8)));
+        CardTransport.inspect();config(legacy);yes(!CardTransport.busy()&&CardTransport.status().contains("未修改")&&CardTransport.status().contains("[1, 3, 5]")&&CardTransport.status().contains("天气"));
+        Map<String,Object> legacyLater=copy(legacy);BoundedJson.map(BoundedJson.map(legacyLater.get("widgets_data")).get("weather")).put("temp",new java.math.BigDecimal("22"));
+        CardTransport.publish(doc,true);config(legacy);yes(request().json.get("cmd").equals("widget_install"));reply(object("code",0));yes(request().json.get("cmd").equals("dashboard_config"));n=NativeTransfer.packets.size();config(legacyLater);yes(!CardTransport.busy()&&NativeTransfer.packets.size()==n&&CardTransport.status().contains("无法回读确认")&&CardTransport.status().contains("未执行"));
+        CardTransport.remove("turbo_ui_card_test");config(legacy);yes(request().json.get("cmd").equals("widget_uninstall"));reply(object("code",0));config(legacy);yes(!CardTransport.busy()&&CardTransport.status().contains("已接受移除"));
+        Map<String,Object> legacyChanged=copy(legacy);legacyChanged.put("widgets",Arrays.asList(1L,3L));CardTransport.publish(doc,false);config(legacy);reply(object("code",0));config(legacyChanged);yes(!CardTransport.busy()&&CardTransport.status().contains("回读安装结果"));
+        CardTransport.publish(doc,false);config(legacy);reply(object("code",2));yes(!CardTransport.busy()&&CardTransport.status().contains("拒绝"));
         System.out.println("CardFlowTest: "+checks+" assertions, targeted install/readback/order/remove and fault paths");
     }
 }
