@@ -59,3 +59,7 @@ python3 android-addon/package-official-ota-preparation.py --guarded \
 可运行 `python3 android-addon/tests/PrivateArtifactAudit.py /path/to/signed.apk` 检查扩展DEX与允许资源、凭据模式及测试替身；不代替人工审查。私有数据存在手机沙盒，不应从手机导出沙盒重新打包。
 
 [安装教程](docs/INSTALL_AND_FLASH.md) · [固件范围与摘要](../firmware-research/strix-1.0.4.12/tap1/README.md) · [开发者SDK](../docs/DEVELOPER_ECOSYSTEM.md) · [1.0.4历史记录（不是本版流程）](docs/ANDROID_104_HISTORY.md)
+
+## 全天智记上下文（PR #21 源码候选）
+
+新增定稿文本、有界窗口队列、显式上传与恢复、独立查询开关及外部 Agent 只读示例。默认关闭，源码不代表已安装或端到端验收。使用上方完整构建和打包链；配置、v4 迁移回退限制及证据边界见 [Ambient context bridge](docs/AMBIENT_CONTEXT.md)。

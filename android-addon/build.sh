@@ -1,13 +1,25 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")"
-sdk="${ANDROID_SDK_ROOT:?Set ANDROID_SDK_ROOT}"
+sdk="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+if [[ -z "$sdk" && -n "${LOCALAPPDATA:-}" && -d "${LOCALAPPDATA}/Android/Sdk" ]]; then
+  sdk="${LOCALAPPDATA}/Android/Sdk"
+fi
+: "${sdk:?Set ANDROID_SDK_ROOT}"
 build_tools="$sdk/build-tools/36.0.0"
 android_jar="$sdk/platforms/android-36/android.jar"
 mkdir -p build/classes build/test build/dex
+javac -encoding UTF-8 -source 8 -target 8 -d build/test \
+  src/com/turboio/addon/{AlwaysOnConsume,RayneoAuthDiagnostic,RayneoContextQueue,RayneoCurrentQuestion,RayneoContextProtocol,RayneoQueryBridge,RayneoSourceIdentity}.java \
+  tests/{AlwaysOnContextTest,AlwaysOnContractTest,AlwaysOnWindowTest,RayneoAuthDiagnosticTest}.java
+for test in AlwaysOnContextTest AlwaysOnContractTest AlwaysOnWindowTest com.turboio.addon.RayneoAuthDiagnosticTest; do
+  java -cp build/test "$test"
+done
 javac -encoding UTF-8 -d build/test src/com/turboio/addon/HostBusiness.java tests/HostBusinessTest.java
 java -cp build/test com.turboio.addon.HostBusinessTest
 node tests/HostProfilesTest.mjs
+node --test tests/HostCallbacksTest.mjs tests/AlwaysOnEntryTest.mjs
+node --test package-105.test.mjs examples/query-context.test.mjs
 node tests/OtaHooksTest.mjs
 node tests/OfficialOtaSourceTest.mjs
 python3 tests/ApkAssemblyTest.py

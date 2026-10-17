@@ -40,6 +40,8 @@ export function verifyHost(root,profile) {
     '.method public final onAsrResult(Ljava/lang/String;ZLjava/lang/String;)V',
     '.method public final onNlpResult(Lcom/rayneo/airuntime/controller/NlpResult;)V',
     '.method public final onResponseComplete()V']);
+  const alwaysOn=profile.version==='1.0.5' ? expect('LF7/i$b;', [
+    '.method public final onAlwaysOnResponse(Lcom/rayneo/airuntime/controller/RayNeoAlwaysOnResponse;)V']) : null;
   const activity=expect('Lcom/rayneo/venus/MainActivity;',['.method public final onPostResume()V']);
   const event=expect('Lcom/rayneo/rayneo_venus_sdk_plugin/j;',['.method public final z(Ljava/lang/String;Ljava/util/Map;)V']);
   expect('LE3/u;',[
@@ -64,5 +66,5 @@ export function verifyHost(root,profile) {
     if(!fs.readFileSync(classFile(root,'LP3/h;'),'utf8').includes('"MARS_FOTA"'))throw new Error('Missing MARS_FOTA');
     ota={queue,sender};
   }
-  return {listener,activity,event,ota,version:profile.version,code:profile.code};
+  return {listener,alwaysOn,activity,event,ota,version:profile.version,code:profile.code};
 }
