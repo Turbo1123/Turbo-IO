@@ -110,6 +110,8 @@ javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/t
 java -cp build/test com.turboio.addon.NavMapCodecTest build/test/navmap-golden
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{RoadScene,BoundedJson}.java tests/RoadSceneTest.java
 java -cp build/test com.turboio.addon.RoadSceneTest ../official-addon/ios107-edition/tests/maps
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/RoadFetch.java tests/RoadFetchTest.java
+java -cp build/test com.turboio.addon.RoadFetchTest
 mkdir -p build/test-menu-flow
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-menu-flow tests/menuflow/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/MenuLayout.java
 java -cp build/test-menu-flow:build/test com.turboio.addon.MenuLayoutTest
