@@ -16,7 +16,7 @@ public final class DiagnosticsRunTest {
         HexCarrier.w32(p,8,session);HexCarrier.w32(p,12,seq);HexCarrier.w32(p,16,tick);HexCarrier.w32(p,20,1);HexCarrier.w32(p,24,0x7FFFE);HexCarrier.w32(p,28,build);
         for(int i=1;i<19;i++)HexCarrier.w32(p,32+4*i,i*100);HexCarrier.w32(p,120,flags);HexCarrier.w32(p,124,HexCarrier.crc(p,124));return p;}
     static void feed(String from,byte[] raw){NativeTransfer.receiver.message(from,envelope(raw));}
-    static DiagnosticsRun fresh(){NativeTransfer.sent.clear();NativeTransfer.peer="test-peer";DiagnosticsRun r=new DiagnosticsRun(root,Runnable::run);NativeTransfer.receiver=r::message;return r;}
+    static DiagnosticsRun fresh(){NativeTransfer.sent.clear();NativeTransfer.peer="test-peer";NativeTransfer.quarantine=0;NativeTransfer.diagnosticsActive=false;DiagnosticsRun r=new DiagnosticsRun(root,Runnable::run);NativeTransfer.receiver=r::message;return r;}
     public static void main(String[] a)throws Exception{
         root=Files.createTempDirectory("tdg-test").toFile();
         // Start: one file with a 600 s START, sequence 1.
@@ -55,6 +55,18 @@ public final class DiagnosticsRunTest {
         r=fresh();NativeTransfer.busyOther=true;ok(!r.start()&&NativeTransfer.sent.isEmpty(),"busy");NativeTransfer.busyOther=false;
         File full=Files.createTempDirectory("tdg-full").toFile();for(int i=0;i<100;i++)new File(full,"run"+i).mkdirs();
         NativeTransfer.sent.clear();DiagnosticsRun f=new DiagnosticsRun(full,Runnable::run);ok(!f.start()&&NativeTransfer.sent.isEmpty()&&full.list().length==100,"archive bound");
+        // Early stop before any sample: START is settled by its file result alone (iOS semantics), the STOP
+        // still reaches the glasses, and the shared lane is never quarantined.
+        NativeTransfer.quarantine=0;r=fresh();ok(r.start(),"start again");ok(NativeTransfer.diagnosticsActive,"lane marked busy for other owners");
+        r.stop("user_stop");ok(NativeTransfer.sent.size()==1,"stop queued behind start");NativeTransfer.settle(true);
+        ok(NativeTransfer.quarantine==0,"no quarantine after an early stop");ok(NativeTransfer.sent.size()==2&&op(1)==TdgCodec.STOP,"early stop delivered");NativeTransfer.settle(true);
+        r.poll();ok(!NativeTransfer.diagnosticsActive,"lane released once stop delivered");
+        // START whose file transfer fails: lane quarantined; the owed STOP is retried by poll() and sent once, never dropped.
+        r=fresh();r.start();NativeTransfer.settle(false);ok(NativeTransfer.quarantine>0&&NativeTransfer.sent.size()==1,"quarantined");
+        SystemClock.now+=30000;r.poll();ok(NativeTransfer.sent.size()==1&&NativeTransfer.diagnosticsActive,"stop still owed during quarantine");
+        SystemClock.now+=31000;r.poll();ok(NativeTransfer.sent.size()==2&&op(1)==TdgCodec.STOP,"owed stop sent after quarantine");NativeTransfer.settle(true);r.poll();r.poll();ok(NativeTransfer.sent.size()==2&&!NativeTransfer.diagnosticsActive,"exactly once");
+        // A refused START creates no report directory (slots are never consumed by failed taps).
+        r=fresh();NativeTransfer.quarantine=SystemClock.now+60000;int before=root.list().length;ok(!r.start()&&root.list().length==before&&r.status().contains("提交失败"),"refused start leaves no directory");NativeTransfer.quarantine=0;
         ok("LVGL 配置容量".equals(DiagnosticsRun.label("lv_configured_bytes"))&&"errors".equals(DiagnosticsRun.label("unknown"))==false&&"unknown".equals(DiagnosticsRun.label("unknown")),"labels");
         System.out.println("DiagnosticsRunTest: "+n+" checks; start, samples, timeouts, stop once, bounds, report privacy");
     }

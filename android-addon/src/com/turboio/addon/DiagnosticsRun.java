@@ -21,8 +21,8 @@ final class DiagnosticsRun {
     static String label(String name){for(int i=0;i<TdgCodec.NAMES.length;i++)if(TdgCodec.NAMES[i].equals(name))return LABELS[i];return name;}
 
     private final File root;private final Executor writer;
-    private String peer="",reason,runId="",saveStatus="尚未采集";private File reportDir;
-    private boolean active,received,inFlight,pendingStop;private long session,lastSeq,lastTick,gaps,evicted,droppedEvents,revision;
+    private String peer="",reason,runId="";private volatile String saveStatus="尚未采集";private File reportDir;
+    private boolean active,received,inFlight,stopOwed;private double stopOwedSince;private long session,lastSeq,lastTick,gaps,evicted,droppedEvents,revision;
     private double began,deadline,lastReceipt,lastSave;
     private final ArrayDeque<Map<String,Object>> samples=new ArrayDeque<>();private final ArrayDeque<Map<String,Object>> events=new ArrayDeque<>();
 
@@ -36,34 +36,47 @@ final class DiagnosticsRun {
     double remaining(){return active?Math.max(0,deadline-now()):0;}
     String status(){
         if(active)return !received?"等待眼镜首条采样":(now()-lastReceipt>5?"采样暂时中断 · 原因未知":"正在采集 · 可返回使用其他功能");
-        return reason==null?"未开始":REASONS.getOrDefault(reason,"已结束");
+        String r=reason==null?"未开始":REASONS.getOrDefault(reason,"已结束");return stopNote.isEmpty()?r:r+"\n"+stopNote;
     }
     boolean start(){
         if(active)return false;String p=NativeTransfer.connected();if(p==null||p.isEmpty()||NativeTransfer.busy())return false;
         String[] entries;if(!(root.isDirectory()||root.mkdirs())||(entries=root.list())==null||entries.length>=100){reason="archive_unavailable";return false;} // bounded; old reports are never deleted
-        File next=new File(root,UUID.randomUUID().toString());if(!next.mkdir()){reason="archive_unavailable";return false;}
+        if(stopOwed||inFlight)return false; // the previous run's STOP has not reached the glasses yet
         SecureRandom r=new SecureRandom();long s;do{s=r.nextInt()&0xffffffffL;}while(s==0);
-        peer=p;session=s;lastSeq=lastTick=gaps=evicted=droppedEvents=revision=0;samples.clear();events.clear();reportDir=next;runId=next.getName();reason=null;
-        began=now();deadline=began+LEASE_MS/1000.0;lastSave=began;lastReceipt=0;received=false;active=true;pendingStop=false;
-        event("start_requested");checkpoint();
-        boolean sent=NativeTransfer.send(FILE,TdgCodec.command(TdgCodec.START,session,1,LEASE_MS),1,session,15000,(state,result)->settled(TdgCodec.START,state));
-        if(!sent){stop("submit_failed");return false;}inFlight=true;return true;
+        // Submit first: a refused tap must not consume one of the 100 report slots.
+        if(!NativeTransfer.send(FILE,TdgCodec.command(TdgCodec.START,s,1,LEASE_MS),1,s,15000,(state,result)->settled(TdgCodec.START,state))){reason="submit_failed";return false;}
+        // TDG1 has no command reply: like iOS, the START settles on the file result alone (a missing
+        // first sample is reported as first_sample_timeout, not by holding or quarantining the lane).
+        inFlight=true;NativeTransfer.ack(p,1,s,0);
+        peer=p;session=s;lastSeq=lastTick=gaps=evicted=droppedEvents=revision=0;samples.clear();events.clear();reason=null;stopOwed=false;
+        began=now();deadline=began+LEASE_MS/1000.0;lastSave=began;lastReceipt=0;received=false;active=true;lane();
+        File next=new File(root,UUID.randomUUID().toString());if(next.mkdir()){reportDir=next;runId=next.getName();}else{reportDir=null;runId="";event("start_requested");stop("archive_unavailable");return false;}
+        event("start_requested");checkpoint();return true;
     }
     private void settled(int op,TransferGate.State state){
         inFlight=false;
-        if(op==TdgCodec.START){event(state==TransferGate.State.CONFIRMED||state==TransferGate.State.UNCERTAIN?"file_finished":"file_failed");if(state==TransferGate.State.FAILED||state==TransferGate.State.REJECTED)stop("transfer_failed");}
-        if(pendingStop){pendingStop=false;sendStop();}
+        if(op==TdgCodec.START){event(state==TransferGate.State.CONFIRMED?"file_finished":state==TransferGate.State.UNCERTAIN?"file_uncertain":"file_failed");if(state!=TransferGate.State.CONFIRMED)stop("transfer_failed");}
+        trySendStop();lane();
     }
-    /** STOP has no reply from the glasses: it is acknowledged here so the transfer settles on the file result alone. */
-    private void sendStop(){
-        if(inFlight){pendingStop=true;return;}
-        if(session==0||!peer.equals(NativeTransfer.connected()))return; // other glasses: their lease expires on its own
-        if(NativeTransfer.send(FILE,TdgCodec.command(TdgCodec.STOP,session,2,0),2,session,10000,(state,result)->inFlight=false)){inFlight=true;NativeTransfer.ack(peer,2,session,0);}
+    /** An owed STOP is retried (e.g. after the lane's 60 s quarantine) until sent once; it is never dropped silently.
+     * STOP has no reply from the glasses, so it is acknowledged here and settles on the file result alone. */
+    private void trySendStop(){
+        if(!stopOwed||inFlight)return;
+        if(session==0){stopOwed=false;return;}
+        if(!peer.equals(NativeTransfer.connected())){stopOwed=false;stopNote="眼镜已变化，结束指令未发送；原眼镜会在 10 分钟租期到后自动停止";return;}
+        if(now()-stopOwedSince>=LEASE_MS/1000.0){stopOwed=false;stopNote="结束指令未能发送；眼镜会在 10 分钟租期到后自动停止";return;}
+        if(NativeTransfer.send(FILE,TdgCodec.command(TdgCodec.STOP,session,2,0),2,session,10000,(state,result)->{inFlight=false;lane();})){inFlight=true;stopOwed=false;stopNote="";NativeTransfer.ack(peer,2,session,0);}
+        else stopNote="结束指令等待传输通道空闲后发送";
     }
+    private String stopNote="";
+    /** Other message-lease owners (OTA, camera, cards, menu) stay out while sampling or a STOP is owed. */
+    private void lane(){NativeTransfer.diagnosticsActive=active||stopOwed||inFlight;}
     void stop(String why){
-        if(!active)return;reason=REASONS.containsKey(why)?why:"user_stop";event(reason);active=false;sendStop();checkpoint();
+        if(!active)return;reason=REASONS.containsKey(why)?why:"user_stop";event(reason);active=false;stopOwed=true;stopOwedSince=now();trySendStop();lane();checkpoint();
     }
+    boolean busy(){return active||stopOwed||inFlight;}
     void poll(){
+        if(stopOwed){trySendStop();lane();}
         if(!active)return;double t=now();
         if(!peer.equals(NativeTransfer.connected())){stop("peer_context_changed");return;}
         if(t>=deadline){stop("lease_elapsed");return;}
@@ -82,7 +95,7 @@ final class DiagnosticsRun {
         row.put("phone_received_uptime_s",sec(now()));row.put("phone_received_wall_time_s",wall());row.put("probe_ms",s.probeMs);row.put("metrics",metrics);
         row.put("ring_events",s.eventCount);row.put("ring_overwritten",s.eventsLost);row.put("probe_stopped_for_latency",s.flags==1);
         if(samples.size()==600){samples.removeFirst();evicted++;}samples.addLast(row);lastSeq=s.sequence;lastTick=s.tickMs;lastReceipt=now();
-        if(!received){received=true;event("first_sample");NativeTransfer.ack(peer,1,session,0);} // first sample is the glasses' answer to START
+        if(!received){received=true;event("first_sample");}
         if(s.flags==1)stop("probe_slow");else if(lastReceipt-lastSave>=5)checkpoint();
     }
     private void event(String code){

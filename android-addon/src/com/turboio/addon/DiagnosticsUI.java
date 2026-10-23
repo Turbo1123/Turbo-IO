@@ -24,11 +24,12 @@ final class DiagnosticsUI {
         DiagnosticsRun run=DiagnosticsRun.current(new File(a.getFilesDir(),"turboio/diagnostics"));
         TextView state=EditorialUI.text(a,"",14,EditorialUI.LIME);b.addView(state);
         TextView metrics=EditorialUI.text(a,"",13,EditorialUI.INK);b.addView(metrics);
-        EditorialUI.button(a,b,"开始记录 10 分钟",true,()->{if(!run.start())EditorialUI.notice(a,"未开始："+run.status()+"\n请先连接眼镜、结束其他传输任务并退出升级保护。");});
+        EditorialUI.button(a,b,"开始记录 10 分钟",true,()->{if(!run.start())EditorialUI.notice(a,"未开始："+run.status()+"\n请先连接眼镜、结束其他传输任务并退出升级保护。");keepPolling(run);});
         EditorialUI.button(a,b,"结束记录",false,()->run.stop("user_stop"));
         EditorialUI.button(a,b,"分享报告（Markdown）",false,()->share(a,run.reportMarkdown(),"text/markdown","Turbo IO 眼镜诊断.md"));
-        EditorialUI.button(a,b,"分享报告（JSON）",false,()->share(a,new String(run.reportJSON(),StandardCharsets.UTF_8),"application/json","Turbo IO 眼镜诊断.json"));
-        Runnable tick=new Runnable(){public void run(){if(!s.dialog.isShowing())return;run.poll();state.setText(run.status()+(run.active()?" · 剩余 "+(int)run.remaining()+" 秒":"")+" · 采样 "+run.count()+"\n"+run.saveStatus());metrics.setText(table(run.latest()));MAIN.postDelayed(this,1000);}};
+        EditorialUI.button(a,b,"分享报告（JSON 文件）",false,()->shareFile(a,run.reportJSON()));
+        keepPolling(run);
+        Runnable tick=new Runnable(){public void run(){if(!s.dialog.isShowing())return;state.setText(run.status()+(run.active()?" · 剩余 "+(int)run.remaining()+" 秒":"")+" · 采样 "+run.count()+"\n"+run.saveStatus());metrics.setText(table(run.latest()));MAIN.postDelayed(this,1000);}};
         MAIN.post(tick);
         // One-tap tests
         b.addView(EditorialUI.text(a,"测试",17,EditorialUI.INK));
@@ -36,6 +37,18 @@ final class DiagnosticsUI {
         EditorialUI.button(a,b,"测试模型接口",false,()->{result.setText("正在请求模型接口…");new Thread(()->{String r=modelTest(a);MAIN.post(()->result.setText(r));}).start();});
         EditorialUI.button(a,b,"测试联网搜索",false,()->{result.setText("正在请求联网搜索…");new Thread(()->{String r=searchTest(a);MAIN.post(()->result.setText(r));}).start();});
         s.dialog.setOnDismissListener(d->MAIN.removeCallbacks(tick));
+    }
+    private static boolean polling;
+    /** The session's timeouts, lease and checkpoints run on their own 1 s timer, not the screen's; it ends with the session. */
+    private static void keepPolling(DiagnosticsRun run){if(polling||!run.busy())return;polling=true;MAIN.post(new Runnable(){public void run(){run.poll();if(run.busy())MAIN.postDelayed(this,1000);else polling=false;}});}
+    /** A full run's JSON is ~0.5 MB, too big for an Intent text extra: share it as a file through the host's cache provider. */
+    private static void shareFile(Activity a,byte[] json){
+        try{File folder=new File(a.getCacheDir(),"share_plus");if(!folder.isDirectory()&&!folder.mkdirs())throw new IOException("cache");
+            String name="TurboIO-diagnostics-"+UUID.randomUUID().toString().substring(0,8)+".json";try(FileOutputStream out=new FileOutputStream(new File(folder,name))){out.write(json);}
+            android.net.Uri uri=new android.net.Uri.Builder().scheme("content").authority(a.getPackageName()+".flutter.share_provider").appendPath("cache").appendPath(name).build();
+            Intent intent=new Intent(Intent.ACTION_SEND).setType("application/json").putExtra(Intent.EXTRA_STREAM,uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);intent.setClipData(android.content.ClipData.newRawUri("Turbo IO diagnostics",uri));
+            a.startActivity(Intent.createChooser(intent,"分享诊断报告"));
+        }catch(Exception e){EditorialUI.notice(a,"无法分享 JSON 报告："+e.getClass().getSimpleName());}
     }
     private static String cut(String v,int n){return v.length()<=n?v:v.substring(0,n)+"…";}
     private static String table(Map<String,Object> latest){
