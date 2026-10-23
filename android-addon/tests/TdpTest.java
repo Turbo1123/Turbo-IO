@@ -27,6 +27,8 @@ public final class TdpTest {
         ok(Arrays.equals(Tdp.carrierEncode(r),env),"carrier encode");
         ok(Tdp.carrierDecode(11,env)==null,"wrong business");
         boolean all=true;for(int i=0;i<env.length;i++){byte[] m=env.clone();m[i]^=(byte)(m[i]>='a'&&m[i]<='f'?0x20:1);if(Tdp.carrierDecode(15,m)!=null)all=false;}ok(all,"every envelope byte change rejected");
+        for(int at:new int[]{6,7,32,35}){byte[] raw=Tdp.replyEncode(r);raw[at]=1;long c=Tdp.crc(raw,0,36);for(int i=0;i<4;i++)raw[36+i]=(byte)(c>>(8*i));ok(Tdp.replyDecode(raw)==null,"re-sealed reserved byte "+at);}
+        { byte[] raw=Tdp.replyEncode(r);raw[5]=11;long c=Tdp.crc(raw,0,36);for(int i=0;i<4;i++)raw[36+i]=(byte)(c>>(8*i));ok(Tdp.replyDecode(raw)==null,"result above ABORTED"); }
         ok(Tdp.carrierDecode(15,Arrays.copyOf(env,env.length-1))==null,"truncated envelope");
         // Canonical packet validation (DisplayPhoneTransport Valid).
         byte[] q=Tdp.query(7);ok(Tdp.valid(q)&&Tdp.valid(g(dir,"chunk.bin"))&&Tdp.valid(g(dir,"rect.bin")),"valid");
