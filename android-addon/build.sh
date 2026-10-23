@@ -99,6 +99,9 @@ cc -Wall -Wextra -Werror -I../official-addon/ios107-edition tests/tdg_golden.c .
 build/test/tdg-golden/generate build/test/tdg-golden
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{HexCarrier,TdgCodec}.java tests/TdgCodecTest.java
 java -cp build/test com.turboio.addon.TdgCodecTest build/test/tdg-golden
+mkdir -p build/test-diag-flow
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-diag-flow tests/diagflow/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/{DiagnosticsRun,CustomEnvelope,BoundedJson,TransferGate}.java
+java -cp build/test-diag-flow:build/test com.turboio.addon.DiagnosticsRunTest
 mkdir -p build/test-menu-flow
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-menu-flow tests/menuflow/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/MenuLayout.java
 java -cp build/test-menu-flow:build/test com.turboio.addon.MenuLayoutTest
