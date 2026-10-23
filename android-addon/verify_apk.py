@@ -21,13 +21,19 @@ with zipfile.ZipFile(source) as original, zipfile.ZipFile(output) as derivative:
             raise SystemExit('Duplicate ZIP entries')
         if archive.testzip() is not None:
             raise SystemExit('ZIP integrity failed')
+    index = 2
+    while f'classes{index}.dex' in before:
+        index += 1
+    # Added DEX must continue the vendor sequence: optional hook DEX, then the addon.
+    new_dex = sorted((n for n in after - before if n.startswith('classes') and n.endswith('.dex')), key=lambda n: int(n[7:-4] or 1))
+    addon_dex = new_dex if len(new_dex) in (1, 2) and set(new_dex) == {f'classes{i}.dex' for i in range(index, index + len(new_dex))} else []
     removed = sorted(before - after)
     added = sorted(after - before)
     changed = sorted(name for name in before & after
                      if hashlib.sha256(original.read(name)).digest()
                      != hashlib.sha256(derivative.read(name)).digest())
     unexpected = [name for name in removed if not name.startswith('META-INF/')]
-    unexpected += [name for name in added if name != 'classes4.dex' and name not in extra and not name.startswith('META-INF/')]
+    unexpected += [name for name in added if name not in addon_dex and name not in extra and not name.startswith('META-INF/')]
     unexpected += [name for name, path in extra.items() if name not in after or derivative.read(name) != path.read_bytes()]
     expected_manifest = bool(extra) and derivative.read('AndroidManifest.xml') == patch_manifest(original.read('AndroidManifest.xml'))
     unexpected += [name for name in changed if name != 'classes2.dex' and not (name == 'AndroidManifest.xml' and expected_manifest)

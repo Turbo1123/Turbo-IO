@@ -7,7 +7,9 @@ export function wrapExact(text,header,original,body){
  }else{if(text.split(header).length!==2)throw new Error('OTA ABI mismatch');text=text.replace(header,header.replace(/ ([A-Za-z_][A-Za-z_0-9]*)\(/,' '+original+'('));}
  return text+'\n'+header+'\n'+body+'\n.end method\n';
 }
-export function queueHook(text){return wrapExact(text,'.method public static o(LE3/Q;)V','turboioOriginal_o',`    .locals 1
+export const OTA_105=Object.freeze({queueClass:'LE3/V;',senderClass:'LE3/u;',message:'LE3/Q;',core:'LQ3/q;',fileMethod:'v'});
+export const OTA_106=Object.freeze({queueClass:'LX3/U;',senderClass:'LX3/u;',message:'LX3/Q;',core:'Lj4/q;',fileMethod:'u'});
+export function queueHook(text,abi=OTA_105){return wrapExact(text,'.method public static o('+abi.message+')V','turboioOriginal_o',`    .locals 1
     :ota_try
     invoke-static {p0}, Lcom/turboio/addon/OfficialOtaBridge;->allowQueue(Ljava/lang/Object;)Ljava/lang/Boolean;
     move-result-object v0
@@ -29,7 +31,7 @@ export function queueHook(text){return wrapExact(text,'.method public static o(L
     move-result v0
     if-eqz v0, :ota_blocked
     :ota_end
-    invoke-static {p0}, LE3/V;->turboioOriginal_o(LE3/Q;)V
+    invoke-static {p0}, ${abi.queueClass}->turboioOriginal_o(${abi.message})V
     return-void
     :ota_error
     move-exception v0
@@ -37,7 +39,7 @@ export function queueHook(text){return wrapExact(text,'.method public static o(L
     invoke-static {p0}, Lcom/turboio/addon/OtaController;->blocked(Ljava/lang/Object;)V
     return-void
     .catch Ljava/lang/Throwable; {:ota_try .. :ota_end} :ota_error`);}
-export function fileHook(text){return wrapExact(text,'.method public final v(Ljava/io/File;Ljava/lang/String;LQ3/q;Ljava/lang/String;)Ljava/lang/String;','turboioOriginal_v',`    .locals 1
+export function fileHook(text,abi=OTA_105){const sig='(Ljava/io/File;Ljava/lang/String;'+abi.core+'Ljava/lang/String;)Ljava/lang/String;';return wrapExact(text,'.method public final '+abi.fileMethod+sig,'turboioOriginal_'+abi.fileMethod,`    .locals 1
     invoke-static {}, Lcom/turboio/addon/OfficialOtaBridge;->allowFile()Z
     move-result v0
     if-eqz v0, :ota_blocked
@@ -47,7 +49,7 @@ export function fileHook(text){return wrapExact(text,'.method public final v(Lja
     invoke-static {}, Lcom/turboio/addon/OtaController;->allowFile()Z
     move-result v0
     if-eqz v0, :ota_blocked
-    invoke-virtual/range {p0 .. p4}, LE3/u;->turboioOriginal_v(Ljava/io/File;Ljava/lang/String;LQ3/q;Ljava/lang/String;)Ljava/lang/String;
+    invoke-virtual/range {p0 .. p4}, ${abi.senderClass}->turboioOriginal_${abi.fileMethod}${sig}
     move-result-object v0
     return-object v0
     :ota_blocked

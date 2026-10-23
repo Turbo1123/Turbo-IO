@@ -9,7 +9,7 @@ public final class OfficialOtaGateTest {
  static OfficialOtaGate gate(boolean durable){OfficialOtaGate g=new OfficialOtaGate(p->{commits++;return durable;});g.bind("peer");return g;}
  static void read(OfficialOtaGate g,int type,Object req,Object reply){yes(g.outbound("peer",f(type,req),now++,true,true));g.inbound("peer",f(type,reply),now++);}
  static void checks(OfficialOtaGate g){read(g,1,null,version());read(g,2,null,OtaFrame.object("BatteryLevel",80));read(g,3,OtaFrame.object("OtaSize",OtaPackage.ZIP_SIZE),OtaFrame.object("Result",true));read(g,11,null,OtaFrame.object("Result",true));}
- static void arm(OfficialOtaGate g){g.arm(pkg,"peer","TAP1-TEST-01",now++);}
+ static void arm(OfficialOtaGate g){g.arm(pkg,"peer",OtaPackage.TOKEN,now++);}
  static void start(OfficialOtaGate g){yes(g.outbound("peer",f(4,OtaFrame.object("Mode",2)),now++,true,true));g.inbound("peer",f(4,OtaFrame.object("Result",true)),now++);}
  static void manifest(OfficialOtaGate g){g.inbound("peer",f(5,null),now++);yes(g.outbound("peer",f(5,OtaFrame.object("OtaVersion",OtaPackage.VERSION)),now++,true,true));g.inbound("peer",f(6,OtaFrame.object("OtaVersion",OtaPackage.VERSION)),now++);yes(g.outbound("peer",f(6,pkg.manifest()),now++,true,true));}
  static OfficialOtaGate transfer(){OfficialOtaGate g=gate(true);checks(g);arm(g);start(g);manifest(g);return g;}

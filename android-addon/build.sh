@@ -24,14 +24,14 @@ java -cp build/test TransferGateTest
 mkdir -p build/test-host-events
 javac -encoding UTF-8 -d build/test src/com/turboio/addon/LauncherMeta.java tests/LauncherMetaTest.java
 java -cp build/test com.turboio.addon.LauncherMetaTest
-javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-host-events tests/hostevents/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/NativeTransfer.java
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-host-events tests/hostevents/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/NativeTransfer.java src/com/turboio/addon/HostAbi.java
 java -cp build/test-host-events:build/test com.turboio.addon.HostEventTest
 "${TURBO_SDK_PYTHON:-python3}" tests/app_golden.py
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/{BoundedJson,AppCodec,FocusCodec,CustomEnvelope}.java tests/AppCodecTest.java
 java -cp build/test AppCodecTest ../app-gallery build/test/app-golden
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test tests/CustomEnvelopeTest.java
 java -cp build/test CustomEnvelopeTest
-javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{OtaFrame,OtaPackage,OtaRecoveryGuard,OtaSession}.java tests/OtaTest.java tests/OtaRecoveryGuardTest.java
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{HostAbi,OtaFrame,OtaPackage,OtaRecoveryGuard,OtaSession}.java tests/OtaTest.java tests/OtaRecoveryGuardTest.java
 java -cp build/test com.turboio.addon.OtaRecoveryGuardTest
 ota_candidate=../official-addon/build/app-ap-20260927-test-01/StrixOS-1.0.4.12-TAP1-TEST-01-CANDIDATE-NOT-APPROVED.zip
 java -cp build/test com.turboio.addon.OtaTest "$ota_candidate"
@@ -41,10 +41,18 @@ javac -encoding UTF-8 -cp build/test -d build/test tests/OfficialOtaDirectoryTes
 java -cp build/test com.turboio.addon.OfficialOtaDirectoryTest "$ota_candidate"
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/OfficialOtaGate.java tests/OfficialOtaGateTest.java
 java -cp build/test com.turboio.addon.OfficialOtaGateTest "$ota_candidate"
+# Host 1.0.6 candidate (TMIG1, same pinned ZIP as the iOS 1.0.6 edition); stock 1.0.5.5 ZIP must be refused.
+tmig1_dir=../official-addon/build/strix-1.0.5.5-tmig1
+tmig1_candidate=$tmig1_dir/StrixOS-1.0.5.5-TurboIO-TMIG1-CANDIDATE-NOT-APPROVED.zip
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test tests/Tmig1CandidateTest.java
+java -Dturboio.host=1.0.6 -cp build/test com.turboio.addon.Tmig1CandidateTest "$tmig1_candidate" "$tmig1_dir/Strix-OS-1.0.5.5-original.zip" "$ota_candidate"
+java -Dturboio.host=1.0.6 -cp build/test com.turboio.addon.OfficialOtaFeedTest "$tmig1_candidate"
+java -Dturboio.host=1.0.6 -cp build/test com.turboio.addon.OfficialOtaDirectoryTest "$tmig1_candidate"
+java -Dturboio.host=1.0.6 -cp build/test com.turboio.addon.OfficialOtaGateTest "$tmig1_candidate"
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/OfficialOtaPreflightPoll.java tests/OfficialOtaPreflightPollTest.java
 java -cp build/test com.turboio.addon.OfficialOtaPreflightPollTest
 mkdir -p build/test-ota-flow
-javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-ota-flow tests/otaflow/*.java src/com/turboio/addon/OtaController.java
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-ota-flow tests/otaflow/*.java src/com/turboio/addon/OtaController.java src/com/turboio/addon/HostAbi.java
 java -cp build/test-ota-flow:build/test com.turboio.addon.OtaControllerTest "$ota_candidate"
 java -cp build/test-ota-flow:build/test com.turboio.addon.OtaControllerTest unused recovery
 java -cp build/test-ota-flow:build/test com.turboio.addon.OtaInstallGuardTest "$ota_candidate"

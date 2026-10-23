@@ -10,20 +10,24 @@ import subprocess
 import sys
 import zipfile
 
-ORIGINAL = '78214ba0e1057871315da1cee17d860415c8b913521e59afc2748e45ead64c6c'
-PATCHED = '851e0c59babc656e4eb4f47e00f3947605c3ddba530eeef4b65e7942e2898541'
+ROUTES = (b'http://127.0.0.1:18794/g/xxxxxxxA78p2M', b'http://127.0.0.1:18794/g/xxxxxxxxxxCCXhB')
+# original libapp.so SHA-256 -> (patched SHA-256, version tag, slot offsets)
+PROFILES = {
+    '78214ba0e1057871315da1cee17d860415c8b913521e59afc2748e45ead64c6c':
+        ('851e0c59babc656e4eb4f47e00f3947605c3ddba530eeef4b65e7942e2898541', '105', (0x86e1f5, 0xd95b8)),
+    'e9ab4326681c0b53892550b04e03284b2bba2e30adcf22033b8e23e5b3bc66af':
+        ('96cc9a9f4634a2321e06790d0f062cd36e6420ef69c6166eb5bab41608fb917e', '106', (0x885c9a, 0xe1ffc)),
+}
 NATIVE = 'lib/arm64-v8a/libapp.so'
 MARKER = 'assets/turboio/official-ota-preparation.txt'
-VALUE = b'ANDROID-105-OFFICIAL-OTA-PREPARE-01\n'
-SLOTS = [(0x86e1f5, b'/xrlauncherapi/v1/signApi/gray/upgrade', b'http://127.0.0.1:18794/g/xxxxxxxA78p2M'),
-         (0xd95b8, b'/xrlauncherhwapi/v1/signApi/gray/upgrade', b'http://127.0.0.1:18794/g/xxxxxxxxxxCCXhB')]
+VALUE = 'ANDROID-{}-OFFICIAL-OTA-PREPARE-01\n'
 root = pathlib.Path(__file__).resolve().parent
 arguments = sys.argv[1:]
 guarded = arguments and arguments[0] == '--guarded'
 if guarded:
     arguments = arguments[1:]
     MARKER = 'assets/turboio/official-ota-guarded.txt'
-    VALUE = b'ANDROID-105-OFFICIAL-OTA-GUARD-02\n'
+    VALUE = 'ANDROID-{}-OFFICIAL-OTA-GUARD-02\n'
 original, base, patched_lib, out = map(pathlib.Path, arguments)
 if out.exists() or out.resolve() in {p.resolve() for p in (original, base, patched_lib)}:
     raise SystemExit('Refuse to overwrite an existing artifact or an input')
@@ -31,7 +35,9 @@ subprocess.run([sys.executable, str(root/'verify_apk.py'), str(original), str(ba
 new = patched_lib.read_bytes()
 with zipfile.ZipFile(base) as z:
     before = z.read(NATIVE)
-    assert hashlib.sha256(before).hexdigest() == ORIGINAL
+    PATCHED, TAG, OFFSETS = PROFILES[hashlib.sha256(before).hexdigest()]
+    VALUE = VALUE.format(TAG).encode()
+    SLOTS = list(zip(OFFSETS, (b'/xrlauncherapi/v1/signApi/gray/upgrade', b'/xrlauncherhwapi/v1/signApi/gray/upgrade'), ROUTES))
     assert hashlib.sha256(new).hexdigest() == PATCHED
     expected = bytearray(before)
     for offset, old, replacement in SLOTS:
