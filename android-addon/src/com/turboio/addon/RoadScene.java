@@ -113,19 +113,24 @@ final class RoadScene {
         for(int r=regions.size()-1;r>=0;r--)for(Object f:regions.get(r).features){if(all.size()>=10000)break;if(seen.add(f))all.add(f);}
         features=all;scene=scene2=null;
     }
+    /** Parsed fixture per name (read at most once); an unreadable or invalid fixture is cached as a miss. */
+    private final Map<String,Region> fixtureCache=new HashMap<>();
+    private static final Region MISSING=new Region(new double[0],Collections.emptyList());
+    private Region fixture(String name){
+        Region cached=fixtureCache.get(name);if(cached!=null)return cached;Region r=MISSING;
+        try{byte[] d=fixtures.read(name);if(d!=null&&d.length<=FIXTURE_BYTES){
+            Map<String,Object> j=BoundedJson.map(BoundedJson.readLarge(d,FIXTURE_BYTES,FIXTURE_NODES));
+            List<Object> b=BoundedJson.list(BoundedJson.map(j.get("meta")).get("bbox")),list=BoundedJson.list(BoundedJson.map(j.get("geojson")).get("features"));
+            if(b.size()==4&&list.size()<=5000){double[] box=new double[4];boolean valid=true;for(int i=0;i<4;i++){box[i]=num(b.get(i));valid&=Double.isFinite(box[i])&&box[i]>=-180&&box[i]<=180;}if(valid)r=new Region(box,list);}
+        }}catch(RuntimeException e){/* malformed fixture: cached as a miss */}
+        fixtureCache.put(name,r);return r;
+    }
     /** Bundled public-area fixtures (shenzhen, hongkong) whose bbox contains the WGS position. */
     private boolean loadFixture(double[] wgs){
         if(fixtures==null)return false;
-        for(String name:new String[]{"shenzhen","hongkong"}){
-            try{byte[] d=fixtures.read(name);if(d==null||d.length>FIXTURE_BYTES)continue;
-                Map<String,Object> j=BoundedJson.map(BoundedJson.readLarge(d,FIXTURE_BYTES,FIXTURE_NODES));
-                List<Object> b=BoundedJson.list(BoundedJson.map(j.get("meta")).get("bbox")),list=BoundedJson.list(BoundedJson.map(j.get("geojson")).get("features"));
-                if(b.size()!=4||list.size()>5000)continue;double[] box=new double[4];boolean valid=true;
-                for(int i=0;i<4;i++){box[i]=num(b.get(i));valid&=Double.isFinite(box[i])&&box[i]>=-180&&box[i]<=180;}
-                if(!valid||wgs[0]<box[0]||wgs[0]>box[2]||wgs[1]<box[1]||wgs[1]>box[3])continue;
-                installFeatures(list,box);note="公开区域离线路网 · © OpenStreetMap";return true;
-            }catch(RuntimeException e){/* malformed fixture: try the next one */}
-        }
+        for(String name:new String[]{"shenzhen","hongkong"}){Region f=fixture(name);double[] box=f.bbox;
+            if(f==MISSING||wgs[0]<box[0]||wgs[0]>box[2]||wgs[1]<box[1]||wgs[1]>box[3])continue;
+            installFeatures(f.features,box);note="公开区域离线路网 · © OpenStreetMap";return true;}
         return false;
     }
     private static boolean sameSegment(Object a,Object b){if(a==null||b==null)return false;if(a instanceof Number&&b instanceof Number)return ((Number)a).doubleValue()==((Number)b).doubleValue();return a.equals(b);}

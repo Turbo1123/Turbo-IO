@@ -173,12 +173,12 @@ public final class NavigationUI {
             if(simulationMarker==null){Object options=NavReflect.make("com.amap.api.maps.model.MarkerOptions");NavReflect.call(options,"position",latLng(frame.point));NavReflect.call(options,"title","模拟位置 · 非真实定位");simulationMarker=NavReflect.call(map,"addMarker",options);}
             else NavReflect.call(simulationMarker,"setPosition",latLng(frame.point));
         }catch(Exception ignored){}
-        if(frame.finished&&running){running=false;pauseSimulation.setEnabled(false);finishDisplayLater();}
+        if(frame.finished&&running){running=false;revokeRoads();pauseSimulation.setEnabled(false);finishDisplayLater();}
     }
     private final Runnable tick=new Runnable(){public void run(){if(closed)return;
         if(running){
             String phase=displayPhase();
-            if(!phase.equals("ready")&&!phase.equals("starting")){running=false;clearSimulation();guidanceState.setText("眼镜显示已结束或连接中断；请确认镜片状态后重新开始");simulationStatus.setText("模拟已停止 · 不会继续在后台推进");}
+            if(!phase.equals("ready")&&!phase.equals("starting")){running=false;revokeRoads();clearSimulation();guidanceState.setText("眼镜显示已结束或连接中断；请确认镜片状态后重新开始");simulationStatus.setText("模拟已停止 · 不会继续在后台推进");}
             else if(simulation!=null){simulation.advance(SystemClock.elapsedRealtime(),phase.equals("ready"));if(phase.equals("ready"))renderSimulation();else simulationStatus.setText("等待眼镜初始化，模拟暂不推进");}
             else {
             NavSessionPolicy.Position position=NavSessionPolicy.position(fresh(),positionValidated,plannedOrigin==null||origin==null?Double.POSITIVE_INFINITY:NavCore.distance(plannedOrigin,origin));
@@ -189,7 +189,7 @@ public final class NavigationUI {
                 if(match.step<0||match.offRoute>60){hud.setText("已偏离规划路线\n请停止并重新规划");offerDisplay(hud.getText().toString());roadClear();}
                 else {stepIndex=match.step;boolean arrived=stepIndex==steps.size()-1&&NavCore.distance(origin,destination)<20;
                     String text=arrived?"已接近目的地\n"+destinationName:steps.get(stepIndex).instruction+"\n本段剩余 "+NavCore.meters(match.remainingStep)+"\n第 "+(stepIndex+1)+" / "+steps.size()+" 段";
-                    hud.setText(text);offerDisplay(text);if(arrived){roadClear();running=false;finishDisplayLater();}else roadFeed(origin,fixAt,stepIndex);
+                    hud.setText(text);offerDisplay(text);if(arrived){roadClear();running=false;revokeRoads();finishDisplayLater();}else roadFeed(origin,fixAt,stepIndex);
                 }
             }
             }

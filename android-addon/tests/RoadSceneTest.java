@@ -40,6 +40,11 @@ public final class RoadSceneTest {
         RoadScene far=new RoadScene((lat,lon)->new double[]{lat,lon},fixtures);far.setEnabled(true);double[] paris={48.8566,2.3522};
         RoadScene.Result bare=far.decorate("navigating",Arrays.asList(paris,new double[]{48.857,2.353}),paris,now,0,0,now);
         ok(bare!=null&&u16(bare.scene,6)==1&&bare.scene[18]==6&&far.needsRequest(paris)&&bare.note.contains("未授权"),"no coverage: route-only scene (as iOS), needs request");
+        // Fixtures are read and parsed at most once per name, not on every uncovered frame.
+        int[] reads={0};RoadScene once=new RoadScene((lat,lon)->new double[]{lat,lon},name->{reads[0]++;return fixtures.read(name);});once.setEnabled(true);
+        for(int k=0;k<5;k++)once.decorate("navigating",Arrays.asList(paris,new double[]{48.857,2.353}),paris,now+k,0,0,now+k);
+        ok(reads[0]==2,"each fixture read once while uncovered ("+reads[0]+")");
+        RoadScene.Result in=once.decorate("navigating",route,here,now+6,h,0,now+6);ok(reads[0]==2&&in!=null&&u16(in.scene,6)>1,"cached fixture installs on entering its area");
         // Building blocks.
         List<int[]> line=Arrays.asList(new int[]{0,0},new int[]{40,3},new int[]{80,0},new int[]{120,200});List<int[]> simple=RoadScene.simplify(line);ok(simple.size()==3&&simple.get(0)[0]==0&&simple.get(2)[1]==200,"simplify drops a point within 2 m, keeps ends");
         ok(RoadScene.style("motorway")==0&&RoadScene.style("trunk_link")==0&&RoadScene.style("primary_link")==1&&RoadScene.style("secondary")==2&&RoadScene.style("tertiary_link")==3&&RoadScene.style("living_street")==4&&RoadScene.style("footway")==5,"style table");
