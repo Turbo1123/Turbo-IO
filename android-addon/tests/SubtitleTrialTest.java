@@ -22,7 +22,7 @@ public final class SubtitleTrialTest {
         Map<String,Object> s0=json(sent.get(0));ok(NavCore.decode(sent.get(0)).type==7&&t.sid().equals(s0.get("sid"))&&"temporary".equals(s0.get("scope"))&&Boolean.FALSE.equals(s0.get("force")),"preview packet");
         ok(!t.start(preview,stop,10)&&!t.next(11),"single start, no text while starting");
         t.receive(8,m("sid","nope","code",1L),11);ok(t.phase().equals("starting"),"foreign ack ignored");
-        t.receive(8,m("sid",t.sid(),"code",1L),12);ok(t.phase().equals("ready"),"ack → ready");
+        t.receive(8,m("sid",t.sid(),"code",1L),12);ok(t.phase().equals("ready")&&t.note().equals("同 SID 设置回执已收到；点发送A，不代表文字可见或无录音"),"ack → ready, iOS note");
         ok(t.next(13)&&!t.next(14)&&t.next(16)&&!t.next(18.5)&&t.next(19)&&!t.next(25),"three frames ≥3 s apart");ok(sent.size()==4,"preview + 3");
         Map<String,Object> f1=json(sent.get(1));ok(Long.valueOf(3).equals(f1.get("mode"))&&Long.valueOf(0).equals(f1.get("status"))&&"导航显示测试 7392\n前方右转 80米".equals(BoundedJson.map(f1.get("content")).get("source_transcript")),"frame A");
         ok("导航显示测试 3815\n前方右转 35米".equals(BoundedJson.map(json(sent.get(3)).get("content")).get("source_transcript")),"frame C");

@@ -28,11 +28,11 @@ final class SubtitleHudUI {
         EditorialUI.button(a,b,"停止测试（需要镜片确认退出）",false,()->SubtitleHud.stop("用户停止"));
         b.addView(EditorialUI.text(a,"事件记录（不含文字、音频与设备标识）",15,EditorialUI.INK));evidence=EditorialUI.text(a,"",12,EditorialUI.MUTED);b.addView(evidence);
         lifecycle=new Application.ActivityLifecycleCallbacks(){
-            public void onActivityPaused(Activity x){if(x==a)SubtitleHud.stop("手机离开前台或研究页面关闭");}
-            public void onActivityDestroyed(Activity x){if(x==a){SubtitleHud.stop("离开字幕测试页");a.getApplication().unregisterActivityLifecycleCallbacks(this);}}
+            public void onActivityPaused(Activity x){if(x==a){SubtitleHud.invalidateIdle();SubtitleHud.stop("手机离开前台或研究页面关闭");}}
+            public void onActivityDestroyed(Activity x){if(x==a){SubtitleHud.invalidateIdle();SubtitleHud.stop("离开字幕测试页");a.getApplication().unregisterActivityLifecycleCallbacks(this);}}
             public void onActivityCreated(Activity x,Bundle b){}public void onActivityStarted(Activity x){}public void onActivityResumed(Activity x){}public void onActivityStopped(Activity x){}public void onActivitySaveInstanceState(Activity x,Bundle b){}};
         a.getApplication().registerActivityLifecycleCallbacks(lifecycle);
-        s.dialog.setOnDismissListener(d->{SubtitleHud.stop("离开字幕测试页");SubtitleHud.changed=null;a.getApplication().unregisterActivityLifecycleCallbacks(lifecycle);});
+        s.dialog.setOnDismissListener(d->{SubtitleHud.invalidateIdle();SubtitleHud.stop("离开字幕测试页");SubtitleHud.changed=null;a.getApplication().unregisterActivityLifecycleCallbacks(lifecycle);});
         SubtitleHud.changed=this::render;
         Runnable refresh=new Runnable(){public void run(){if(gone())return;render();MAIN.postDelayed(this,1000);}};MAIN.post(refresh);
     }

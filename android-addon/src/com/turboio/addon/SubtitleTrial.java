@@ -54,7 +54,7 @@ final class SubtitleTrial {
         if(type==4){audioPackets++;stop("同设备字幕音频消息出现，已停止纯显示实验",now);return;}
         Object s=json==null?null:json.get("sid");if(sid==null||!sid.equals(s))return;
         if(type==8&&phase.equals("starting")){Object code=json.get("code");
-            if(integral(code,1)||integral(code,2)){phase="ready";note="眼镜已确认临时预览；可以发 A";}else stop("预览回执拒绝或格式未知，不强制抢占",now);return;}
+            if(integral(code,1)||integral(code,2)){phase="ready";note="同 SID 设置回执已收到；点发送A，不代表文字可见或无录音";}else stop("预览回执拒绝或格式未知，不强制抢占",now);return;}
         if(type==3)stop("收到同 SID 停止消息；请确认镜片已退出",now);
     }
     void stop(String reason,double now){
