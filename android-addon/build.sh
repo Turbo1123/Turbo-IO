@@ -83,6 +83,9 @@ cc -Wall -Wextra -Werror -I../official-addon/ios107-edition/camera-v1 tests/came
 build/test/camera-golden/generate build/test/camera-golden
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{HexCarrier,CameraCodec}.java tests/CameraCodecTest.java
 java -cp build/test com.turboio.addon.CameraCodecTest build/test/camera-golden
+mkdir -p build/test-camera-flow
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-camera-flow tests/cameraflow/*.java src/com/turboio/addon/CameraLink.java
+java -cp build/test-camera-flow:build/test com.turboio.addon.CameraLinkTest
 mkdir -p build/test-menu-flow
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-menu-flow tests/menuflow/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/MenuLayout.java
 java -cp build/test-menu-flow:build/test com.turboio.addon.MenuLayoutTest
