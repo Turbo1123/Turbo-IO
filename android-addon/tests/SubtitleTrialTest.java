@@ -23,7 +23,7 @@ public final class SubtitleTrialTest {
         ok(!t.start(preview,stop,10)&&!t.next(11),"single start, no text while starting");
         t.receive(8,m("sid","nope","code",1L),11);ok(t.phase().equals("starting"),"foreign ack ignored");
         t.receive(8,m("sid",t.sid(),"code",1L),12);ok(t.phase().equals("ready"),"ack → ready");
-        ok(t.next(13)&&!t.next(14)&&t.next(16)&&t.next(19)&&!t.next(25),"three frames ≥3 s apart");ok(sent.size()==4,"preview + 3");
+        ok(t.next(13)&&!t.next(14)&&t.next(16)&&!t.next(18.5)&&t.next(19)&&!t.next(25),"three frames ≥3 s apart");ok(sent.size()==4,"preview + 3");
         Map<String,Object> f1=json(sent.get(1));ok(Long.valueOf(3).equals(f1.get("mode"))&&Long.valueOf(0).equals(f1.get("status"))&&"导航显示测试 7392\n前方右转 80米".equals(BoundedJson.map(f1.get("content")).get("source_transcript")),"frame A");
         ok("导航显示测试 3815\n前方右转 35米".equals(BoundedJson.map(json(sent.get(3)).get("content")).get("source_transcript")),"frame C");
         t.tick(249);ok(t.phase().equals("ready"),"249 s ready");t.tick(250);ok(t.phase().equals("stopping")&&NavCore.decode(sent.get(sent.size()-1)).type==3&&Long.valueOf(10).equals(json(sent.get(sent.size()-1)).get("reason_code"))&&t.sid().equals(json(sent.get(sent.size()-1)).get("sid")),"4 min → stop with own sid");
