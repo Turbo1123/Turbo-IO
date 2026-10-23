@@ -5,54 +5,35 @@ import java.security.MessageDigest;
 import java.util.*;
 import java.util.zip.*;
 
-/** One reviewed candidate per pinned host, not an arbitrary firmware loader. No extracted paths.
- * Host 1.0.5 keeps TAP1 (Strix OS 1.0.4.12); host 1.0.6 uses TMIG1 (Strix OS 1.0.5.5), the
- * same pinned candidate the iOS 1.0.6 edition gates on. */
+/** The one reviewed candidate, TVP2 (Strix OS 1.0.5.5 base + TurboIO AP), for hosts 1.0.6 / 1.0.7.
+ * Not an arbitrary firmware loader. No extracted paths. */
 final class OtaPackage {
- static final boolean TMIG1="1.0.6".equals(HostAbi.get().version);
- static final String VERSION=TMIG1?"Strix OS 1.0.5.5":"Strix OS 1.0.4.12", NAME=TMIG1?"TMIG1 · Strix OS 1.0.5.5 新底座":"TAP1-TEST-01 · 菜单显示TEST";
+ static final String VERSION="Strix OS 1.0.5.5", NAME="TVP2 · 清晰投屏与仪表盘兼容";
  /** One-time authorization phrase typed by the user; also the feed/gate candidate token. */
- static final String TOKEN=TMIG1?"TMIG1":"TAP1-TEST-01", CODE=TMIG1?"TMIG1":"TAP1";
- /** Glasses versions this candidate may be offered over (iOS TMIG1 accepts both bases). */
- static final List<String> BASES=TMIG1?Arrays.asList("Strix OS 1.0.4.12","Strix OS 1.0.5.5"):Collections.singletonList("Strix OS 1.0.4.12");
- static final List<String> BASE_CODES=TMIG1?Arrays.asList("01.00.04.0012","01.00.05.0005"):Collections.singletonList("01.00.04.0012");
- static final String FEED_VERSION=TMIG1?"0100050005":"0100040012", DIRECTORY=TMIG1?"Strix_OS_1.0.5.5":"Strix_OS_1.0.4.12";
+ static final String TOKEN="TVP2", CODE="TVP2";
+ /** Glasses versions this candidate may be offered over. */
+ static final List<String> BASES=Arrays.asList("Strix OS 1.0.4.12","Strix OS 1.0.5.5");
+ static final List<String> BASE_CODES=Arrays.asList("01.00.04.0012","01.00.05.0005");
+ static final String FEED_VERSION="0100050005", DIRECTORY="Strix_OS_1.0.5.5";
  /** What the user inspects on the lens before releasing the result guard. */
- static final String MARKER=TMIG1?"显示 Turbo IO 四项菜单":"显示TEST";
- static final int FEED_CODE=TMIG1?100050005:100040012;
- static final int ZIP_SIZE=TMIG1?8824204:9320672, AP_SIZE=TMIG1?7373064:9590856;
- static final String ZIP_SHA=TMIG1?"f1d3616cfde5d128a9b60baab420559e38d19300838b0b87ceb1010f2ac5c940":"5ef21d8c18501d03fad6edee4fe039649cb567352e30dbd234081ecf97140afa";
- static final String AP_SHA=TMIG1?"30522ac7d27a6750274fc2441cf7dd8f3d0ba70d43671e5595b411daa3b135f8":"65e0a5312361ec785eb9ab1659badf182765f4054d4d95fef4c61ceb49dfa4b4";
- // Restoring the AP row to the stock values must reproduce the stock manifest exactly.
- private static final int STOCK_AP_SIZE=TMIG1?7208648:9466560;
- private static final String STOCK_AP_MD5=TMIG1?"0246c12a118e8589593fdd053fddb292":"9156b9419c3557e9bd72dc61692d0b4b";
- private static final String STOCK_MANIFEST=TMIG1?"db67ff62cf58350ef3f781a502c0c20bc378bf6d01272b3cce38494386b374f0":"1619382c8f0b69f68ba9b8d346017a2e42dcf7518b5d29fc348659e5eaebed2c";
- // Non-AP pins independently match the archived original 1.0.4.12 OTA payloads.
- private static final String[] TAP1_PINS={
-  "OtaFileInfo.json 2515 6bad48f6b3ce289bbd104c8cdc9ee219d872ba6e0d331ea3f6843bf2aeaf53b5",
-  "cb_fw_venus.bin 114592 8799f12071bdac082218e3601c24ab0989275fc2f7db74e37b8314a225c2cf7d",
-  "fac_test_img.bin 1821552 18eb0901c3e0daeae48dd5f015252b6931ea7368f0160c2c985c4e74296d17eb",
-  "images.bin 324283 192fefaa70545856884c89a9186e3f86d8f99a0738b201e116a11bc63011c158",
-  "lotties.bin 651481 ad66d83a3394034f825a12769aad292fc03e59fa865fe06bc43536b918a0b32b",
-  "nuttx_ap.bin 9590856 "+AP_SHA,
-  "nuttx_apc1.bin 1420248 97d56ffc6dd575ad3d8bf7739d49e491ad7e4a959db8770b653f5302e171fb5c",
-  "nuttx_audio.bin 1461920 549a72c032595e3829da7d63b7e1fd13cceda1a55dfefa7a7cad02db5a9b42ab",
-  "nuttx_bth.bin 1160160 a8f4594868bffbd3bc08a38d1f3899571608e2d57869d147de3d06f3e4f7a12a",
-  "ota_installer_progress.bin 5616 6fd65d296a667e1a7d94ec129adfd26458a4008ef403b331f855192c36eb3e3f",
-  "pil_algo_up_demo_nand.dll 504388 e266726fe055ac6ec6f785a9440e8da7421402f2b4d3d7889039ad9b94e119c2",
-  "pil_algo_vad_demo.dll 433432 7ac5b5191202adea20c62642987fa0049024dde9c386ba6cd08a1f29ddd5c92c",
-  "pil_algo_wakeup_dll_nand.dll 287560 d1594cb8658b228e52c2606d02f1eab696d35a11ed42ddcb725e76a745f5550f",
-  "rives.bin 689431 836bc019f7152890b94cafafe2edaa024f317526318349f7833319e41158b104",
-  "smf.json 23510 2713dc3a302a65c101fa981500cd8b217766c526b6045bf02db5e9e6763d076d"};
+ static final String MARKER="显示 Turbo IO 三排菜单";
+ static final int FEED_CODE=100050005;
+ static final int ZIP_SIZE=8861428, AP_SIZE=7435336;
+ static final String ZIP_SHA="154f0f8e68a69b8fb93f869e423081ee43969bf09c5174e8dbeac192c1047c11";
+ static final String AP_SHA="66a2d04faa751c87f830ff324c1d9f9eb96a969ba2c65b37170cc82585970586";
+ // Restoring the AP row to the stock values must reproduce the stock 1.0.5.5 manifest exactly.
+ private static final int STOCK_AP_SIZE=7208648;
+ private static final String STOCK_AP_MD5="0246c12a118e8589593fdd053fddb292";
+ private static final String STOCK_MANIFEST="db67ff62cf58350ef3f781a502c0c20bc378bf6d01272b3cce38494386b374f0";
  // Non-AP pins match the unmodified official Strix OS 1.0.5.5 ZIP byte for byte.
- private static final String[] TMIG1_PINS={
-  "OtaFileInfo.json 2700 ff1fa879bfb219b719cecb1cd56a788fb6ae7693d7f154cc0681e0a7b4f75c9d",
+ private static final String[] PINS={
+  "OtaFileInfo.json 2700 843304cf0db0f6061002652952924867cf03051961db5d6dc7ddff043ea7d05b",
   "bt_controller.bin 625364 0060cc360b04577e8f5ce8f5d54fabde6103a6fef5a1a052260097920165a0c6",
   "cb_fw_venus.bin 114592 8799f12071bdac082218e3601c24ab0989275fc2f7db74e37b8314a225c2cf7d",
   "fac_test_img.bin 1821552 18eb0901c3e0daeae48dd5f015252b6931ea7368f0160c2c985c4e74296d17eb",
   "images.bin 383431 219ba2f7935850a059ac7e6a1ffa181056ce70891501db28238940dfbdc44cc5",
   "lotties.bin 651481 ad66d83a3394034f825a12769aad292fc03e59fa865fe06bc43536b918a0b32b",
-  "nuttx_ap.bin 7373064 "+AP_SHA,
+  "nuttx_ap.bin 7435336 "+AP_SHA,
   "nuttx_apc1.bin 1423532 40ea15260a56b6c642120b3234a871662d0e74709deab14cda64be0949dacb40",
   "nuttx_audio.bin 1461920 549a72c032595e3829da7d63b7e1fd13cceda1a55dfefa7a7cad02db5a9b42ab",
   "nuttx_bth.bin 1189216 d48cb821f30045ea681cae0bfdab766c6d02be6f7b2bd5a75e1c41dc127d1a30",
@@ -62,7 +43,6 @@ final class OtaPackage {
   "pil_algo_wakeup_dll_nand.dll 287560 d1594cb8658b228e52c2606d02f1eab696d35a11ed42ddcb725e76a745f5550f",
   "rives.bin 689431 836bc019f7152890b94cafafe2edaa024f317526318349f7833319e41158b104",
   "smf.json 23510 2713dc3a302a65c101fa981500cd8b217766c526b6045bf02db5e9e6763d076d"};
- private static final String[] PINS=TMIG1?TMIG1_PINS:TAP1_PINS;
  static final int PIN_COUNT=PINS.length;
  private final Map<String,byte[]> members;
  private OtaPackage(Map<String,byte[]> members){this.members=members;}

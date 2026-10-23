@@ -36,7 +36,7 @@ public final class OtaController {
  static boolean critical(){return pending;}
  private static String fingerprint(String peer){return OtaPackage.hash("SHA-256",peer.getBytes(StandardCharsets.UTF_8));}
  private static void record(String event){if(log.size()==96)log.remove(0);log.add(SystemClock.elapsedRealtime()+" "+event);}
- static String status(){String base="ANDROID 1.0.5 · OTA-02 / INTEGRATION-08k\n"+note+"\n候选："+(firmware==null?"未载入":OtaPackage.NAME+" · 15/15 校验通过")+"\nAP：9,590,856 字节 · 只有 AP 与原厂不同\n";
+ static String status(){String base="ANDROID · OTA-02 / INTEGRATION-08k\n"+note+"\n候选："+(firmware==null?"未载入":OtaPackage.NAME+" · 15/15 校验通过")+"\nAP："+String.format(java.util.Locale.ROOT,"%,d",OtaPackage.AP_SIZE)+" 字节 · 只有 AP 与原厂不同\n";
   if(session!=null)base+="阶段："+session.state()+"\n电量："+(session.battery()<0?"待读取":session.battery()+"%")+"\n授权："+(session.state()==OtaSession.State.AUTHORIZED?"1":"0")+"\n请求片数："+session.chunks()+" · SDK 已确认消息："+sdkConfirmed+"\nAP 请求覆盖："+session.covered()+" / "+OtaPackage.AP_SIZE+" 字节\n";
   return base+"结果保护："+(pending?"待回读，不可重试":"未开始刷写")+"\n"+(session==null&&pending&&journal!=null?"上次记录："+journal.getString("phase","UNKNOWN")+" · "+journal.getString("chunks","0")+" 片":"")+"\n"+(session==null?"":session.recoveryStatus(SystemClock.elapsedRealtime())+"\n"+session.error());
  }
