@@ -8,7 +8,6 @@ import java.security.MessageDigest;
 import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.*;
 
 /** Android glue for context English (iOS ContextEnglishBridge/Transport/Client/AutoRuntime): TEL1 over the shared
@@ -18,7 +17,7 @@ import java.util.function.*;
 final class CeBridge {
     static final String FILE="turbo-english.tel",ACK="turbo_english_v1",PROGRESS="turbo_english_progress_v1";
     private static final Handler MAIN=NativeTransfer.MAIN;
-    private static final ExecutorService IO=Executors.newSingleThreadExecutor(),NET=Executors.newSingleThreadExecutor();
+    private static final ExecutorService IO=Executors.newSingleThreadExecutor();
     private static Context app;private static SharedPreferences prefs;private static CeSession session;private static CeHistory history;private static CeAuto auto;
     private static String note="尚未发送";private static BiConsumer<String,Boolean> listener,pending;
 
@@ -84,25 +83,18 @@ final class CeBridge {
         try{c.endpoint=CeCore.endpoint(raw);}catch(IllegalArgumentException e){c.error=e.getMessage();}
         return c;
     }
+    static final ModelCall.Texts TEXTS=new ModelCall.Texts("模型服务拒绝请求或返回内容过大；未保存候选","模型响应超过 64 KiB，已停止","模型连接失败或超时；不会自动重复上传片段","已取消生成，未发送到眼镜");
     /** One explicit model request for an approved selection; done runs once on main. The returned Runnable cancels. */
     static Runnable generate(Map<String,Object> selection,BiConsumer<List<Map<String,Object>>,String> done){
-        AtomicBoolean finished=new AtomicBoolean();BiConsumer<List<Map<String,Object>>,String> once=(cards,error)->{if(finished.compareAndSet(false,true))done.accept(cards,error);};
         Config c=config();byte[] body;
-        try{if(c.error!=null)throw new IllegalArgumentException(c.error);body=CeCore.body(selection,c.model,c.disableThinking);}catch(IllegalArgumentException e){String why=e.getMessage();MAIN.post(()->once.accept(null,why));return ()->{};}
+        try{if(c.error!=null)throw new IllegalArgumentException(c.error);body=CeCore.body(selection,c.model,c.disableThinking);}catch(IllegalArgumentException e){String why=e.getMessage();MAIN.post(()->done.accept(null,why));return ()->{};}
         Map<String,Object> frozen=selection;
-        Future<?> job=NET.submit(()->{String error=null;List<Map<String,Object>> cards=null;HttpURLConnection h=null;byte[] reply=null;
-            // Transport stage: every failure maps to a fixed text — platform messages may echo headers (the key).
-            try{h=(HttpURLConnection)new URL(c.endpoint).openConnection();h.setInstanceFollowRedirects(false);h.setUseCaches(false);h.setConnectTimeout(15000);h.setReadTimeout(60000);h.setRequestMethod("POST");h.setDoOutput(true);
-                h.setRequestProperty("Content-Type","application/json");h.setRequestProperty("Accept","application/json");h.setRequestProperty("Authorization","Bearer "+c.key);
-                try(OutputStream o=h.getOutputStream()){o.write(body);}
-                int code=h.getResponseCode();if(code!=200||h.getContentLengthLong()>65536)error="模型服务拒绝请求或返回内容过大；未保存候选";
-                else try(InputStream in=h.getInputStream()){reply=BoundedHTTP.read(in,65536);}catch(IOException e){error=String.valueOf(e.getMessage()).equals("size limit")?"模型响应超过 64 KiB，已停止":"模型连接失败或超时；不会自动重复上传片段";}
-            }catch(Throwable e){error="模型连接失败或超时；不会自动重复上传片段";}
-            finally{if(h!=null)h.disconnect();}
-            // Validation stage: only CeCore's own fixed per-field messages reach the page.
-            if(error==null)try{Object json;try{json=BoundedJson.readDevice(reply);}catch(RuntimeException e){json=null;}cards=CeCore.validate(json,frozen);}catch(IllegalArgumentException e){error=e.getMessage();}catch(RuntimeException e){error="模型返回无效";}
-            List<Map<String,Object>> r=cards;String err=error;MAIN.post(()->once.accept(r,err));});
-        return ()->{job.cancel(true);MAIN.post(()->once.accept(null,"已取消生成，未发送到眼镜"));};
+        return ModelCall.post(c.endpoint,c.key,body,65536,TEXTS,MAIN::post,(reply,error)->{
+            if(error!=null){done.accept(null,error);return;}
+            // Only CeCore's own fixed per-field messages reach the page.
+            List<Map<String,Object>> cards=null;String e=null;
+            try{Object json;try{json=BoundedJson.readDevice(reply);}catch(RuntimeException x){json=null;}cards=CeCore.validate(json,frozen);}catch(IllegalArgumentException x){e=x.getMessage();}catch(RuntimeException x){e="模型返回无效";}
+            done.accept(cards,e);});
     }
     private static String sha256(String s){if(s==null||s.isEmpty())return "";try{byte[] h=MessageDigest.getInstance("SHA-256").digest(s.getBytes(StandardCharsets.UTF_8));StringBuilder b=new StringBuilder();for(byte x:h)b.append(String.format(Locale.ROOT,"%02x",x&255));return b.toString();}catch(Exception e){return "";}}
     /** CEAutoRuntime Context(): the consent binding plus readiness. */
