@@ -7,9 +7,9 @@ export function wrapExact(text,header,original,body){
  }else{if(text.split(header).length!==2)throw new Error('OTA ABI mismatch');text=text.replace(header,header.replace(/ ([A-Za-z_][A-Za-z_0-9]*)\(/,' '+original+'('));}
  return text+'\n'+header+'\n'+body+'\n.end method\n';
 }
-export const OTA_105=Object.freeze({queueClass:'LE3/V;',senderClass:'LE3/u;',message:'LE3/Q;',core:'LQ3/q;',fileMethod:'v'});
 export const OTA_106=Object.freeze({queueClass:'LX3/U;',senderClass:'LX3/u;',message:'LX3/Q;',core:'Lj4/q;',fileMethod:'u'});
-export function queueHook(text,abi=OTA_105){return wrapExact(text,'.method public static o('+abi.message+')V','turboioOriginal_o',`    .locals 1
+export const OTA_107=Object.freeze({queueClass:'LY3/V;',senderClass:'LY3/u;',message:'LY3/S;',core:'Lk4/q;',fileMethod:'u'});
+export function queueHook(text,abi){return wrapExact(text,'.method public static o('+abi.message+')V','turboioOriginal_o',`    .locals 1
     :ota_try
     invoke-static {p0}, Lcom/turboio/addon/OfficialOtaBridge;->allowQueue(Ljava/lang/Object;)Ljava/lang/Boolean;
     move-result-object v0
@@ -39,7 +39,7 @@ export function queueHook(text,abi=OTA_105){return wrapExact(text,'.method publi
     invoke-static {p0}, Lcom/turboio/addon/OtaController;->blocked(Ljava/lang/Object;)V
     return-void
     .catch Ljava/lang/Throwable; {:ota_try .. :ota_end} :ota_error`);}
-export function fileHook(text,abi=OTA_105){const sig='(Ljava/io/File;Ljava/lang/String;'+abi.core+'Ljava/lang/String;)Ljava/lang/String;';return wrapExact(text,'.method public final '+abi.fileMethod+sig,'turboioOriginal_'+abi.fileMethod,`    .locals 1
+export function fileHook(text,abi){const sig='(Ljava/io/File;Ljava/lang/String;'+abi.core+'Ljava/lang/String;)Ljava/lang/String;';return wrapExact(text,'.method public final '+abi.fileMethod+sig,'turboioOriginal_'+abi.fileMethod,`    .locals 1
     invoke-static {}, Lcom/turboio/addon/OfficialOtaBridge;->allowFile()Z
     move-result v0
     if-eqz v0, :ota_blocked

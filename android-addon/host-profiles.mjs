@@ -1,16 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// Obfuscated host ABI per pinned build. 1.0.6 shifted every package and two method names.
-const ABI_105=Object.freeze({transport:'E3',sdk:'P3',core:'Q3',listener:'LH7/c$c;',queue:'LE3/V;',send:'u',file:'v'});
-const ABI_106=Object.freeze({transport:'X3',sdk:'i4',core:'j4',listener:'Lp8/c$c;',queue:'LX3/U;',send:'t',file:'u'});
+// Obfuscated host ABI per pinned build. 1.0.6 shifted every package and two method names;
+// 1.0.7 shifted packages again and the transport message class became S.
+const ABI_106=Object.freeze({transport:'X3',sdk:'i4',core:'j4',listener:'Lp8/c$c;',queue:'LX3/U;',send:'t',file:'u',message:'Q'});
+const ABI_107=Object.freeze({transport:'Y3',sdk:'j4',core:'k4',listener:'Lq8/c$c;',queue:'LY3/V;',send:'t',file:'u',message:'S'});
 export const PROFILES = Object.freeze({
-  ef2e7dd346ca478e13d0f3f1bf31fa61412e44fb9b4ca9cf0d3e864ac608584b:
-    Object.freeze({version:'1.0.4', code:195, directory:'host-104', abi:ABI_105}),
-  '770ba0793d31609aa1e4477db2f8a7aec2c8acc4d9c6ab43d57b0dfc720d3ab3':
-    Object.freeze({version:'1.0.5', code:201, directory:'host-105', abi:ABI_105}),
   '4c1c57ae811cb959478efb5ec510000f7f51ddcb427afff369b1582c66b60206':
     Object.freeze({version:'1.0.6', code:216, directory:'host-106', abi:ABI_106}),
+  '30239f65d910cf7008cfdf6cfacd5c068c5877068b4a637027786377a9ce4f91':
+    Object.freeze({version:'1.0.7', code:230, directory:'host-107', abi:ABI_107}),
 });
 export function profileFor(sha) {
   const profile=PROFILES[sha];
@@ -41,20 +40,20 @@ export function verifyHost(root,profile) {
     for(const line of lines)if(!text.split('\n').includes(line))throw new Error('Host ABI mismatch: '+descriptor+' '+line);
     return file;
   };
-  const abi=profile.abi||ABI_105,T='L'+abi.transport+'/',S='L'+abi.sdk+'/',C='L'+abi.core+'/';
+  const abi=profile.abi,T='L'+abi.transport+'/',S='L'+abi.sdk+'/',C='L'+abi.core+'/',M=T+abi.message+';';
   const listener=expect(abi.listener,[
     '.method public final onAsrResult(Ljava/lang/String;ZLjava/lang/String;)V',
     '.method public final onNlpResult(Lcom/rayneo/airuntime/controller/NlpResult;)V',
     '.method public final onResponseComplete()V']);
   const activity=expect('Lcom/rayneo/venus/MainActivity;',['.method public final onPostResume()V']);
   const event=expect('Lcom/rayneo/rayneo_venus_sdk_plugin/j;',['.method public final z(Ljava/lang/String;Ljava/util/Map;)V']);
-  const sendHeader='.method public final '+abi.send+'('+T+'Q;Lkotlin/jvm/functions/Function2;)V';
+  const sendHeader='.method public final '+abi.send+'('+M+'Lkotlin/jvm/functions/Function2;)V';
   const fileHeader='.method public final '+abi.file+'(Ljava/io/File;Ljava/lang/String;'+C+'q;Ljava/lang/String;)Ljava/lang/String;';
   expect(T+'u;',[
     '.field public static volatile h:'+T+'u;',
     '.method public static g()Ljava/util/List;',
     sendHeader,fileHeader]);
-  expect(T+'Q;',['.method public constructor <init>([BLjava/lang/String;Ljava/lang/String;'+S+'h;'+S+'Q;'+T+'b;ZZ'+C+'p;Lkotlin/jvm/functions/Function2;)V']);
+  expect(M,['.method public constructor <init>([BLjava/lang/String;Ljava/lang/String;'+S+'h;'+S+'Q;'+T+'b;ZZ'+C+'p;Lkotlin/jvm/functions/Function2;)V']);
   expect(T+'C;',['.field public final a:Ljava/lang/String;','.method public final b()Z']);
   expect('Lcom/amap/api/maps/MapsInitializer;',['.method public static setApiKey(Ljava/lang/String;)V']);
   expect('Lcom/amap/api/location/AMapLocationClient;',['.method public static setApiKey(Ljava/lang/String;)V']);
@@ -64,15 +63,15 @@ export function verifyHost(root,profile) {
     if(!source.includes('"'+value+'"'))throw new Error('Missing enum '+value);
   }
   let ota;
-  if(profile.version!=='1.0.4'){
-    const queueHeader='.method public static o('+T+'Q;)V';
+  {
+    const queueHeader='.method public static o('+M+')V';
     const queue=expect(abi.queue,[queueHeader]);
     const sender=classFile(root,T+'u;');
-    expect(T+'Q;',['.field public final b:Ljava/lang/String;','.field public final c:'+S+'h;','.field public final e:[B','.field public k:Lkotlin/jvm/functions/Function2;']);
+    expect(M,['.field public final b:Ljava/lang/String;','.field public final c:'+S+'h;','.field public final e:[B','.field public k:Lkotlin/jvm/functions/Function2;']);
     expect(S+'A;',['.field public static final enum r:'+S+'A;']);
     if(!fs.readFileSync(classFile(root,S+'A;'),'utf8').includes('"MESSAGE_SEND_FAILED"'))throw new Error('Missing MESSAGE_SEND_FAILED');
     if(!fs.readFileSync(classFile(root,S+'h;'),'utf8').includes('"MARS_FOTA"'))throw new Error('Missing MARS_FOTA');
-    ota={queue,sender,queueClass:abi.queue,senderClass:T+'u;',message:T+'Q;',queueHeader,fileHeader,fileMethod:abi.file};
+    ota={queue,sender,queueClass:abi.queue,senderClass:T+'u;',message:M,queueHeader,fileHeader,fileMethod:abi.file};
   }
   return {listener,activity,event,ota,abi,version:profile.version,code:profile.code};
 }

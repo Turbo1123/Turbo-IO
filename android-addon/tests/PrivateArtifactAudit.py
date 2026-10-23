@@ -35,7 +35,7 @@ for path in sorted((ROOT / 'src').rglob('*.java')):
     check(str(path.relative_to(ROOT)), path.read_bytes())
 
 with zipfile.ZipFile(sys.argv[1]) as apk:
-    # Addon DEX follows the vendor DEX set (classes4 on 1.0.5, classes6 on 1.0.6).
+    # Addon DEX follows the vendor DEX set plus the hook DEX (classes6 on 1.0.6 and 1.0.7).
     addon_dex = [n for n in apk.namelist() if re.fullmatch(r'classes\d*\.dex', n) and b'Lcom/turboio/addon/TurboAddon;' in apk.read(n)
                  and b'Lcom/turboio/addon/HostAbi;' in apk.read(n)]
     assert len(addon_dex) == 1, 'Expected exactly one addon DEX'

@@ -8,6 +8,10 @@ mkdir -p build/classes build/test build/dex
 javac -encoding UTF-8 -d build/test src/com/turboio/addon/HostBusiness.java tests/HostBusinessTest.java
 java -cp build/test com.turboio.addon.HostBusinessTest
 node tests/HostProfilesTest.mjs
+mkdir -p build/test-hostabi
+javac -encoding UTF-8 -source 8 -target 8 -d build/test-hostabi src/com/turboio/addon/HostAbi.java tests/HostAbiTest.java
+java -Dturboio.host=1.0.6 -cp build/test-hostabi com.turboio.addon.HostAbiTest X3.Q t u X3.u i4.h j4.q
+java -Dturboio.host=1.0.7 -cp build/test-hostabi com.turboio.addon.HostAbiTest Y3.S t u Y3.u j4.h k4.q
 node tests/OtaHooksTest.mjs
 node tests/OfficialOtaSourceTest.mjs
 python3 tests/ApkAssemblyTest.py
