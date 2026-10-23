@@ -58,6 +58,18 @@ wrap(listener,'onResponseComplete','()V','p0 .. p0','guard');
 wrap(abi.activity,'onPostResume','()V','p0 .. p0','after');
 wrap(abi.notifications,'onNotificationPosted','(Landroid/service/notification/StatusBarNotification;)V','p0 .. p1','after');
 wrap(abi.notifications,'onNotificationRemoved','(Landroid/service/notification/StatusBarNotification;)V','p0 .. p1','after');
+// Capture the SDK plugin instance for always-on audio: a guarded static call before each return of f.<init>()V.
+{
+  let text=fs.readFileSync(abi.sdkPlugin,'utf8');
+  if(!text.includes('turboio_sdk_try_')){
+    const head='.method public constructor <init>()V',start=text.indexOf(head);if(start<0)throw new Error('SDK plugin constructor missing');
+    const end=text.indexOf('.end method',start);let body=text.slice(start,end),k=0;
+    if(!/\n    \.locals [1-9]/.test(body))throw new Error('SDK plugin constructor has no local register');
+    body=body.replace(/\n    return-void\n/g,()=>{k++;return `\n    :turboio_sdk_try_${k}\n    invoke-static {p0}, Lcom/turboio/addon/TurboAddon;->sdkPlugin(Ljava/lang/Object;)V\n    :turboio_sdk_end_${k}\n    .catch Ljava/lang/Throwable; {:turboio_sdk_try_${k} .. :turboio_sdk_end_${k}} :turboio_sdk_catch_${k}\n    return-void\n    :turboio_sdk_catch_${k}\n    move-exception v0\n    return-void\n`;});
+    if(k<1)throw new Error('SDK plugin constructor has no return');
+    fs.writeFileSync(abi.sdkPlugin,text.slice(0,start)+body+text.slice(end));
+  }
+}
 // Preserve official event delivery; observe bounded file and custom ACK metadata afterward.
 const eventFile=abi.event;
 let eventText=fs.readFileSync(eventFile,'utf8');

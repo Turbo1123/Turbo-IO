@@ -33,6 +33,8 @@ function fakeHost(n){
   put('Lcom/rayneo/venus/MainActivity;',['.method public final onPostResume()V']);
   if(!n.noNotify)put('Lim/zoe/labs/flutter_notification_listener/NotificationsHandlerService;',['.method public final onNotificationPosted(Landroid/service/notification/StatusBarNotification;)V','.method public final onNotificationRemoved(Landroid/service/notification/StatusBarNotification;)V']);
   put('Lcom/rayneo/rayneo_venus_sdk_plugin/j;',['.method public final z(Ljava/lang/String;Ljava/util/Map;)V']);
+  put('Lcom/rayneo/rayneo_venus_sdk_plugin/f;',['.method public constructor <init>()V','.field public final y:'+n.alwaysOn]);
+  put(n.alwaysOn,n.noDump?['.method public final k()Ljava/util/LinkedHashMap;']:['.method public final f(ZZZZ)V','.method public final k()Ljava/util/LinkedHashMap;']);
   put(T+'u;',['.field public static volatile h:'+T+'u;','.method public static g()Ljava/util/List;','.method public final '+n.send+'('+M+'Lkotlin/jvm/functions/Function2;)V','.method public final '+n.file+'(Ljava/io/File;Ljava/lang/String;'+C+'q;Ljava/lang/String;)Ljava/lang/String;']);
   put(M,['.method public constructor <init>([BLjava/lang/String;Ljava/lang/String;'+S+'h;'+S+'Q;'+T+'b;ZZ'+C+'p;Lkotlin/jvm/functions/Function2;)V','.field public final b:Ljava/lang/String;','.field public final c:'+S+'h;','.field public final e:[B','.field public k:Lkotlin/jvm/functions/Function2;']);
   put(T+'C;',['.field public final a:Ljava/lang/String;','.method public final b()Z']);
@@ -46,7 +48,7 @@ function fakeHost(n){
   put(S+'A;',['.field public static final enum r:'+S+'A;','"MESSAGE_SEND_FAILED"']);
   return root;
 }
-const n107={transport:'Y3',sdk:'j4',core:'k4',listener:'Lq8/c$c;',queue:'LY3/V;',send:'t',file:'u',message:'S'};
+const n107={transport:'Y3',sdk:'j4',core:'k4',listener:'Lq8/c$c;',queue:'LY3/V;',send:'t',file:'u',message:'S',alwaysOn:'Lm8/k;'};
 const h107=fakeHost(n107);
 try {
   const r=verifyHost(h107,profileFor(SHA_107));
@@ -57,7 +59,7 @@ try {
   // A 1.0.7 tree must not pass as 1.0.6 (different packages and message class).
   assert.throws(()=>verifyHost(h107,profileFor(SHA_106)));
 } finally { fs.rmSync(h107,{recursive:true}); }
-const h106=fakeHost({transport:'X3',sdk:'i4',core:'j4',listener:'Lp8/c$c;',queue:'LX3/U;',send:'t',file:'u',message:'Q'});
+const h106=fakeHost({transport:'X3',sdk:'i4',core:'j4',listener:'Lp8/c$c;',queue:'LX3/U;',send:'t',file:'u',message:'Q',alwaysOn:'Ll8/l;'});
 try { assert.equal(verifyHost(h106,profileFor(SHA_106)).ota.message,'LX3/Q;'); } finally { fs.rmSync(h106,{recursive:true}); }
 // Voice exit needs the official stop entry; a host without it is refused before any mutation.
 const hNoStop=fakeHost({...n107,noStop:true});
@@ -65,6 +67,9 @@ try { assert.throws(()=>verifyHost(hNoStop,profileFor(SHA_107)),/stop/); } final
 // Notification history needs the host's listener service entry points.
 const hNoNotify=fakeHost({...n107,noNotify:true});
 try { assert.throws(()=>verifyHost(hNoNotify,profileFor(SHA_107)),/NotificationsHandlerService/); } finally { fs.rmSync(hNoNotify,{recursive:true}); }
+// Always-on audio needs the SDK plugin's controller field and its dump/status methods.
+const hNoDump=fakeHost({...n107,noDump:true});
+try { assert.throws(()=>verifyHost(hNoDump,profileFor(SHA_107)),/m8\/k/); } finally { fs.rmSync(hNoDump,{recursive:true}); }
 const h107b=fakeHost(n107);
-try { const v=verifyHost(h107b,profileFor(SHA_107));assert.equal(v.voiceStop,'Lq8/c;');assert.ok(v.notifications.endsWith('NotificationsHandlerService.smali')); } finally { fs.rmSync(h107b,{recursive:true}); }
-console.log('Host profile tests passed (21 assertions).');
+try { const v=verifyHost(h107b,profileFor(SHA_107));assert.equal(v.voiceStop,'Lq8/c;');assert.ok(v.notifications.endsWith('NotificationsHandlerService.smali'));assert.ok(v.sdkPlugin.endsWith('/f.smali')); } finally { fs.rmSync(h107b,{recursive:true}); }
+console.log('Host profile tests passed (23 assertions).');

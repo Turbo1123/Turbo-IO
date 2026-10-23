@@ -51,6 +51,10 @@ public final class TurboAddon {
     private static final String REVISION = "android-105-integration-08";
     private TurboAddon() {}
 
+    /** The official SDK plugin instance, captured at construction (package.mjs tap); weakly held. */
+    private static volatile java.lang.ref.WeakReference<Object> sdkPlugin=new java.lang.ref.WeakReference<>(null);
+    public static void sdkPlugin(Object plugin){if(plugin!=null)sdkPlugin=new java.lang.ref.WeakReference<>(plugin);}
+    static Object sdkPlugin(){return sdkPlugin.get();}
     /** Host NotificationsHandlerService.onNotificationPosted/Removed, after the official handling (package.mjs wrap). */
     public static void notificationPosted(Object service,android.service.notification.StatusBarNotification sbn){NotificationTap.posted(service,sbn);}
     public static void notificationRemoved(Object service,android.service.notification.StatusBarNotification sbn){NotificationTap.removed(service,sbn);}

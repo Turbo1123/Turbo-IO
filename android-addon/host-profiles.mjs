@@ -3,8 +3,8 @@ import path from 'node:path';
 
 // Obfuscated host ABI per pinned build. 1.0.6 shifted every package and two method names;
 // 1.0.7 shifted packages again and the transport message class became S.
-const ABI_106=Object.freeze({transport:'X3',sdk:'i4',core:'j4',listener:'Lp8/c$c;',queue:'LX3/U;',send:'t',file:'u',message:'Q'});
-const ABI_107=Object.freeze({transport:'Y3',sdk:'j4',core:'k4',listener:'Lq8/c$c;',queue:'LY3/V;',send:'t',file:'u',message:'S'});
+const ABI_106=Object.freeze({transport:'X3',sdk:'i4',core:'j4',listener:'Lp8/c$c;',queue:'LX3/U;',send:'t',file:'u',message:'Q',alwaysOn:'Ll8/l;'});
+const ABI_107=Object.freeze({transport:'Y3',sdk:'j4',core:'k4',listener:'Lq8/c$c;',queue:'LY3/V;',send:'t',file:'u',message:'S',alwaysOn:'Lm8/k;'});
 export const PROFILES = Object.freeze({
   '4c1c57ae811cb959478efb5ec510000f7f51ddcb427afff369b1582c66b60206':
     Object.freeze({version:'1.0.6', code:216, directory:'host-106', abi:ABI_106}),
@@ -57,6 +57,9 @@ export function verifyHost(root,profile) {
     '.method public final onNotificationPosted(Landroid/service/notification/StatusBarNotification;)V',
     '.method public final onNotificationRemoved(Landroid/service/notification/StatusBarNotification;)V']);
   const event=expect('Lcom/rayneo/rayneo_venus_sdk_plugin/j;',['.method public final z(Ljava/lang/String;Ljava/util/Map;)V']);
+  // Always-on audio: the SDK plugin's controller (field y) with configureDump f(ZZZZ) and status k().
+  const sdkPlugin=expect('Lcom/rayneo/rayneo_venus_sdk_plugin/f;',['.method public constructor <init>()V','.field public final y:'+abi.alwaysOn]);
+  expect(abi.alwaysOn,['.method public final f(ZZZZ)V','.method public final k()Ljava/util/LinkedHashMap;']);
   const sendHeader='.method public final '+abi.send+'('+M+'Lkotlin/jvm/functions/Function2;)V';
   const fileHeader='.method public final '+abi.file+'(Ljava/io/File;Ljava/lang/String;'+C+'q;Ljava/lang/String;)Ljava/lang/String;';
   expect(T+'u;',[
@@ -83,5 +86,5 @@ export function verifyHost(root,profile) {
     if(!fs.readFileSync(classFile(root,S+'h;'),'utf8').includes('"MARS_FOTA"'))throw new Error('Missing MARS_FOTA');
     ota={queue,sender,queueClass:abi.queue,senderClass:T+'u;',message:M,queueHeader,fileHeader,fileMethod:abi.file};
   }
-  return {listener,activity,event,ota,abi,voiceStop,notifications,version:profile.version,code:profile.code};
+  return {listener,activity,event,ota,abi,voiceStop,notifications,sdkPlugin,version:profile.version,code:profile.code};
 }
