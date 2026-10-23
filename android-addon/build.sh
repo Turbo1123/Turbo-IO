@@ -102,6 +102,12 @@ java -cp build/test com.turboio.addon.TdgCodecTest build/test/tdg-golden
 mkdir -p build/test-diag-flow
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-diag-flow tests/diagflow/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/{DiagnosticsRun,CustomEnvelope,BoundedJson,TransferGate}.java
 java -cp build/test-diag-flow:build/test com.turboio.addon.DiagnosticsRunTest
+# TNR3 nav-map wire codec: Java vs the iOS/firmware nav_map.c.
+mkdir -p build/test/navmap-golden
+cc -Wall -Wextra -Werror -I../official-addon/ios107-edition -I../official-addon/ios107-edition/navigation-runtime-v1 tests/navmap_golden.c ../official-addon/ios107-edition/nav_map.c ../official-addon/ios107-edition/navigation-runtime-v1/nav_runtime.c -o build/test/navmap-golden/generate
+build/test/navmap-golden/generate build/test/navmap-golden
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/NavMapCodec.java tests/NavMapCodecTest.java
+java -cp build/test com.turboio.addon.NavMapCodecTest build/test/navmap-golden
 mkdir -p build/test-menu-flow
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-menu-flow tests/menuflow/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/MenuLayout.java
 java -cp build/test-menu-flow:build/test com.turboio.addon.MenuLayoutTest
