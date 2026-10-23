@@ -18,11 +18,11 @@ final class RecordingTextUI {
     private static final ExecutorService IO=Executors.newSingleThreadExecutor();
     private static final Handler MAIN=new Handler(Looper.getMainLooper());
     private static final ModelCall.Texts TEXTS=new ModelCall.Texts("服务拒绝请求或返回无效内容；未保存错误正文；原转写未改。","模型响应超过大小限制。","连接失败或超时，本次整理未完成。原转写保留，可手动重试。","本次已取消，原录音、转写及之前已保存的整理结果不变。");
-    private final Activity a;private EditText editor;private TextView info;private Runnable job;private int run;private File result;
+    private final Activity a;private EditorialUI.Screen screen;private EditText editor;private TextView info;private Runnable job;private int run;private File result;
     private RecordingTextUI(Activity a){this.a=a;}
     static void show(Activity a){CeBridge.init(a);new RecordingTextUI(a).open();}
     private void open(){
-        EditorialUI.Screen s=new EditorialUI.Screen(a,"文字整理");LinearLayout b=s.body;
+        EditorialUI.Screen s=new EditorialUI.Screen(a,"文字整理");screen=s;LinearLayout b=s.body;
         info=EditorialUI.text(a,"保留官方 ASR。导入或粘贴完整转写，确认后仅上传文字；不覆盖官方内容。",14,EditorialUI.LIME);b.addView(info);
         b.addView(EditorialUI.text(a,"完整转写文字",15,EditorialUI.INK));
         editor=new EditText(a);editor.setMinLines(8);editor.setGravity(android.view.Gravity.TOP);editor.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);editor.setTextColor(EditorialUI.INK);editor.setHint("粘贴完整转写，最多 30 万字符");editor.setHintTextColor(EditorialUI.MUTED);b.addView(editor);
@@ -39,6 +39,8 @@ final class RecordingTextUI {
             if(text==null||text.trim().isEmpty()||text.length()>300000){EditorialUI.notice(a,"需要非空 UTF-8 TXT/MD，最多 30 万字符 / 2 MB；不会悄悄截断全文。");return;}
             editor.setText(text);info.setText("已导入本机文本，尚未上传。请核对是否为完整转写。");});
     }
+    /** The screen can vanish without a dismiss callback (Activity destroyed); never keep uploading then. */
+    private boolean gone(){return a.isFinishing()||a.isDestroyed()||screen==null||!screen.dialog.isShowing();}
     private void cancel(){if(job==null)return;Runnable j=job;job=null;run++;j.run();editor.setEnabled(true);info.setText("本次已取消，原录音、转写及之前已保存的整理结果不变。");}
     private void confirm(){
         if(job!=null)return;String text=editor.getText().toString();List<String> chunks=RecordingText.chunks(text);
@@ -51,7 +53,7 @@ final class RecordingTextUI {
                 result=null;editor.setEnabled(false);int mine=++run;next(mine,c,chunks,new ArrayList<>(),text);}).show();
     }
     private void next(int mine,CeBridge.Config c,List<String> chunks,List<String> answers,String input){
-        if(mine!=run)return;
+        if(mine!=run)return;if(gone()){cancel();return;}
         if(answers.size()==chunks.size()){job=null;editor.setEnabled(true);String md=RecordingText.markdown(c.model,answers,input);
             IO.execute(()->{File f=null;try{File dir=new File(a.getNoBackupFilesDir(),"turboio/recording-text");if(!dir.isDirectory()&&!dir.mkdirs())throw new IOException();f=new File(dir,"录音整理.md");try(FileOutputStream o=new FileOutputStream(f)){o.write(md.getBytes(StandardCharsets.UTF_8));o.getFD().sync();}}catch(Throwable t){f=null;}
                 File saved=f;MAIN.post(()->{if(a.isDestroyed())return;result=saved;info.setText(saved!=null?"全部分段已整理，已另存本机 Markdown（含输入原文）。点击分享可发送到其他应用。":"模型整理完成，但本机保存失败。内容保留在下方，请复制保存。");if(saved==null)editor.setText(md);});});
@@ -60,7 +62,7 @@ final class RecordingTextUI {
         Map<String,Object> payload=RecordingText.payload(c.model,chunks.get(index),c.disableThinking);
         if(payload==null){job=null;editor.setEnabled(true);info.setText("文字分段或模型配置无效，未继续发送。");return;}
         job=ModelCall.post(c.endpoint,c.key,BoundedJson.canonical(payload),262144,TEXTS,MAIN::post,(reply,error)->{
-            if(mine!=run)return;
+            if(mine!=run)return;if(gone()){job=null;run++;return;}
             if(error!=null){job=null;editor.setEnabled(true);info.setText(error);return;}
             Object json;try{json=BoundedJson.readLarge(reply,262144,20000);}catch(RuntimeException e){json=null;}
             String answer=RecordingText.answer(json);
