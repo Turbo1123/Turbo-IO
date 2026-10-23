@@ -106,6 +106,8 @@ mkdir -p build/test-menu-flow
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-menu-flow tests/menuflow/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/MenuLayout.java
 java -cp build/test-menu-flow:build/test com.turboio.addon.MenuLayoutTest
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/ChatPolicy.java tests/ChatPolicyTest.java
+javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/VoiceExit.java tests/VoiceExitTest.java
+java -cp build/test com.turboio.addon.VoiceExitTest
 java -cp build/test ChatPolicyTest
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/SpeechBuffer.java tests/SpeechBufferTest.java
 java -cp build/test com.turboio.addon.SpeechBufferTest

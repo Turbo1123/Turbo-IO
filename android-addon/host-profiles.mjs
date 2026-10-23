@@ -45,6 +45,12 @@ export function verifyHost(root,profile) {
     '.method public final onAsrResult(Ljava/lang/String;ZLjava/lang/String;)V',
     '.method public final onNlpResult(Lcom/rayneo/airuntime/controller/NlpResult;)V',
     '.method public final onResponseComplete()V']);
+  // Voice exit: the listener's outer voice controller and its official stop_assistant entry.
+  const voiceStop=abi.listener.replace('$c;',';');
+  expect(abi.listener,['.field public final synthetic a:'+voiceStop]);
+  {let text;try{text=fs.readFileSync(classFile(root,voiceStop),'utf8');}catch(e){throw new Error('Host ABI mismatch: voice stop entry '+voiceStop);}const head='.method public final s(Ljava/lang/String;ZZ)V',at=text.split('\n').indexOf(head);
+   const body=at<0?'':text.split('\n').slice(at,at+400).join('\n'),end=body.indexOf('.end method');
+   if(at<0||end<0||!body.slice(0,end).includes('"stop_assistant"'))throw new Error('Host ABI mismatch: voice stop entry '+voiceStop);}
   const activity=expect('Lcom/rayneo/venus/MainActivity;',['.method public final onPostResume()V']);
   const event=expect('Lcom/rayneo/rayneo_venus_sdk_plugin/j;',['.method public final z(Ljava/lang/String;Ljava/util/Map;)V']);
   const sendHeader='.method public final '+abi.send+'('+M+'Lkotlin/jvm/functions/Function2;)V';
@@ -73,5 +79,5 @@ export function verifyHost(root,profile) {
     if(!fs.readFileSync(classFile(root,S+'h;'),'utf8').includes('"MARS_FOTA"'))throw new Error('Missing MARS_FOTA');
     ota={queue,sender,queueClass:abi.queue,senderClass:T+'u;',message:M,queueHeader,fileHeader,fileMethod:abi.file};
   }
-  return {listener,activity,event,ota,abi,version:profile.version,code:profile.code};
+  return {listener,activity,event,ota,abi,voiceStop,version:profile.version,code:profile.code};
 }

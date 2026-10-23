@@ -27,7 +27,9 @@ function fakeHost(n){
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'turbo-host-abi-'));
   const T='L'+n.transport+'/',S='L'+n.sdk+'/',C='L'+n.core+'/',M=T+n.message+';';
   const put=(d,lines)=>{const rel=d.slice(1,-1)+'.smali',f=path.join(root,'smali_classes2',rel);fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f,['.class public '+d,...lines].join('\n')+'\n');};
-  put(n.listener,['.method public final onAsrResult(Ljava/lang/String;ZLjava/lang/String;)V','.method public final onNlpResult(Lcom/rayneo/airuntime/controller/NlpResult;)V','.method public final onResponseComplete()V']);
+  const outer=n.listener.replace('$c;',';');
+  put(n.listener,['.field public final synthetic a:'+outer,'.method public final onAsrResult(Ljava/lang/String;ZLjava/lang/String;)V','.method public final onNlpResult(Lcom/rayneo/airuntime/controller/NlpResult;)V','.method public final onResponseComplete()V']);
+  if(!n.noStop)put(outer,['.method public final s(Ljava/lang/String;ZZ)V','    const-string v1, "stop_assistant"','.end method']);
   put('Lcom/rayneo/venus/MainActivity;',['.method public final onPostResume()V']);
   put('Lcom/rayneo/rayneo_venus_sdk_plugin/j;',['.method public final z(Ljava/lang/String;Ljava/util/Map;)V']);
   put(T+'u;',['.field public static volatile h:'+T+'u;','.method public static g()Ljava/util/List;','.method public final '+n.send+'('+M+'Lkotlin/jvm/functions/Function2;)V','.method public final '+n.file+'(Ljava/io/File;Ljava/lang/String;'+C+'q;Ljava/lang/String;)Ljava/lang/String;']);
@@ -56,4 +58,9 @@ try {
 } finally { fs.rmSync(h107,{recursive:true}); }
 const h106=fakeHost({transport:'X3',sdk:'i4',core:'j4',listener:'Lp8/c$c;',queue:'LX3/U;',send:'t',file:'u',message:'Q'});
 try { assert.equal(verifyHost(h106,profileFor(SHA_106)).ota.message,'LX3/Q;'); } finally { fs.rmSync(h106,{recursive:true}); }
-console.log('Host profile tests passed (17 assertions).');
+// Voice exit needs the official stop entry; a host without it is refused before any mutation.
+const hNoStop=fakeHost({...n107,noStop:true});
+try { assert.throws(()=>verifyHost(hNoStop,profileFor(SHA_107)),/stop/); } finally { fs.rmSync(hNoStop,{recursive:true}); }
+const h107b=fakeHost(n107);
+try { assert.equal(verifyHost(h107b,profileFor(SHA_107)).voiceStop,'Lq8/c;'); } finally { fs.rmSync(h107b,{recursive:true}); }
+console.log('Host profile tests passed (19 assertions).');

@@ -105,10 +105,19 @@ public final class TurboAddon {
     }
     // Android delivers these callbacks on ShareHandler, unlike the iOS hook's
     // main-queue controller. Queue original + extension work together in order.
+    private static volatile String exitedSession="";
     public static void dispatchAsr(Object source, String text, boolean finished, String session) {
         serial(() -> {
             try { invokeTyped(source,"onAsrResult",new Class<?>[]{String.class,boolean.class,String.class},new Object[]{text,finished,session}); }
             catch(Exception ignored) { diagnostic="官方 ASR 分发失败";return; }
+            // Voice exit (iOS voiceExitCommands): an exact final phrase stops the official assistant through the
+            // listener's own stop path; the rest of that ASR session is ignored so a late delta cannot reopen it.
+            if(finished&&prefs!=null&&prefs.getBoolean("voice_exit",false)&&VoiceExit.matches(text)){
+                VoiceExit.Stopper stopper=VoiceExit.resolve(source);
+                if(stopper!=null){cancel();exitedSession=session==null?"":session;diagnostic=stopper.stop()?"语音退出已调用官方停止入口；等待镜片确认":"语音退出调用失败";return;}
+                diagnostic="当前版本停止入口未通过校验，语音退出未执行";
+            }
+            if(session!=null&&!exitedSession.isEmpty()&&session.equals(exitedSession))return;
             if(text!=null&&!text.isEmpty())VoiceSpeech.asr(source,session,finished);
             onAsr(source,text,finished,session);
         });
@@ -386,6 +395,7 @@ public final class TurboAddon {
         EditText key = input(host,box,"API Key（留空保留现有值）","",true);
         label(host,box,"密钥使用 Android Keystore 加密保存，不显示、不写入日志。没有预填旧密钥。");
         EditText persona = input(host,box,"个人提示词",prefs.getString("persona","用简洁中文回答，内容显示在智能眼镜上。"),false);
+        Switch voiceExit=new Switch(host);voiceExit.setText("语音退出指令（退下吧 / 关闭 / 没事了 / 关闭窗口；完整短句匹配）");voiceExit.setChecked(prefs.getBoolean("voice_exit",false));box.addView(voiceExit);
         Switch thinking=new Switch(host);thinking.setText("DeepSeek：关闭思考扩展参数");thinking.setChecked(ChatPolicy.thinkingDisabled(prefs.contains("disable_thinking")?prefs.getBoolean("disable_thinking",true):null));box.addView(thinking);
         label(host,box,"流式开启 · 最多 2048 输出 tokens\n近 50 条成功对话作为上下文；存档仅含扩展成功完成的回复，不读取官方历史。声音、插话和自动息屏仍需本版实测。");
         AlertDialog dialog = new AlertDialog.Builder(host).setTitle("模型与对话").setView(scroll).setNegativeButton("返回",(d,w)->showHome()).setPositiveButton("保存",null).create();
@@ -397,7 +407,7 @@ public final class TurboAddon {
                 if(!secret.isEmpty()) SecretStore.put(app,secret);
                 if(select.getSelectedItemPosition()==2 && SecretStore.get(app).isEmpty()) { Toast.makeText(host,"请先填写 API Key",Toast.LENGTH_LONG).show(); return; }
                 cancel(); HISTORY.clear(); prefs.edit().putInt("mode",select.getSelectedItemPosition()).putString("endpoint",url)
-                    .putString("model",modelId).putString("persona",persona.getText().toString()).putBoolean("disable_thinking",thinking.isChecked()).apply();
+                    .putString("model",modelId).putString("persona",persona.getText().toString()).putBoolean("disable_thinking",thinking.isChecked()).putBoolean("voice_exit",voiceExit.isChecked()).apply();
                 key.setText(""); dialog.dismiss(); showHome();
             } catch(Exception ignored) { Toast.makeText(host,"保存失败，请检查 HTTPS 地址、模型或密钥存储",Toast.LENGTH_LONG).show(); }
         })); dialog.show();
