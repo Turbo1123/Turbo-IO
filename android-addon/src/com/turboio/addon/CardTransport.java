@@ -11,8 +11,10 @@ final class CardTransport {
     static void listen(Runnable r){changed=r;}static void detach(){changed=null;}static String status(){return note;}static boolean busy(){return !owner.isEmpty();}
     private static void mark(String s){note=s;if(changed!=null)changed.run();}
     static void inspect(){if(busy()){mark("上一轮仍在确认");return;}readOnly=true;install=null;id="";first=false;begin();}
+    /** TDC1 developer card (turbo_ui_devcard_v1); same flow, text validated like the firmware parser. */
+    static void publishDevcard(String text,boolean top){if(busy()){mark("上一轮仍在确认");return;}readOnly=false;try{install=CardCodec.devcard(text);id="turbo_ui_devcard_v1";first=top;begin();}catch(RuntimeException e){mark("TDC1 数值不合法，未发送");}}
     static void publish(Map<String,Object> doc,boolean top){if(busy()){mark("上一轮仍在确认");return;}readOnly=false;try{install=CardCodec.install(doc,CardIcons::pixels);id=(String)doc.get("id");first=top;begin();}catch(RuntimeException e){mark("草稿校验失败，未发送");}}
-    static void remove(String ident){if(busy())return;if(ident==null||!ident.matches("turbo_ui_card_[a-z0-9_]{1,34}"))return;readOnly=false;id=ident;install=null;first=false;begin();}
+    static void remove(String ident){if(busy())return;if(ident==null||!(ident.matches("turbo_ui_card_[a-z0-9_]{1,34}")||ident.equals("turbo_ui_devcard_v1")))return;readOnly=false;id=ident;install=null;first=false;begin();}
     private static void begin(){String lease=UUID.randomUUID().toString();if(!NativeTransfer.acquireMessages(lease)){mark("请先连接眼镜并结束其他传输/显示任务");return;}owner=lease;peer=NativeTransfer.connected();before=null;mutated=false;query("before");}
     private static void end(String s){String old=owner;owner="";sequence=0;before=null;install=null;step="";NativeTransfer.releaseMessages(old);mark(s);}
     private static void query(String stage){send(object("cmd","dashboard_config","payload",object("version",1,"value",0)),stage);}

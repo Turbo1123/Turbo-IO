@@ -35,6 +35,13 @@ public class CardFlowTest {
         Map<String,Object> legacy=BoundedJson.map(BoundedJson.readDevice("{\"simple_mode\":false,\"widgets\":[1,3,5],\"widgets_data\":{\"weather\":{\"temp\":21.5},\"clock\":{}}}".getBytes(StandardCharsets.UTF_8)));
         for(int op=0;op<3;op++){if(op==0)CardTransport.inspect();else if(op==1)CardTransport.publish(doc,true);else CardTransport.remove("turbo_ui_card_test");
          int packets=NativeTransfer.packets.size();config(legacy);yes(!CardTransport.busy()&&NativeTransfer.packets.size()==packets&&CardTransport.status().contains("需刷 TVP2"));}
+        // TDC1 developer card goes through the same read → install → readback → pin flow.
+        CardTransport.publishDevcard("TDC1;99;90;85;375;1280;1400;2000;0;1;2",true);config(baseline);yes(request().json.get("cmd").equals("widget_install"));
+        Map<String,Object> dev=BoundedJson.map(BoundedJson.map(request().json.get("payload")).get("data"));yes("turbo_ui_devcard_v1".equals(dev.get("id")));reply(object("code",0));
+        config(object("widgets_v2",Arrays.asList(weather,todo,dev),"simple_mode",true));yes(request().json.get("cmd").equals("dashboard_update"));
+        reply(object("cmd","dashboard_update","payload",object("value",0)));config(CardCodec.first(object("widgets_v2",Arrays.asList(weather,todo,dev),"simple_mode",true),"turbo_ui_devcard_v1"));yes(!CardTransport.busy()&&CardTransport.status().contains("置顶"));
+        int devPackets=NativeTransfer.packets.size();CardTransport.publishDevcard("TDC1;101;90;85;375;1280;1400;2000;0;1;2",true);yes(!CardTransport.busy()&&NativeTransfer.packets.size()==devPackets&&CardTransport.status().contains("未发送"));
+        CardTransport.remove("turbo_ui_devcard_v1");config(baseline);yes(!CardTransport.busy()&&CardTransport.status().contains("没有这张卡片"));
         System.out.println("CardFlowTest: "+checks+" assertions, targeted install/readback/order/remove and fault paths");
     }
 }

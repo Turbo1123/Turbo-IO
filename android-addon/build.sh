@@ -66,6 +66,12 @@ java -cp build/test-ota-flow:build/test com.turboio.addon.OtaControllerTest "$ot
 java -cp build/test-ota-flow:build/test com.turboio.addon.OtaControllerTest unused recovery
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{CardCodec,CardEnvelope}.java tests/CardCodecTest.java
 java -cp build/test CardCodecTest build/test/card-golden
+# TDC1 developer card: Java validator vs the iOS/firmware C dc_parse.
+mkdir -p build/test/devcard-golden
+cc -Wall -Wextra -Werror -I../official-addon/ios107-edition tests/devcard_golden.c ../official-addon/ios107-edition/card.c -o build/test/devcard-golden/generate
+build/test/devcard-golden/generate build/test/devcard-golden
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test tests/DevCardTest.java
+java -cp build/test com.turboio.addon.DevCardTest build/test/devcard-golden
 cc -Wall -Wextra -Werror -I../official-addon/research/dashboard-editor-v1 tests/card_native.c ../official-addon/research/dashboard-editor-v1/editor.c -o build/test/card-native
 build/test/card-native build/test/card-golden
 mkdir -p build/test-card-flow
