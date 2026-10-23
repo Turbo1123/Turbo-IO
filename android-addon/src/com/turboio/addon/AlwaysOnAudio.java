@@ -60,13 +60,25 @@ final class AlwaysOnAudio {
         int frames=(t&3)==0?1:(t&3)==3?(n>1?p[1]&63:0):2;return frames>0&&spf*frames<=5760?spf*frames:0;
     }
     /** TIOFinalizeAlwaysOnOgg: valid single-stream Ogg Opus; legacy granules (count*960+preskip) rewritten to sample totals. */
-    static boolean finalizeOgg(File copy){boolean[] repair={false};if(!scan(copy,false,repair))return false;return !repair[0]||scan(copy,true,null);}
-    private static boolean scan(File file,boolean write,boolean[] needsRepair){
-        boolean ok=false,eos=false,legacy=true,correct=true;long serial=0,seq=0,total=0,count=0;int packets=0,skip=0;ByteArrayOutputStream packet=new ByteArrayOutputStream();
+    static boolean finalizeOgg(File copy){
+        boolean[] repair={false};long[] lastPage={-1};
+        if(!scan(copy,false,repair,lastPage)){
+            // The host skips the EOS page when a stream ends right after a full page: mark the last page EOS (copy only).
+            if(lastPage[0]<0||!markEos(copy,lastPage[0])||!scan(copy,false,repair,null))return false;
+        }
+        return !repair[0]||scan(copy,true,null,null);
+    }
+    private static boolean markEos(File file,long offset){
+        try(RandomAccessFile f=new RandomAccessFile(file,"rw")){f.seek(offset);byte[] h=new byte[27];if(f.read(h)!=27)return false;int n=h[26]&255;byte[] rest=new byte[n];if(n>0&&f.read(rest)!=n)return false;int size=0;for(byte l:rest)size+=l&255;
+            byte[] page=new byte[27+n+size];System.arraycopy(h,0,page,0,27);System.arraycopy(rest,0,page,27,n);if(size>0&&f.read(page,27+n,size)!=size)return false;
+            page[5]|=4;long c=crc(page);for(int i=0;i<4;i++)page[22+i]=(byte)(c>>(8*i));f.seek(offset);f.write(page);f.getFD().sync();return true;}catch(IOException|RuntimeException e){return false;}
+    }
+    private static boolean scan(File file,boolean write,boolean[] needsRepair,long[] missingEos){
+        boolean ok=false,eos=false,legacy=true,correct=true;long lastAudio=-1,serial=0,seq=0,total=0,count=0;int packets=0,skip=0;ByteArrayOutputStream packet=new ByteArrayOutputStream();
         try(RandomAccessFile f=new RandomAccessFile(file,write?"rw":"r")){
             for(int pageIndex=0;pageIndex<100000;pageIndex++){
                 long offset=f.getFilePointer();byte[] header=new byte[27];int got=f.read(header);
-                if(got<=0){ok=eos&&packets>2&&packet.size()==0&&(legacy||correct);break;}
+                if(got<=0){ok=eos&&packets>2&&packet.size()==0&&(legacy||correct);if(!eos&&missingEos!=null&&count>0&&packets>2&&packet.size()==0&&(legacy||correct))missingEos[0]=lastAudio;break;}
                 if(eos||got!=27)break;
                 if(header[0]!='O'||header[1]!='g'||header[2]!='g'||header[3]!='S'||header[4]!=0||(header[5]&~7)!=0||(((header[5]&1)!=0)!=(packet.size()>0)))break;
                 if(pageIndex==0){if((header[5]&2)==0||le32(header,18)!=0)break;serial=le32(header,14);}else if((header[5]&2)!=0)break;
@@ -84,7 +96,7 @@ final class AlwaysOnAudio {
                     packets++;packet.reset();}
                 if(!valid)break;long gp=le64(header,6);eos=(header[5]&4)!=0;
                 if(eos&&(count==0||packet.size()>0))break;
-                if(completed>0){legacy=legacy&&gp==count*960+skip;correct=correct&&gp==total;
+                if(completed>0){lastAudio=offset;legacy=legacy&&gp==count*960+skip;correct=correct&&gp==total;
                     if(write){for(int i=0;i<8;i++)page[6+i]=(byte)(total>>(8*i));long c=crc(page);for(int i=0;i<4;i++)page[22+i]=(byte)(c>>(8*i));long resume=f.getFilePointer();f.seek(offset);f.write(page);f.seek(resume);}}
                 else if(gp!=(packet.size()>0?-1L:0))break;
             }

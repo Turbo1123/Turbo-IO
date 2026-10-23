@@ -11,11 +11,12 @@ public final class AlwaysOnAudioTest {
         byte[] l=lace.toByteArray(),b=body.toByteArray();byte[] h=new byte[27+l.length+b.length];h[0]='O';h[1]='g';h[2]='g';h[3]='S';h[5]=(byte)flags;
         for(int i=0;i<8;i++)h[6+i]=(byte)(granule>>(8*i));for(int i=0;i<4;i++){h[14+i]=(byte)(0x1234>>(8*i));h[18+i]=(byte)(seq>>(8*i));}h[26]=(byte)l.length;
         System.arraycopy(l,0,h,27,l.length);System.arraycopy(b,0,h,27+l.length,b.length);long c=crc(h);for(int i=0;i<4;i++)h[22+i]=(byte)(c>>(8*i));return h;}
-    static byte[] ogg(long audioGranule){
+    static byte[] ogg(long audioGranule){return ogg(audioGranule,4);}
+    static byte[] ogg(long audioGranule,int lastFlags){
         byte[] head=new byte[19];System.arraycopy("OpusHead".getBytes(),0,head,0,8);head[8]=1;head[9]=1;head[10]=(byte)(312&255);head[11]=(byte)(312>>8);head[12]=(byte)0x80;head[13]=(byte)0xbb;
         byte[] tags=new byte[16];System.arraycopy("OpusTags".getBytes(),0,tags,0,8);
         byte[] f={(byte)0xF8,0,0};ByteArrayOutputStream o=new ByteArrayOutputStream();
-        o.write(page(2,0,0,Arrays.asList(head)),0,0);byte[] p0=page(2,0,0,Collections.singletonList(head)),p1=page(0,0,1,Collections.singletonList(tags)),p2=page(4,audioGranule,2,Arrays.asList(f,f,f));
+        o.write(page(2,0,0,Arrays.asList(head)),0,0);byte[] p0=page(2,0,0,Collections.singletonList(head)),p1=page(0,0,1,Collections.singletonList(tags)),p2=page(lastFlags,audioGranule,2,Arrays.asList(f,f,f));
         o.write(p0,0,p0.length);o.write(p1,0,p1.length);o.write(p2,0,p2.length);return o.toByteArray();}
     static File write(Path p,byte[] b)throws IOException{Files.createDirectories(p.getParent());Files.write(p,b);return p.toFile();}
     public static void main(String[] a)throws Exception{
@@ -33,6 +34,9 @@ public final class AlwaysOnAudioTest {
         File valid=write(sessions.resolve("s3/realtime_ok.ogg"),ogg(2880));File copy=AlwaysOnAudio.copy(base.toFile(),valid,exports);ok(Arrays.equals(Files.readAllBytes(copy.toPath()),ogg(2880)),"valid Ogg Opus copied unchanged");
         File legacy=write(sessions.resolve("s3/realtime_legacy.ogg"),ogg(3*960+312));File fixed=AlwaysOnAudio.copy(base.toFile(),legacy,exports);
         ok(Arrays.equals(Files.readAllBytes(fixed.toPath()),ogg(2880))&&Arrays.equals(Files.readAllBytes(legacy.toPath()),ogg(3*960+312)),"legacy granules repaired in the copy only");
+        // Host never writes an EOS page when a stream ends right after a full page: finalize EOS in the copy only.
+        File noEos=write(sessions.resolve("s3/realtime_noeos.ogg"),ogg(2880,0));File eosFixed=AlwaysOnAudio.copy(base.toFile(),noEos,exports);
+        ok(Arrays.equals(Files.readAllBytes(eosFixed.toPath()),ogg(2880))&&Arrays.equals(Files.readAllBytes(noEos.toPath()),ogg(2880,0)),"missing EOS finalized in the copy");
         byte[] broken=ogg(2880);broken[broken.length-1]^=1;File bad=write(sessions.resolve("s3/realtime_bad.ogg"),broken);refused=false;try{AlwaysOnAudio.copy(base.toFile(),bad,exports);}catch(IllegalArgumentException e){refused=true;}ok(refused,"bad CRC refused");
         byte[] cut=Arrays.copyOf(ogg(2880),ogg(2880).length-20);File trunc=write(sessions.resolve("s3/realtime_cut.ogg"),cut);refused=false;try{AlwaysOnAudio.copy(base.toFile(),trunc,exports);}catch(IllegalArgumentException e){refused=true;}ok(refused,"truncated refused");
         File moving=write(sessions.resolve("s3/cached_moving.pcm"),new byte[]{1,2,3,4});AlwaysOnAudio.testHook=()->{try{Files.write(moving.toPath(),new byte[]{1,2,3,4,5});}catch(IOException e){throw new UncheckedIOException(e);}};

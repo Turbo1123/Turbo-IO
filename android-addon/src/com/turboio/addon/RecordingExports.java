@@ -53,6 +53,17 @@ final class RecordingExports {
             if(text?document:audio) out.add(node);
         }
     }
+    /** Share a file that already lives under cache/share_plus (no second copy). */
+    static void shareInPlace(Activity activity,File file,String mime) {
+        try {
+            File root=new File(activity.getCacheDir(),"share_plus").getCanonicalFile();String path=file.getCanonicalPath();
+            if(!path.startsWith(root.getPath()+File.separator)||!file.isFile()) throw new IOException();
+            Uri.Builder b=new Uri.Builder().scheme("content").authority(activity.getPackageName()+".flutter.share_provider").appendPath("cache");
+            for(String part:path.substring(root.getPath().length()+1).split(java.util.regex.Pattern.quote(File.separator))) b.appendPath(part);
+            Uri uri=b.build();Intent intent=new Intent(Intent.ACTION_SEND).setType(mime).putExtra(Intent.EXTRA_STREAM,uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.setClipData(ClipData.newRawUri("Turbo IO export",uri));activity.startActivity(Intent.createChooser(intent,"分享文件副本"));
+        } catch(Exception ignored) {Toast.makeText(activity,"分享失败，原件未改动",Toast.LENGTH_LONG).show();}
+    }
     static void share(Activity activity,File original,String mime) {
         new Thread(() -> {
             try {

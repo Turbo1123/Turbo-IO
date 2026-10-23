@@ -59,8 +59,9 @@ final class AlwaysOnAudioUI {
         status=AlwaysOnHost.status();renderStatus();
         if(status!=null&&Boolean.TRUE.equals(status.get("alwaysOnRunning"))){EditorialUI.notice(a,"请先停止官方全天智记，等音频落盘后刷新再分享。");return;}
         if(status!=null&&Boolean.TRUE.equals(status.get("dumpEnabled"))){EditorialUI.notice(a,"请先关闭上方音频保存开关，让官方写完文件尾，再刷新分享。不会删除原件。");return;}
-        File base=AlwaysOnHost.base(a),exports=new File(a.getNoBackupFilesDir(),"turboio/always-on-exports");
-        IO.execute(()->{File copy=null;String error=null;try{copy=AlwaysOnAudio.copy(base,e.file,exports);}catch(IllegalArgumentException x){error=x.getMessage();}catch(Throwable t){error=AlwaysOnAudio.COPY_ERROR;}
-            File c=copy;String err=error;MAIN.post(()->{if(gone())return;if(err!=null)EditorialUI.notice(a,err);else RecordingExports.share(a,c,c.getName().endsWith(".pcm")?"application/octet-stream":"audio/ogg");});});
+        // The validated copy is written once, directly under the share provider root; the previous export is removed first.
+        File base=AlwaysOnHost.base(a),exports=new File(new File(a.getCacheDir(),"share_plus"),"always-on");
+        IO.execute(()->{try{NotificationTap.delete(new File(a.getNoBackupFilesDir(),"turboio/always-on-exports"));}catch(Throwable ignored){}File copy=null;String error=null;try{NotificationTap.delete(exports);copy=AlwaysOnAudio.copy(base,e.file,exports);}catch(IllegalArgumentException x){error=x.getMessage();}catch(Throwable t){error=AlwaysOnAudio.COPY_ERROR;}
+            File c=copy;String err=error;MAIN.post(()->{if(gone())return;if(err!=null)EditorialUI.notice(a,err);else RecordingExports.shareInPlace(a,c,c.getName().endsWith(".pcm")?"application/octet-stream":"audio/ogg");});});
     }
 }
