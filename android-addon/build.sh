@@ -71,6 +71,12 @@ build/test/card-native build/test/card-golden
 mkdir -p build/test-card-flow
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-card-flow tests/cardflow/*.java src/com/turboio/addon/CardTransport.java
 java -cp build/test-card-flow:build/test com.turboio.addon.CardFlowTest
+# TMG2 menu layout (2/3 rows): Java codec vs the iOS/firmware C codec.
+mkdir -p build/test/menu-golden
+cc -Wall -Wextra -Werror -I../official-addon/ios107-edition tests/menu_golden.c ../official-addon/ios107-edition/menu_config.c -o build/test/menu-golden/generate
+build/test/menu-golden/generate build/test/menu-golden
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{HexCarrier,MenuCodec}.java tests/MenuCodecTest.java
+java -cp build/test com.turboio.addon.MenuCodecTest build/test/menu-golden
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/ChatPolicy.java tests/ChatPolicyTest.java
 java -cp build/test ChatPolicyTest
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/SpeechBuffer.java tests/SpeechBufferTest.java
