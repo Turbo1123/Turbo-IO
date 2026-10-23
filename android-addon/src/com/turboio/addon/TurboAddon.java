@@ -63,11 +63,13 @@ public final class TurboAddon {
         app = host.getApplicationContext(); activity = new WeakReference<>(host);
         prefs = app.getSharedPreferences("turboio_settings", 0);
         VoiceSpeech.init(app);
+        // First, isolated: the glasses-log gate must be loaded before any owned event can reach the official app.
+        try{GlassesLog.init(app);}catch(RuntimeException ignored){}
         OtaController.init(app);
         OfficialOtaPreparation.init(app);
         OfficialOtaBridge.init(app);
         BackgroundWork.init(app);MusicPlayer.init(app);ReaderLibrary.init(app);CloudCaption.init(app);BackgroundWork.register("新闻",NewsTele::stop);
-        NativeTransfer.init(app);FocusController.init(app);AppController.init(app);CardTransport.init();NativeNavigation.init(app);CeBridge.init(app);Ride.service(app);GlassesLog.init(app);TodoRuntime.init(app);
+        NativeTransfer.init(app);FocusController.init(app);AppController.init(app);CardTransport.init();NativeNavigation.init(app);CeBridge.init(app);Ride.service(app);TodoRuntime.init(app);
         ViewGroup root = host.findViewById(android.R.id.content);
         if (root.findViewWithTag("turboio-entry") != null) return;
         TextView button = new TextView(host);

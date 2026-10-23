@@ -13,7 +13,9 @@ final class GlassesLogGate {
     GlassesLogGate(Map<String,Object> snapshot){
         if(snapshot==null)return;Object d=snapshot.get("device");if(!(d instanceof String)||((String)d).isEmpty())return;
         device=(String)d;task=GlassesLogContract.taskId(snapshot.get("task"));settled=task!=null&&Boolean.TRUE.equals(snapshot.get("settled"));
-        Object q=snapshot.get("quarantined");if(q instanceof List)for(Object o:(List<?>)q){String t=GlassesLogContract.taskId(o);if(t!=null&&quarantined.size()<MAX_ROUNDS)quarantined.add(t);}
+        // No cap on load (iOS parity): the ACK path may legitimately hold more than 32, and the current task is always owned.
+        Object q=snapshot.get("quarantined");if(q instanceof List)for(Object o:(List<?>)q){String t=GlassesLogContract.taskId(o);if(t!=null)quarantined.add(t);}
+        if(task!=null)quarantined.add(task);
         Object r=snapshot.get("retired");if(r instanceof List)for(Object o:(List<?>)r){String t=GlassesLogContract.taskId(o);if(t!=null&&quarantined.contains(t))retired.add(t);}
     }
     Map<String,Object> snapshot(){

@@ -80,21 +80,25 @@ public final class GlassesLog {
         if(!s.isEmpty()&&!renewable()){changed("本轮任务未完成归档核验，或设备不匹配；未重复发送。请保留当前状态，由Mac核对日志。");return;}
         if(!ready()){changed("尚未发送：未取得近期官方通信。请回官方首页确认眼镜连接，再进入本页；不是等待两分钟。");return;}
         String device=routeDevice;if(!device.equals(NativeTransfer.connected())||NativeTransfer.busy()){changed("尚未发送：未取得近期官方通信。请回官方首页确认眼镜连接，再进入本页；不是等待两分钟。");return;}
-        long seq=new java.security.SecureRandom().nextInt(0x3fffffff)+1L;
+        long seq=new java.security.SecureRandom().nextInt(0x3fffffff)+1L;Object manager,message;
         Map<String,Object> payload=new LinkedHashMap<>();payload.put("data","");payload.put("mode",0L);payload.put("value",0L);
         Map<String,Object> json=new LinkedHashMap<>();json.put("cmd","start_log_task");json.put("payload",payload);byte[] packet=A2uiFrame.packet(16,seq,json);
         if(packet==null){changed("未发送：官方传输ABI不可用");return;}
+        // Resolve the whole host send path before arming ownership, so an ABI failure never leaves a stuck round.
+        try{manager=NavReflect.field(NavReflect.type(HostAbi.manager()),"h");Object business=NavReflect.call(NavReflect.type(HostAbi.business()),"valueOf","LOG_REPORT"),priority=NavReflect.call(NavReflect.type(HostAbi.priority()),"valueOf","NORMAL");
+            message=NavReflect.make(HostAbi.message(),packet,UUID.randomUUID().toString(),device,business,null,priority,false,false,null,null);}
+        catch(Exception e){changed("未发送：官方传输ABI不可用");return;}
+        // Verify the previous archive (32 MiB SHA-256) before taking the lock that host-thread consume() needs.
+        GlassesLogFiles.Restored previous=archive!=null?GlassesLogFiles.restore(home,device):null;
         synchronized(GlassesLog.class){
-            if(archive!=null){GlassesLogFiles.Restored v=GlassesLogFiles.restore(home,device);String task=gate.task();
+            if(archive!=null){GlassesLogFiles.Restored v=previous;String task=gate.task();
                 if(v==null||task==null||!task.equals(v.task)||!v.file.equals(archive)||!GlassesLogFiles.writeJson(new File(home,"receipt-"+task+".json"),GlassesLogFiles.readJson(new File(home,"archive.json")))||!gate.beginNext(device,GlassesLog::saveOwner)){changed("未发送：旧归档核验或新隔离记录保存失败；保留旧副本");return;}
                 archive=null;
             }else if(!gate.begin(device)||!saveOwner(gate.snapshot())){changed("未发送：无法建立持久化隔离记录");return;}
         }
         started=SystemClock.elapsedRealtime();long mine=++round;Map<String,Object> extra=new LinkedHashMap<>();
         changed("已请求一次眼镜日志，等待回执；180秒接收窗口，不自动重试");
-        try{Object manager=NavReflect.field(NavReflect.type(HostAbi.manager()),"h"),business=NavReflect.call(NavReflect.type(HostAbi.business()),"valueOf","LOG_REPORT"),priority=NavReflect.call(NavReflect.type(HostAbi.priority()),"valueOf","NORMAL");
-            Object message=NavReflect.make(HostAbi.message(),packet,UUID.randomUUID().toString(),device,business,null,priority,false,false,null,null);
-            Object callback=NavReflect.proxy("kotlin.jvm.functions.Function2",(name,args)->MAIN.post(()->{if(mine!=round||archive!=null)return;
+        try{Object callback=NavReflect.proxy("kotlin.jvm.functions.Function2",(name,args)->MAIN.post(()->{if(mine!=round||archive!=null)return;
                 changed(args.length>1&&args[1]==null?"SDK接收了请求，仍需眼镜回执和归档":"SDK回调未确认成功，结果未知；不重试，隔离保留");}));
             QueueTap.OWN.set(message);try{NavReflect.call(manager,HostAbi.send(),message,callback);}finally{QueueTap.OWN.remove();}
         }catch(Exception e){changed("发送调用异常，结果未知；隔离保留，不重试");}

@@ -67,6 +67,15 @@ public final class GlassesLogTest {
         GlassesLogGate w=new GlassesLogGate(saved.get(0));ok(!w.reconcile(TASK,"test")&&w.accept("fileShareSuccess",good(TASK)).retired,"retired survives restart");
         String nt=UUID.randomUUID().toString();ok(w.accept("fileShareSuccess",good(nt)).awaitingAck,"new task early");ok(w.accept("messageReceived",ack("test","LOG_REPORT",0L,nt,1)).candidate!=null&&!w.ownsRequest("test"),"new round settles");
         GlassesLogGate b=new GlassesLogGate(null);b.begin("test");b.reconcile(TASK,"test");int rounds=0;for(int i=0;i<40;i++){if(!b.beginNext("test",s->true))break;rounds++;b.reconcile(UUID.randomUUID().toString(),"test");}ok(rounds==31,"32-round quarantine bound ("+rounds+")");
+        // Review I1: an over-full quarantine on disk must never drop the current task on reload.
+        { List<Object> q=new ArrayList<>();for(int i=0;i<33;i++)q.add(UUID.randomUUID().toString());String cur=(String)q.get(32);
+          GlassesLogGate big=new GlassesLogGate(m("device","test","task",cur,"quarantined",q,"retired",new ArrayList<>(),"settled",false));
+          ok(big.accept("fileShareSuccess",good(cur)).consume,"current task stays owned after reload"); }
+        { GlassesLogGate cur=new GlassesLogGate(m("device","test","task",TASK,"quarantined",new ArrayList<>(),"retired",new ArrayList<>(),"settled",false));ok(cur.accept("fileShareSuccess",good(TASK)).consume,"current task is owned even if missing from the list"); }
+        // Review M8: tolerant JSON for ACKs (a float field elsewhere must not hand the ACK to Flutter).
+        { byte[] p=A2uiFrame.packet(17,5,m("cmd","start_log_task_ack","payload",m("value",0L,"mode",0L,"data",TASK)));String json=new String(Arrays.copyOfRange(p,6,6+(p[5]&255)),java.nio.charset.StandardCharsets.UTF_8).replace("}}",",\"extra\":1.5}}");
+          byte[] j=json.getBytes(java.nio.charset.StandardCharsets.UTF_8);byte[] q=new byte[6+j.length];System.arraycopy(p,0,q,0,4);q[4]=26;q[5]=(byte)j.length;System.arraycopy(j,0,q,6,j.length);
+          ok(A2uiFrame.decode(q)!=null,"float field tolerated"); }
         ok(new GlassesLogGate(m("device","")).snapshot().isEmpty()&&new GlassesLogGate(m("task",TASK)).snapshot().isEmpty(),"snapshot needs a device");
         System.out.println("GlassesLogTest: "+n+" checks; A2UI frames, task ids, ack/file contract, window, gate ownership/early/recovery/retire/bound");
     }

@@ -22,7 +22,7 @@ final class A2uiFrame {
                 if(field==3||field==4){if(wire!=2)return null;long len=var(b,p);if(len>b.length-p[0])return null;if(field==4&&len!=0)return null;if(field==3)json=Arrays.copyOfRange(b,p[0],p[0]+(int)len);p[0]+=(int)len;}
                 else{if(wire!=0)return null;long v=var(b,p);if(v<0||v>0xffffffffL)return null;if(field==1)version=v;else if(field==2)type=v;else if(field==5)seq=v;else mode=v;}}
             if(version!=1||type==0||json==null||json.length==0)return null;
-            Object o=BoundedJson.read(json);if(!(o instanceof Map))return null;
+            Object o=BoundedJson.readDevice(json);if(!(o instanceof Map))return null;
             Frame f=new Frame();f.type=type;f.sequence=seq;f.mode=mode;f.json=BoundedJson.map(o);return f;
         }catch(RuntimeException e){return null;}
     }
