@@ -36,6 +36,10 @@ public final class OtaController {
  static boolean critical(){return pending;}
  private static String fingerprint(String peer){return OtaPackage.hash("SHA-256",peer.getBytes(StandardCharsets.UTF_8));}
  private static void record(String event){if(log.size()==96)log.remove(0);log.add(SystemClock.elapsedRealtime()+" "+event);}
+ /** A pending journal from an old TAP1 self-sender run cannot be read back here (TVP2 build only
+  * accepts Strix OS 1.0.5.5), so say how to leave it instead of offering buttons that cannot work. */
+ static String staleJournalNote(){return "检测到旧版（TAP1 自发包）升级记录，结果未确认，本版无法回读或解除；为安全起见已拦截官方升级与部分眼镜业务。\n"
+  +"1. 确认眼镜已自然重启并回到首页、功能正常；\n2. 在系统设置 → 应用 → 雷鸟 AI → 存储，清除数据后重新登录；\n3. 如眼镜无法回首页，不要再次刷写，保留现状并联系开发者。";}
  static String status(){String base="ANDROID · OTA-02 / INTEGRATION-08k\n"+note+"\n候选："+(firmware==null?"未载入":OtaPackage.NAME+" · 15/15 校验通过")+"\nAP："+String.format(java.util.Locale.ROOT,"%,d",OtaPackage.AP_SIZE)+" 字节 · 只有 AP 与原厂不同\n";
   if(session!=null)base+="阶段："+session.state()+"\n电量："+(session.battery()<0?"待读取":session.battery()+"%")+"\n授权："+(session.state()==OtaSession.State.AUTHORIZED?"1":"0")+"\n请求片数："+session.chunks()+" · SDK 已确认消息："+sdkConfirmed+"\nAP 请求覆盖："+session.covered()+" / "+OtaPackage.AP_SIZE+" 字节\n";
   return base+"结果保护："+(pending?"待回读，不可重试":"未开始刷写")+"\n"+(session==null&&pending&&journal!=null?"上次记录："+journal.getString("phase","UNKNOWN")+" · "+journal.getString("chunks","0")+" 片":"")+"\n"+(session==null?"":session.recoveryStatus(SystemClock.elapsedRealtime())+"\n"+session.error());
