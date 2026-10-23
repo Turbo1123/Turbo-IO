@@ -154,6 +154,8 @@ cc -Wall -Wextra -Werror -I../official-addon/research/navigation-runtime-v1 test
 build/test/nav-golden/generate build/test/nav-golden
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{NativeNavCodec,NativeNavSession,NativeNavRoute}.java tests/NativeNavTest.java
 java -cp build/test NativeNavTest build/test/nav-golden
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{NativeNavCodec,NativeNavSession,NavMapCodec,HexCarrier}.java tests/NativeNavMapTest.java
+java -cp build/test NativeNavMapTest
 javac -encoding UTF-8 -source 8 -target 8 -cp "$android_jar" -d build/classes src/com/turboio/addon/*.java
 jar cf build/turboio-addon.jar -C build/classes .
 # Official GUARD bridge manual release. Fakes first; android.jar and the add-on classes only satisfy
