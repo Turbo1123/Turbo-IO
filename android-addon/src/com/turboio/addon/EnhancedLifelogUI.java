@@ -20,7 +20,7 @@ final class EnhancedLifelogUI {
     private final Activity a;private EditorialUI.Screen s;private TextView note,selectedLabel;private LinearLayout candidateBox,historyBox;
     private LocalDate day=LocalDate.now();private boolean includeSpeech=true,loading;private int generation;
     private List<CeLifelog.Row> speech=new ArrayList<>();private List<Map<String,Object>> archive=new ArrayList<>(),candidates=new ArrayList<>();private final Set<String> selected=new LinkedHashSet<>();
-    private Instant start,end;private String zone,scope;
+    private Instant start,end;private String zone,scope;private Runnable job;
     private EnhancedLifelogUI(Activity a){this.a=a;}
     static void show(Activity a){CeBridge.init(a);new EnhancedLifelogUI(a).open();}
     private static TnlStore store(Activity a){return new TnlStore(new File(a.getNoBackupFilesDir(),"turboio/enhanced-lifelog"));}
@@ -48,20 +48,24 @@ final class EnhancedLifelogUI {
         EditorialUI.button(a,b,"清空增强智记结果",false,()->new AlertDialog.Builder(a).setTitle("清空增强智记？").setMessage("仅删除这台手机单独保存的增强总结，不能撤回已发给模型的内容。不删除官方日记或通知历史。")
             .setNegativeButton("取消",null).setPositiveButton("清空",(d,w)->READ.execute(()->{boolean ok;try{ok=store(a).clear();}catch(Throwable t){ok=false;}boolean r=ok;MAIN.post(()->{if(!r)EditorialUI.notice(a,"未能清空");renderHistory();});})).show());
         renderCandidates();renderHistory();
+        // Leaving the screen cancels a running request (iOS cancels on disappear); late callbacks are ignored.
+        s.dialog.setOnDismissListener(d->{generation++;Runnable j=job;job=null;if(j!=null)j.run();});
     }
+    private boolean gone(){return a.isFinishing()||a.isDestroyed()||!s.dialog.isShowing();}
     private void invalidate(){generation++;loading=false;archive=new ArrayList<>();candidates=new ArrayList<>();speech=new ArrayList<>();selected.clear();scope=null;note.setText("内容已清除，请重新读取。");renderCandidates();}
     private void load(){
         if(loading)return;invalidate();loading=true;int token=generation;note.setText("仅读本机，不联网…");
         ZoneId z=ZoneId.systemDefault();Instant from=day.atStartOfDay(z).toInstant(),to=day.plusDays(1).atStartOfDay(z).toInstant();boolean withSpeech=includeSpeech;NotificationRuntime rt=NotificationTap.runtime(a);
-        READ.execute(()->{String before=CeLifelog.scope(CeBridge.dirs()),error=null;List<Map<String,Object>> notes;List<CeLifelog.Row> rows=new ArrayList<>();
-            try{notes=rt.store().search("",2000);}catch(Throwable t){notes=new ArrayList<>();error=String.valueOf(rt.status().get("error"));}
+        READ.execute(()->{try{String before=CeLifelog.scope(CeBridge.dirs()),error=null;List<Map<String,Object>> notes;List<CeLifelog.Row> rows=new ArrayList<>();
+            try{notes=rt.store().search("",2000);}catch(Throwable t){notes=new ArrayList<>();error="通知归档暂不可读；请稍后重试。";}
             if(withSpeech)try{rows=CeLifelog.read(CeBridge.dirs(),z);}catch(IllegalArgumentException e){error=e.getMessage();}catch(Throwable t){error=CeHive.ERROR;}
             List<Map<String,Object>> cands=TnlCore.candidates(notes,from,to);String after=CeLifelog.scope(CeBridge.dirs());
             List<Map<String,Object>> n=notes;List<CeLifelog.Row> r=rows;String err=error;
-            MAIN.post(()->{if(token!=generation||!s.dialog.isShowing())return;loading=false;
+            MAIN.post(()->{if(token!=generation||gone())return;loading=false;
                 if(!before.equals(after)){note.setText("账号缓存变化，请重新读取。");return;}
                 archive=n;speech=r;candidates=cands;start=from;end=to;zone=z.getId();scope=before;
-                note.setText(err!=null&&!err.isEmpty()&&!"null".equals(err)?err:"已在本机读取，请勾选需要补充的通知。未上传任何内容。");renderCandidates();renderHistory();});});
+                note.setText(err!=null&&!err.isEmpty()&&!"null".equals(err)?err:"已在本机读取，请勾选需要补充的通知。未上传任何内容。");renderCandidates();renderHistory();});
+            }catch(Throwable t){MAIN.post(()->{if(token==generation)loading=false;});}});
     }
     private void renderCandidates(){
         candidateBox.removeAllViews();selectedLabel.setText("通知 · 已选 "+selected.size()+" / "+candidates.size());
@@ -74,7 +78,7 @@ final class EnhancedLifelogUI {
     }
     private void renderHistory(){
         READ.execute(()->{List<Map<String,Object>> rows;try{rows=store(a).read(System.currentTimeMillis()/1000.0);}catch(Throwable t){rows=null;}List<Map<String,Object>> r=rows;
-            MAIN.post(()->{if(!s.dialog.isShowing())return;historyBox.removeAllViews();if(r==null){historyBox.addView(EditorialUI.text(a,"增强智记本机文件不可用；未覆盖既有记录。",13,EditorialUI.MUTED));return;}
+            MAIN.post(()->{if(gone())return;historyBox.removeAllViews();if(r==null){historyBox.addView(EditorialUI.text(a,"增强智记本机文件不可用；未覆盖既有记录。",13,EditorialUI.MUTED));return;}
                 if(r.isEmpty()){historyBox.addView(EditorialUI.text(a,"暂无保存的总结",13,EditorialUI.MUTED));return;}
                 for(Map<String,Object> h:r){String when=Instant.ofEpochMilli((long)(((Number)h.get("createdAt")).doubleValue()*1000)).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
                     TextView row=EditorialUI.text(a,"智记 "+h.get("speechCount")+" 段 · 通知 "+h.get("notificationCount")+" 条\n"+when+" · "+h.get("model"),14,EditorialUI.INK);row.setPadding(0,10,0,10);
@@ -112,14 +116,14 @@ final class EnhancedLifelogUI {
             CeBridge.Config now=CeBridge.config();
             if(!now.endpoint.equals(c.endpoint)||!now.model.equals(c.model)||!now.key.equals(c.key)||(!synthetic&&(scopeNow==null||!scopeNow.equals(CeLifelog.scope(CeBridge.dirs()))))){EditorialUI.notice(a,"输入、账号或模型配置已变化，本次未发送。");return;}
             ProgressDialog wait=new ProgressDialog(a);wait.setMessage("正在生成…");wait.setCancelable(false);
-            Runnable cancel=ModelCall.post(c.endpoint,c.key,request,131072,TEXTS,MAIN::post,(reply,error)->{wait.dismiss();
+            Runnable cancel=ModelCall.post(c.endpoint,c.key,request,131072,TEXTS,MAIN::post,(reply,error)->{job=null;try{wait.dismiss();}catch(Throwable ignored){}if(gone())return;
                 if(error!=null){EditorialUI.notice(a,"未保存总结："+error);return;}
                 List<Map<String,Object>> items;try{items=TnlCore.validate(reply,ctx);}catch(IllegalArgumentException e){EditorialUI.notice(a,"未保存总结："+e.getMessage());return;}
                 String result=TnlCore.render(items,ctx);
                 if(synthetic){text("示例总结","合成示例结果 · 未写入真实历史\n\n"+result);return;}
                 READ.execute(()->{boolean saved;try{saved=store(a).save(result,provider,c.model,ctx,System.currentTimeMillis()/1000.0);}catch(Throwable x){saved=false;}boolean ok=saved;
-                    MAIN.post(()->{text("增强智记",(ok?"已单独保存到本机 · 官方日记未改动":"保存失败，结果仅在当前页；请勿离开")+"\n\n"+result);renderHistory();});});});
-            wait.setButton(DialogInterface.BUTTON_NEGATIVE,"取消",(x,y)->cancel.run());wait.show();
+                    MAIN.post(()->{if(gone())return;text("增强智记",(ok?"已单独保存到本机 · 官方日记未改动":"保存失败，结果仅在当前页；请勿离开")+"\n\n"+result);renderHistory();});});});
+            job=cancel;wait.setButton(DialogInterface.BUTTON_NEGATIVE,"取消",(x,y)->cancel.run());wait.show();
         }).show();
     }
 }

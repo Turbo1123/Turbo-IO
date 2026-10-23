@@ -34,7 +34,8 @@ final class TnlCore {
             Object e=r.get("eventId");if(!(e instanceof Long||e instanceof Integer)||(((Number)e).longValue()!=0&&((Number)e).longValue()!=1))continue;
             boolean valid=true;for(String k:new String[]{"id","appId","uid","session"}){String v=text(r.get(k),256);if(v==null||v.isEmpty())valid=false;}if(!valid)continue;
             if(text(r.get("title"),2048)==null||text(r.get("subtitle"),2048)==null||text(r.get("content"),32768)==null||text(r.get("appName"),2048)==null)continue;
-            String key=hash(Arrays.asList(r.get("session"),r.get("appId"),r.get("uid")));Map<String,Object> old=latest.get(key);
+            // Android reuses a notification key per conversation: different text on one key is a new message (iOS ANCS uid is per message).
+            String key=hash(Arrays.asList(r.get("session"),r.get("appId"),r.get("uid"),r.get("title"),r.get("subtitle"),r.get("content")));Map<String,Object> old=latest.get(key);
             if(old==null||num(old.get("receivedAt"))<t||(num(old.get("receivedAt"))==t&&((String)r.get("id")).compareTo((String)old.get("id"))<0))latest.put(key,r);
         }
         List<Map<String,Object>> sorted=new ArrayList<>(latest.values());

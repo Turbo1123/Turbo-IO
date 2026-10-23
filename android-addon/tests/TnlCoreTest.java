@@ -12,11 +12,13 @@ public final class TnlCoreTest {
         List<Map<String,Object>> archive=new ArrayList<>(Arrays.asList(note("k1","会议","下午三点开会",t0+3600,0),note("k1","会议","改为四点开会",t0+7200,1),note("k2","删掉","已移除",t0+7300,2),
             note("k3","登录","您的验证码是 123456",t0+7400,0),note("k4","明天","不在范围",t0+90000,0),note("k5","重复","同样内容",t0+8000,0)));
         List<Map<String,Object>> c=TnlCore.candidates(archive,start,end);
-        ok(c.size()==2&&c.get(0).get("text").equals("会议\n\n改为四点开会")&&c.get(0).get("timeMeaning").equals("phone_received_at")&&((String)c.get(0).get("id")).matches("n-[0-9a-f]{64}"),"latest update wins, removal / sensitive / out of range excluded");
+        // Android keys are reused per conversation: a re-post with different text is a new message, not an update.
+        ok(c.size()==3&&c.get(0).get("text").equals("会议\n\n下午三点开会")&&c.get(1).get("text").equals("会议\n\n改为四点开会")&&c.get(0).get("timeMeaning").equals("phone_received_at")&&((String)c.get(0).get("id")).matches("n-[0-9a-f]{64}"),"distinct messages on one key kept; removal / sensitive / out of range excluded");
+        List<Map<String,Object>> same=Arrays.asList(note("k7","群","同一条",t0+100,0),note("k7","群","同一条",t0+200,1));ok(TnlCore.candidates(same,start,end).size()==1,"identical re-post collapses to the latest");
         ok(TnlCore.candidates(archive,start,start.plusSeconds(90001)).isEmpty(),"range ≤ 90000 s");
         List<CeLifelog.Row> speech=new ArrayList<>();for(int i=0;i<70;i++)speech.add(new CeLifelog.Row("第"+i+"段讨论",start.plusSeconds(60L*i).toString()));
         speech.add(new CeLifelog.Row("支付密码是 abc",start.plusSeconds(9000).toString()));speech.add(new CeLifelog.Row("昨天","2026-10-21T05:00:00Z"));
-        Set<String> sel=new HashSet<>(Collections.singletonList((String)c.get(0).get("id")));
+        Set<String> sel=new HashSet<>(Collections.singletonList((String)c.get(1).get("id")));
         Map<String,Object> ctx=TnlCore.context(speech,archive,sel,start,end,"Asia/Shanghai");
         ok(ctx.get("notificationCount").equals(1L)&&ctx.get("speechCount").equals(64L)&&((Number)ctx.get("speechOmitted")).longValue()==7&&Boolean.TRUE.equals(ctx.get("partial")),"64 speech rows, omitted counted (6 over cap + 1 sensitive)");
         List<?> rows=(List<?>)ctx.get("rows");String prev="";for(Object r:rows){String at=(String)((Map<?,?>)r).get("at");ok(at.compareTo(prev)>=0,"time order");prev=at;}

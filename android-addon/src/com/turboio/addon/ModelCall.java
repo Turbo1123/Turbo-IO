@@ -25,7 +25,7 @@ final class ModelCall {
                 if(code!=200)error=texts.refused;else if(h.getContentLengthLong()>cap)error=texts.tooLarge;
                 else try(InputStream in=h.getInputStream()){reply=BoundedHTTP.read(in,cap);}catch(IOException e){error="size limit".equals(e.getMessage())?texts.tooLarge:texts.failed;}
             }catch(Throwable e){error=texts.failed;}
-            finally{if(h!=null)h.disconnect();}
+            finally{if(h!=null)try{h.disconnect();}catch(Throwable ignored){}}
             once.accept(error==null?reply:null,error);});
         return ()->{once.accept(null,texts.cancelled);HttpURLConnection h=live.get();if(h!=null)try{h.disconnect();}catch(Throwable ignored){}};
     }
