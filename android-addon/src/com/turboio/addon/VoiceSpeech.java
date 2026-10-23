@@ -9,7 +9,8 @@ import android.widget.*;
 import java.io.*;
 import java.util.*;
 
-/** Local synthesis only. No service key, network voice, microphone or vendor audio mutation. */
+/** Answer read-out: local Android TTS by default, or Ali Flash realtime cloud TTS (CloudTts) when selected with a key.
+ * No microphone or vendor audio mutation; output only to Bluetooth media unless phone output is explicitly allowed. */
 final class VoiceSpeech {
     private static final Handler MAIN=new Handler(Looper.getMainLooper());
     private static Context app;private static SharedPreferences prefs;private static TextToSpeech tts;
@@ -24,9 +25,44 @@ final class VoiceSpeech {
     static boolean enabled(){return prefs!=null&&prefs.getBoolean("tts_enabled",false);}
     static void foreground(boolean value){foreground=value;if(!value)stop("App 进入后台，停止前台测试朗读");}
     private static boolean phoneAllowed(){return prefs.getBoolean("tts_phone",false);}
-    static String status(){return status;}
+    static String status(){return cloud()&&cloudTts!=null?cloudTts.status():status;}
+    private static boolean cloud(){return prefs!=null&&"cloud".equals(prefs.getString("tts_engine","local"));}
+    private static CloudTts cloudTts;private static String cloudFull="";private static PcmPlayer pcmPlayer;
+    private static CloudTts cloudTts(){
+        if(cloudTts==null){pcmPlayer=new PcmPlayer();cloudTts=new CloudTts(new WsTransport(),pcmPlayer,()->{try{return SecretStore.get(app,"tts_key");}catch(Exception e){return "";}},prefs.getString("tts_endpoint",CloudTts.DEFAULT_ENDPOINT));}
+        return cloudTts;
+    }
+    /** DashScope duplex socket on the shared bounded RFC6455 client. */
+    private static final class WsTransport implements CloudTts.Transport{
+        private BoundedWebSocket ws;
+        public void open(String url,String key,CloudTts.Listener l){ws=new BoundedWebSocket(new BoundedWebSocket.Listener(){public void opened(){}public void text(String t){l.text(t);}public void closed(String c){l.closed(c);}public void binary(byte[] b){l.binary(b);}},true);ws.connect(url,key,"X-DashScope-DataInspection: enable\r\n");}
+        public boolean send(String json){return ws!=null&&ws.send(json);}
+        public void close(){if(ws!=null)ws.close();ws=null;}
+    }
+    /** PCM16 LE mono 24 kHz to the Bluetooth media output on its own thread, so a slow AudioTrack never blocks callers. */
+    private static final class PcmPlayer implements CloudTts.Pcm{
+        private final java.util.concurrent.LinkedBlockingQueue<byte[]> queue=new java.util.concurrent.LinkedBlockingQueue<>();private volatile int queued;private volatile Thread thread;private AudioTrack track;
+        public boolean available(){return phoneAllowed()||output()!=null;}
+        public synchronized boolean write(byte[] pcm){
+            if(queued+pcm.length>4*1024*1024)return false;queued+=pcm.length;queue.offer(pcm.clone());
+            if(thread==null){Thread t=new Thread(this::run,"TurboIO-tts-pcm");thread=t;t.start();}return true;
+        }
+        private void run(){
+            AudioAttributes attr=new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build();
+            AudioFocusRequest f=new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK).setAudioAttributes(attr).build();
+            try{if(audio.requestAudioFocus(f)!=AudioManager.AUDIOFOCUS_REQUEST_GRANTED){MAIN.post(()->mark("未获得音频焦点，云端朗读未播放"));return;}
+                int min=AudioTrack.getMinBufferSize(24000,AudioFormat.CHANNEL_OUT_MONO,AudioFormat.ENCODING_PCM_16BIT);
+                AudioTrack t=new AudioTrack.Builder().setAudioAttributes(attr).setAudioFormat(new AudioFormat.Builder().setSampleRate(24000).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).setEncoding(AudioFormat.ENCODING_PCM_16BIT).build()).setBufferSizeInBytes(Math.max(min*4,48000)).setTransferMode(AudioTrack.MODE_STREAM).build();
+                synchronized(this){track=t;}AudioDeviceInfo route=output();if(route!=null)t.setPreferredDevice(route);else if(!phoneAllowed()){MAIN.post(()->mark("眼镜音频未连接"));return;}
+                t.play();
+                while(Thread.currentThread()==thread){byte[] b=queue.poll(3,java.util.concurrent.TimeUnit.SECONDS);if(b==null)break;queued-=b.length;if(t.write(b,0,b.length)<0)break;}
+            }catch(Exception e){MAIN.post(()->mark("眼镜音频播放失败"));}
+            finally{synchronized(this){if(track!=null){try{track.stop();}catch(RuntimeException ignored){}track.release();track=null;}if(thread==Thread.currentThread())thread=null;}audio.abandonAudioFocusRequest(f);}
+        }
+        public synchronized void stop(){Thread t=thread;thread=null;queue.clear();queued=0;if(track!=null)try{track.pause();track.flush();}catch(RuntimeException ignored){}if(t!=null)t.interrupt();}
+    }
     private static void mark(String s){status=s;for(Runnable r:new ArrayList<>(listeners))try{r.run();}catch(RuntimeException ignored){}}
-    static void stop(String reason){generation++;queue.clear();buffer.reset();official="";activeId="";source=null;session="";speaking=received=blocked=false;
+    static void stop(String reason){if(cloudTts!=null)cloudTts.cancel();cloudFull="";generation++;queue.clear();buffer.reset();official="";activeId="";source=null;session="";speaking=received=blocked=false;
         MAIN.removeCallbacks(watchdog);if(tts!=null)try{tts.stop();}catch(RuntimeException ignored){}releasePlayer();File old=activeFile;activeFile=null;if(old!=null)old.delete();mark(reason);
     }
     private static void releasePlayer(){if(player!=null){try{player.release();}catch(RuntimeException ignored){}player=null;}if(focus!=null&&audio!=null){audio.abandonAudioFocusRequest(focus);focus=null;}}
@@ -41,7 +77,9 @@ final class VoiceSpeech {
     static void suppress(){fail("本轮包含官方语音，避免重复朗读");}
     static void custom(Object owner,String sid,String full,boolean end){if(!enabled()||blocked)return;if(source!=owner||!Objects.equals(session,sid)){stop("接收自有回答");source=owner;session=sid==null?"":sid;}append(full,true,end);}
     static void finish(Object owner){if(enabled()&&source==owner&&received&&!blocked)append("",false,true);}
-    private static void append(String text,boolean full,boolean end){if(!foreground)return;try{received=true;List<String> sentences=buffer.append(text,full,end);if(queue.size()+sentences.size()>64)throw new IllegalArgumentException();queue.addAll(sentences);if(!queue.isEmpty())ensureEngine();}catch(RuntimeException e){fail("朗读队列超过限制或文本被重写；本轮停止");}}
+    private static void append(String text,boolean full,boolean end){if(!foreground)return;
+        if(cloud()){received=true;cloudFull=full?text:cloudFull+text;CloudTts c=cloudTts();c.append(cloudFull,end);mark(c.status());return;}
+        try{received=true;List<String> sentences=buffer.append(text,full,end);if(queue.size()+sentences.size()>64)throw new IllegalArgumentException();queue.addAll(sentences);if(!queue.isEmpty())ensureEngine();}catch(RuntimeException e){fail("朗读队列超过限制或文本被重写；本轮停止");}}
     private static void fail(String why){stop(why);blocked=true;}
     private static void ensureEngine(){if(ready){pump();return;}if(initializing)return;initializing=true;mark("正在初始化本机语音引擎");
         long token=generation,engine=++engineGeneration;
@@ -85,12 +123,25 @@ final class VoiceSpeech {
         if(!phoneAllowed()&&!bluetooth(d)){fail("实际输出不是蓝牙耳机，已保持静音并停止");return;}player.setVolume(1,1);mark(bluetooth(d)?"正在通过蓝牙媒体设备播放":"正在通过系统媒体输出播放（已允许）");
     }
     static void show(Activity a){EditorialUI.Screen screen=new EditorialUI.Screen(a,"回答同步朗读");LinearLayout b=screen.body;
-        b.addView(EditorialUI.text(a,"本机中文 TTS · 无需 Key",22,EditorialUI.INK));b.addView(EditorialUI.text(a,"只选择已安装的非联网音色。蓝牙连接不等于媒体音频已连接；实际输出以系统路由为准。不会开启麦克风或修改官方音频会话。",14,EditorialUI.MUTED));
+        b.addView(EditorialUI.text(a,cloud()?"阿里 qwen-audio-3.1-tts-flash · 云端":"本机中文 TTS · 无需 Key · 默认",22,EditorialUI.INK));b.addView(EditorialUI.text(a,"本机模式只选择已安装的非联网音色；云端模式把回答文字发送到你配置的阿里服务。蓝牙连接不等于媒体音频已连接；实际输出以系统路由为准。不会开启麦克风或修改官方音频会话。",14,EditorialUI.MUTED));
+        EditorialUI.toggle(a,b,"朗读引擎：阿里 Flash 云端（关闭为本机语音）",cloud(),(v,on)->{prefs.edit().putString("tts_engine",on?"cloud":"local").apply();stop(on?"已切换为云端 Flash":"已切换为本机语音");});
+        EditorialUI.button(a,b,"阿里 Flash TTS 配置",false,()->configureCloud(a));
         EditorialUI.toggle(a,b,"回答同步朗读",enabled(),(v,on)->{prefs.edit().putBoolean("tts_enabled",on).apply();stop(on?"已启用；等待下一轮回答":"已关闭");});
         EditorialUI.toggle(a,b,"允许手机/其他系统媒体输出（默认关闭）",phoneAllowed(),(v,on)->{prefs.edit().putBoolean("tts_phone",on).apply();stop("音频策略已修改");});
         TextView state=EditorialUI.text(a,status,15,EditorialUI.LIME);b.addView(state);Runnable refresh=()->state.setText(status);listeners.add(refresh);screen.dialog.setOnDismissListener(d->listeners.remove(refresh));
-        EditorialUI.button(a,b,"播放测试语音",true,()->{stop("测试语音");append("Turbo IO 本机语音测试，校验七三九二。",false,true);});
+        EditorialUI.button(a,b,"播放测试语音",true,()->{stop("测试语音");append(cloud()?"Turbo IO 云端语音测试，校验七三九二。":"Turbo IO 本机语音测试，校验七三九二。",false,true);});
         EditorialUI.button(a,b,"停止朗读",false,()->stop("已手动停止"));
         EditorialUI.button(a,b,"系统语音设置",false,()->{try{a.startActivity(new Intent("com.android.settings.TTS_SETTINGS"));}catch(RuntimeException e){EditorialUI.notice(a,"系统未提供语音设置入口，请在设置中搜索文字转语音。");}});
+    }
+    /** Key goes to the Android Keystore-backed SecretStore and is never shown again; endpoint must pass CloudTts.endpointValid. */
+    private static void configureCloud(Activity a){
+        LinearLayout box=new LinearLayout(a);box.setOrientation(LinearLayout.VERTICAL);int pad=(int)(16*a.getResources().getDisplayMetrics().density);box.setPadding(pad,pad/2,pad,0);
+        EditText key=new EditText(a);key.setHint("DashScope API Key（留空保留现有值）");key.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);box.addView(key);
+        EditText endpoint=new EditText(a);endpoint.setHint("服务地址（可选）");endpoint.setText(prefs.getString("tts_endpoint",CloudTts.DEFAULT_ENDPOINT));box.addView(endpoint);
+        TextView note=new TextView(a);note.setText("仅 wss://dashscope.aliyuncs.com 或 *.maas.aliyuncs.com 的 /api-ws/v1/inference。Key 加密保存，不回显、不写日志。");box.addView(note);
+        new AlertDialog.Builder(a).setTitle("阿里 Flash TTS 配置").setView(box).setNegativeButton("取消",null).setPositiveButton("保存",(d,w)->{
+            String url=endpoint.getText().toString().trim();if(!CloudTts.endpointValid(url)){EditorialUI.notice(a,"服务地址不符合要求，未保存");return;}
+            try{String k=key.getText().toString().trim();if(!k.isEmpty())SecretStore.put(app,"tts_key",k);}catch(Exception e){EditorialUI.notice(a,"Key 保存失败");return;}
+            prefs.edit().putString("tts_endpoint",url).apply();cloudTts=null;stop("云端 TTS 配置已保存");}).show();
     }
 }

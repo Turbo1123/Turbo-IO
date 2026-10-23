@@ -108,6 +108,10 @@ java -cp build/test-menu-flow:build/test com.turboio.addon.MenuLayoutTest
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/ChatPolicy.java tests/ChatPolicyTest.java
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/VoiceExit.java tests/VoiceExitTest.java
 java -cp build/test com.turboio.addon.VoiceExitTest
+javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/{CloudTts,BoundedJson}.java tests/CloudTtsTest.java
+java -cp build/test com.turboio.addon.CloudTtsTest
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{BoundedWebSocket,ReaderCodec}.java tests/WebSocketFrameTest.java
+java -cp build/test com.turboio.addon.WebSocketFrameTest
 java -cp build/test ChatPolicyTest
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/SpeechBuffer.java tests/SpeechBufferTest.java
 java -cp build/test com.turboio.addon.SpeechBufferTest
