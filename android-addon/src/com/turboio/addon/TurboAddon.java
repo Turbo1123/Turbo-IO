@@ -247,7 +247,9 @@ public final class TurboAddon {
             TreeMap<Integer, JSONObject> calls = new TreeMap<>();
             int responseStart = answer.length();
             JSONObject body = new JSONObject().put("model", model).put("messages", messages).put("stream", true)
-                .put("max_tokens", 2048).put("thinking", new JSONObject().put("type", "disabled"));
+                .put("max_tokens", 2048);
+            // DeepSeek-only extension, sent only while the switch is on (iOS deepseekDisableThinking).
+            if (ChatPolicy.thinkingDisabled(prefs.contains("disable_thinking") ? prefs.getBoolean("disable_thinking", true) : null)) body.put("thinking", new JSONObject().put("type", "disabled"));
             if (specs.length()>0) body.put("tools",specs).put("tool_choice","auto");
             http = (HttpURLConnection)new URL(endpoint).openConnection(); connection = http;
             http.setConnectTimeout(15000); http.setReadTimeout(30000); http.setInstanceFollowRedirects(false);
@@ -384,7 +386,8 @@ public final class TurboAddon {
         EditText key = input(host,box,"API Key（留空保留现有值）","",true);
         label(host,box,"密钥使用 Android Keystore 加密保存，不显示、不写入日志。没有预填旧密钥。");
         EditText persona = input(host,box,"个人提示词",prefs.getString("persona","用简洁中文回答，内容显示在智能眼镜上。"),false);
-        label(host,box,"思考关闭 · 流式开启 · 最多 2048 输出 tokens\n近 50 条成功对话作为上下文；存档仅含扩展成功完成的回复，不读取官方历史。声音、插话和自动息屏仍需本版实测。");
+        Switch thinking=new Switch(host);thinking.setText("DeepSeek：关闭思考扩展参数");thinking.setChecked(ChatPolicy.thinkingDisabled(prefs.contains("disable_thinking")?prefs.getBoolean("disable_thinking",true):null));box.addView(thinking);
+        label(host,box,"流式开启 · 最多 2048 输出 tokens\n近 50 条成功对话作为上下文；存档仅含扩展成功完成的回复，不读取官方历史。声音、插话和自动息屏仍需本版实测。");
         AlertDialog dialog = new AlertDialog.Builder(host).setTitle("模型与对话").setView(scroll).setNegativeButton("返回",(d,w)->showHome()).setPositiveButton("保存",null).create();
         dialog.setOnShowListener(d -> dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             try {
@@ -394,7 +397,7 @@ public final class TurboAddon {
                 if(!secret.isEmpty()) SecretStore.put(app,secret);
                 if(select.getSelectedItemPosition()==2 && SecretStore.get(app).isEmpty()) { Toast.makeText(host,"请先填写 API Key",Toast.LENGTH_LONG).show(); return; }
                 cancel(); HISTORY.clear(); prefs.edit().putInt("mode",select.getSelectedItemPosition()).putString("endpoint",url)
-                    .putString("model",modelId).putString("persona",persona.getText().toString()).apply();
+                    .putString("model",modelId).putString("persona",persona.getText().toString()).putBoolean("disable_thinking",thinking.isChecked()).apply();
                 key.setText(""); dialog.dismiss(); showHome();
             } catch(Exception ignored) { Toast.makeText(host,"保存失败，请检查 HTTPS 地址、模型或密钥存储",Toast.LENGTH_LONG).show(); }
         })); dialog.show();
