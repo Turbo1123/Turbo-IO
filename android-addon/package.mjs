@@ -5,7 +5,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {profileFor,verifyHost} from './host-profiles.mjs';
-import {queueHook,fileHook,EVENT_GUARD,OTA_106,OTA_107} from './ota-hooks.mjs';
+import {queueHook,fileHook,EVENT_GUARD,LOG_CONSUME,OTA_106,OTA_107} from './ota-hooks.mjs';
 
 const root=path.dirname(new URL(import.meta.url).pathname);
 const source=process.argv[2];
@@ -83,7 +83,7 @@ if(eventText.includes('turboioOriginal_z(')) {
 }
 eventText+='\n'+eventHeader+`\n    .locals 1
 ${abi.ota?EVENT_GUARD:''}
-    invoke-virtual {p0, p1, p2}, Lcom/rayneo/rayneo_venus_sdk_plugin/j;->turboioOriginal_z(Ljava/lang/String;Ljava/util/Map;)V
+${LOG_CONSUME}    invoke-virtual {p0, p1, p2}, Lcom/rayneo/rayneo_venus_sdk_plugin/j;->turboioOriginal_z(Ljava/lang/String;Ljava/util/Map;)V
     :turboio_nav_try
     invoke-static {p1, p2}, Lcom/turboio/addon/NativeTransfer;->event(Ljava/lang/String;Ljava/util/Map;)V
     :turboio_nav_end

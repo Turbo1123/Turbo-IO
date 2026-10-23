@@ -71,7 +71,7 @@ export function verifyHost(root,profile) {
   expect('Lcom/amap/api/maps/MapsInitializer;',['.method public static setApiKey(Ljava/lang/String;)V']);
   expect('Lcom/amap/api/location/AMapLocationClient;',['.method public static setApiKey(Ljava/lang/String;)V']);
   expect('Lcom/amap/api/services/core/ServiceSettings;',['.method public static getInstance()Lcom/amap/api/services/core/ServiceSettings;', '.method public setApiKey(Ljava/lang/String;)V']);
-  for(const [descriptor,value] of [[S+'h;','AI_SUBTITLE'],[S+'h;','LAUNCHER'],[S+'h;','TELEPROMPTER'],[T+'b;','NORMAL'],[C+'q;','SmallCore']]) {
+  for(const [descriptor,value] of [[S+'h;','AI_SUBTITLE'],[S+'h;','LAUNCHER'],[S+'h;','TELEPROMPTER'],[S+'h;','LOG_REPORT'],[S+'h;','SCHEDULE_TODO'],[T+'b;','NORMAL'],[C+'q;','SmallCore']]) {
     const source=fs.readFileSync(classFile(root,descriptor),'utf8');
     if(!source.includes('"'+value+'"'))throw new Error('Missing enum '+value);
   }

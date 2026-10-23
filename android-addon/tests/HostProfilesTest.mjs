@@ -41,7 +41,7 @@ function fakeHost(n){
   put('Lcom/amap/api/maps/MapsInitializer;',['.method public static setApiKey(Ljava/lang/String;)V']);
   put('Lcom/amap/api/location/AMapLocationClient;',['.method public static setApiKey(Ljava/lang/String;)V']);
   put('Lcom/amap/api/services/core/ServiceSettings;',['.method public static getInstance()Lcom/amap/api/services/core/ServiceSettings;','.method public setApiKey(Ljava/lang/String;)V']);
-  put(S+'h;',['"AI_SUBTITLE"','"LAUNCHER"','"TELEPROMPTER"','"MARS_FOTA"']);
+  put(S+'h;',['"AI_SUBTITLE"','"LAUNCHER"','"TELEPROMPTER"','"MARS_FOTA"','"LOG_REPORT"','"SCHEDULE_TODO"']);
   put(T+'b;',['"NORMAL"']);
   put(C+'q;',['"SmallCore"']);
   put(n.queue,['.method public static o('+M+')V']);
