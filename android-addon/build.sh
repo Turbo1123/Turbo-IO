@@ -120,6 +120,8 @@ cc -Wall -Wextra -Werror -I$EN tests/english_golden.c $EN/english_wire.c $EN/eng
 build/test/english-golden/generate build/test/english-golden
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/CeWire.java tests/CeWireTest.java
 java -cp build/test com.turboio.addon.CeWireTest build/test/english-golden
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{CeTransfer,CeSession,TransferGate}.java tests/CeTransferTest.java
+java -cp build/test com.turboio.addon.CeTransferTest build/test/english-golden
 mkdir -p build/test-menu-flow
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-menu-flow tests/menuflow/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/MenuLayout.java
 java -cp build/test-menu-flow:build/test com.turboio.addon.MenuLayoutTest
