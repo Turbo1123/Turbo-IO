@@ -54,7 +54,7 @@ final class RecordingTextUI {
         if(mine!=run)return;
         if(answers.size()==chunks.size()){job=null;editor.setEnabled(true);String md=RecordingText.markdown(c.model,answers,input);
             IO.execute(()->{File f=null;try{File dir=new File(a.getNoBackupFilesDir(),"turboio/recording-text");if(!dir.isDirectory()&&!dir.mkdirs())throw new IOException();f=new File(dir,"录音整理.md");try(FileOutputStream o=new FileOutputStream(f)){o.write(md.getBytes(StandardCharsets.UTF_8));o.getFD().sync();}}catch(Throwable t){f=null;}
-                File saved=f;MAIN.post(()->{result=saved;info.setText(saved!=null?"全部分段已整理，已另存本机 Markdown（含输入原文）。点击分享可发送到其他应用。":"模型整理完成，但本机保存失败。内容保留在下方，请复制保存。");if(saved==null)editor.setText(md);});});
+                File saved=f;MAIN.post(()->{if(a.isDestroyed())return;result=saved;info.setText(saved!=null?"全部分段已整理，已另存本机 Markdown（含输入原文）。点击分享可发送到其他应用。":"模型整理完成，但本机保存失败。内容保留在下方，请复制保存。");if(saved==null)editor.setText(md);});});
             return;}
         int index=answers.size();info.setText("正在整理第 "+(index+1)+" / "+chunks.size()+" 段… 可取消；离开此页会停止。");
         Map<String,Object> payload=RecordingText.payload(c.model,chunks.get(index),c.disableThinking);
@@ -76,7 +76,7 @@ final class RecordingTextUI {
                     if(rows.isEmpty())error="所选日期尚无本机正文。请先在官方智记打开该记录的原文，再回来导出；不用重新录音。";
                     else{File dir=new File(a.getNoBackupFilesDir(),"turboio/lifelog-export");if(!dir.isDirectory()&&!dir.mkdirs())throw new IOException();file=new File(dir,"全天智记.md");try(FileOutputStream o=new FileOutputStream(file)){o.write(RecordingText.lifelogMarkdown(rows,z).getBytes(StandardCharsets.UTF_8));}}}
                 catch(IllegalArgumentException e){error=e.getMessage();}catch(Throwable t){error="无法写入独立文件，原记录未改。";}
-                String err=error;File f=file;MAIN.post(()->{if(err!=null)EditorialUI.notice(a,err);else RecordingExports.share(a,f,"text/markdown");});});
+                String err=error;File f=file;MAIN.post(()->{if(a.isFinishing()||a.isDestroyed())return;if(err!=null)EditorialUI.notice(a,err);else RecordingExports.share(a,f,"text/markdown");});});
         },today.getYear(),today.getMonthValue()-1,today.getDayOfMonth()).show();
     }
 }
