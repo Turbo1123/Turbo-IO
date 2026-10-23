@@ -15,6 +15,8 @@ final class HdCastUI {
     private boolean gone(){return a.isFinishing()||a.isDestroyed()||s==null||!s.dialog.isShowing();}
     private void open(){
         s=new EditorialUI.Screen(a,"清晰投屏 · 实验");LinearLayout b=s.body;
+        // The user watches the glasses, not the phone: a screen timeout would stop the Activity and end the cast.
+        if(s.dialog.getWindow()!=null)s.dialog.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         b.addView(EditorialUI.text(a,"需要眼镜已刷 TVP2，并停在眼镜首页。手机把画面缩放成 540×220 灰度，四块收齐并校验后才换帧；眼镜短按暂停/继续，长按退出。仅前台运行，不上传云端。",13,EditorialUI.MUTED));
         EditorialUI.button(a,b,"选择本机视频并开始",true,this::pickVideo);
         EditorialUI.button(a,b,"用测试图案开始",false,()->begin(null));

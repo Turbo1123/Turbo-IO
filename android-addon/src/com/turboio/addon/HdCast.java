@@ -40,12 +40,16 @@ final class HdCast {
         c.startedAt=now();c.link.start();MAIN.post(c.ticker);c.changed();return c;
     }
     private void openVideo(){
-        try{MediaMetadataRetriever r=new MediaMetadataRetriever();r.setDataSource(activity.getApplicationContext(),video);
+        MediaMetadataRetriever r=new MediaMetadataRetriever();
+        try{r.setDataSource(activity.getApplicationContext(),video);
             String d=r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION),hv=r.extractMetadata(MediaMetadataRetriever.METADATA_KEY_HAS_VIDEO);
-            long ms=d==null?0:Long.parseLong(d);if(ms<=0||!"yes".equals(hv)){r.release();MAIN.post(()->fail("这个文件没有可读取的视频轨道"));return;}
+            long ms=d==null?0:Long.parseLong(d);if(ms<=0||!"yes".equals(hv)){release(r);MAIN.post(()->abandon("这个文件没有可读取的视频轨道"));return;}
             retriever=r;durationMs=ms;
-        }catch(Exception|Error e){MAIN.post(()->fail("视频无法读取：请先下载到本机，限常见 MP4/H.264"));}
+        }catch(Exception|Error e){release(r);MAIN.post(()->abandon("视频无法读取：请先下载到本机，限常见 MP4/H.264"));}
     }
+    private static void release(MediaMetadataRetriever r){try{r.release();}catch(Exception ignored){}}
+    /** A source error is not a link error: CLOSE the glasses page before releasing the lease. */
+    private void abandon(String why){if(current!=this)return;failure=why;stop();}
     private final Runnable ticker=new Runnable(){public void run(){
         if(current!=HdCast.this)return;
         if(!peer.equals(NativeTransfer.connected())){link.tick();fail("眼镜连接变化，已停止投屏");return;}
