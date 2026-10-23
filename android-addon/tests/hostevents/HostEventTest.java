@@ -38,6 +38,7 @@ class OtaController {static boolean busy(){return false;}}
 class EntryProbe {static void event(String kind,Map<?,?> data){}}
 class NavGlasses {static boolean active(){return false;}static void event(String k,Map<?,?> m){}}
 class NativeNavigation {static boolean active(){return false;}}
+class SubtitleHud {static boolean active(){return false;}static void event(String k,Map<?,?> m){}}
 class ReaderBridge {static boolean active(){return false;}}
 class MusicBridge {static boolean active(){return false;}}
 class DisplayBridge {static boolean on;static boolean active(){return on;}}
