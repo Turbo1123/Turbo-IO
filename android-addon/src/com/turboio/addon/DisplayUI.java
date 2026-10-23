@@ -12,7 +12,7 @@ final class DisplayUI {
     private static final ExecutorService IO=Executors.newSingleThreadExecutor();
     private static final Handler MAIN=new Handler(Looper.getMainLooper());
     private final Activity a;private EditorialUI.Screen s;private ImageView preview;private TextView note,rectState,baseline,pickInfo;
-    private byte[] pixels;private boolean left,loading,resumed=true,refreshPending;private int meters=80;private long lastRefresh;
+    private byte[] pixels;private boolean left,loading,resumed=true,covered,refreshPending;private int meters=80;private long lastRefresh;
     private Application.ActivityLifecycleCallbacks lifecycle;
     private DisplayUI(Activity a){this.a=a;}
     static void show(Activity a){new DisplayUI(a).open();}
@@ -36,7 +36,7 @@ final class DisplayUI {
         rectState=EditorialUI.text(a,"尚未查询",12,EditorialUI.MUTED);b.addView(rectState);
         EditorialUI.button(a,b,"关闭眼镜测试页",false,()->result(DisplayBridge.session()!=null&&DisplayBridge.session().closePage()));
         b.addView(EditorialUI.text(a,"需要会话有效且无在途任务；退出手机页会停止续租，不保证镜片立即关闭",12,EditorialUI.MUTED));
-        EditorialUI.button(a,b,"返回 N8W 旧版传图",false,()->ImageUploadUI.show(a));
+        EditorialUI.button(a,b,"返回 N8W 旧版传图",false,()->{covered=true;DisplayBridge.foreground(false);ImageUploadUI.show(a,()->{covered=false;resume();});});
         b.addView(EditorialUI.text(a,"低延迟实验 · 只传变化区域",15,EditorialUI.INK));
         EditorialUI.button(a,b,"4 · 距离 80 / 60 米切换并局部发送",false,()->delta(0));
         EditorialUI.button(a,b,"5 · 左右转切换并局部发送",false,()->delta(1));
@@ -55,14 +55,14 @@ final class DisplayUI {
         Runnable tick=new Runnable(){public void run(){if(gone())return;try{DisplayBridge.tick();}catch(RuntimeException ignored){}refresh();MAIN.postDelayed(this,50);}};MAIN.postDelayed(tick,50);
         resume();refreshPending=true;refresh();
     }
-    private void resume(){if(!gone()&&resumed)DisplayBridge.foreground(true);}
+    private void resume(){if(DisplayCopy.foreground(!gone(),resumed,covered))DisplayBridge.foreground(true);}
     private void refresh(){
         if(!refreshPending||gone())return;TdpSession t=DisplayBridge.session();long now=SystemClock.elapsedRealtime();
         if(t!=null&&t.busy()&&now-lastRefresh<250)return;refreshPending=false;lastRefresh=now;
         if(t!=null)note.setText(t.state());rectState.setText(t==null?"尚未查询":t.state());
         baseline.setText(t==null?"基线无效 · 0/0块 · 0.00秒\n未查询":String.format(java.util.Locale.ROOT,"基线%s · %d/%d块 · %.2f秒\n%s",t.hasPixelBaseline()?"已确认":"无效",t.completedRects(),t.deltaTotal(),t.deltaElapsed(),t.state()));
     }
-    private void result(boolean ok){if(!ok){TdpSession t=DisplayBridge.session();note.setText(t!=null?t.state():"未发送：请先连接并进入眼镜 Turbo Display 页面，再查询 SID。");}}
+    private void result(boolean ok){if(!ok){TdpSession t=DisplayBridge.session();note.setText(DisplayCopy.refused(t!=null?t.state():null,NativeTransfer.status()));}}
     private void query(){
         if(loading)return;
         if(!DisplayBridge.setup()){note.setText("没有当前官方连接，或旧任务结果未知。请在官方设备页确认连接，不会创建第二个蓝牙连接。");return;}
@@ -96,7 +96,9 @@ final class DisplayUI {
         return bmp;
     }
     private void pick(){
-        if(loading)return;
+        if(loading)return;TdpSession live=DisplayBridge.session();
+        if(live!=null&&live.busy()){note.setText("传输进行中，请等本次完成后再选图；不会中断在途画面。");return;}
+        boolean hadSession=live!=null&&live.ready();
         DocumentPicker.pick(a,20*1024*1024,bytes->{loading=true;pickInfo.setText("正在本机解码…");IO.execute(()->{byte[] g=null;
             try{BitmapFactory.Options o=new BitmapFactory.Options();o.inJustDecodeBounds=true;BitmapFactory.decodeByteArray(bytes,0,bytes.length,o);
                 String mime=o.outMimeType==null?"":o.outMimeType;
@@ -107,7 +109,7 @@ final class DisplayUI {
                 c.drawBitmap(src,null,new Rect(r[0],r[1],r[0]+r[2],r[1]+r[3]),new Paint(Paint.FILTER_BITMAP_FLAG));src.recycle();g=gray(canvas);canvas.recycle();
             }catch(Throwable t){g=null;}
             byte[] out=g;MAIN.post(()->{loading=false;if(gone())return;
-                if(out!=null){pixels=out;showGray(out);note.setText("已本机缩图，没有发送。");}else note.setText("文件不可用或超限：请先下载到本机，限单帧 PNG/JPEG/HEIC、16MP/20MiB。");
+                if(out!=null){pixels=out;showGray(out);note.setText(DisplayCopy.picked(hadSession));}else note.setText("文件不可用或超限：请先下载到本机，限单帧 PNG/JPEG/HEIC、16MP/20MiB。");
                 pickInfo.setText("只修改手机预览，不自动发送");});});});
     }
 }

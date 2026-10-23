@@ -31,7 +31,7 @@ public final class NativeTransfer {
     static String connected(){try{Object list=NavReflect.call(NavReflect.type(HostAbi.manager()),"g");String found="";for(Object d:(List<?>)list)if(Boolean.TRUE.equals(NavReflect.call(d,"b"))){if(!found.isEmpty())return "";Object id=NavReflect.field(d,"a");if(!(id instanceof String))return "";found=(String)id;}return found;}catch(Exception e){return "";}}
     /** OTA evidence must distinguish an empty connected list from an SDK failure. */
     static String otaConnection(){try{Object list=NavReflect.call(NavReflect.type(HostAbi.manager()),"g");if(!(list instanceof List))return null;String found="";for(Object d:(List<?>)list){Object connected=NavReflect.call(d,"b");if(!(connected instanceof Boolean))return null;if(Boolean.TRUE.equals(connected)){if(!found.isEmpty())return null;Object id=NavReflect.field(d,"a");if(!(id instanceof String)||((String)id).isEmpty())return null;found=(String)id;}}return found;}catch(Exception e){return null;}}
-    static boolean busy(){return OtaController.busy()||OfficialOtaBridge.busy()||!messageOwner.isEmpty()||writing||(gate!=null&&gate.busy());}
+    static boolean busy(){return OtaController.busy()||OfficialOtaBridge.busy()||!messageOwner.isEmpty()||writing||(gate!=null&&gate.busy())||DisplayBridge.active();}
     static boolean fileBusy(){return writing||(gate!=null&&gate.busy());}
     /** Set by DiagnosticsRun while TDG1 samples or a STOP is owed; message-lease owners (OTA, camera, cards, menu) wait. */
     static volatile boolean diagnosticsActive;

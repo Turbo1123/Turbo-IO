@@ -167,6 +167,8 @@ java -cp build/test com.turboio.addon.TdpTest build/test/tdp-golden
 cc -Wall -Wextra -Werror -I$TDPF tests/tdp_oracle.c $TDPF/display_runtime.c -o build/test/tdp-golden/oracle
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/TdpSession.java tests/TdpSessionTest.java
 java -cp build/test com.turboio.addon.TdpSessionTest build/test/tdp-golden/oracle
+javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/DisplayCopy.java tests/DisplayCopyTest.java
+java -cp build/test com.turboio.addon.DisplayCopyTest
 mkdir -p build/test/hd-golden
 VPF=../firmware-research/strix-1.0.5.5-tvp2/src/video-player-v1
 cc -Wall -Wextra -Werror -I$VPF tests/hd_golden.c $VPF/player.c -o build/test/hd-golden/generate

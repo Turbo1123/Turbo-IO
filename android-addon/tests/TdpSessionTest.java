@@ -27,6 +27,7 @@ public final class TdpSessionTest {
             if(k%2==1){reply(e);s.tick();pump();ok(sends==before,"reply alone never sends");s.fileDone(0);}else{s.fileDone(0);s.tick();pump();ok(sends==before,"file alone never sends");reply(e);}
             ok(sends==before,"no re-entry from the ACK callback");now+=step;pump();}return k;}
     }
+    static Tdp.Reply copy(Tdp.Reply q){return Tdp.replyDecode(Tdp.replyEncode(q));}
     static byte[] frame(int mul){byte[] f=new byte[Tdp.PIXELS];for(int i=0;i<f.length;i++)f[i]=(byte)(i*mul);return f;}
     public static void main(String[] a)throws Exception{
         oracle=a[0];
@@ -64,6 +65,23 @@ public final class TdpSessionTest {
                 r.pump();
             }
             int stopped=r.sends;s.setForeground(false);r.now+=60;r.pump();s.tick();ok(r.sends==stopped,"mode "+mode+" no sends after stop");
+        }
+        // Focus 1: stale request, mismatched sid, wrong revision and error results never advance; unsolicited CLOSED stops.
+        try(Glasses g=new Glasses()){Rig r=new Rig();TdpSession s=r.s;r.open(g);ok(s.ready(),"focus rig");
+            r.now+=0.2;ok(s.sendTestRect(),"rect for focus");byte[] good=g.handle(r.packet,r.now);Tdp.Reply q=Tdp.carrierDecode(15,good);
+            Tdp.Reply stale=copy(q);stale.request=(q.request-1)&0xffffffffL;ok(r.reply(Tdp.carrierEncode(stale))<0&&s.busy(),"stale request ignored");
+            Tdp.Reply sid=copy(q);sid.sid=q.sid+1;ok(r.reply(Tdp.carrierEncode(sid))<0&&s.busy(),"mismatched sid ignored");
+            Tdp.Reply rev=copy(q);rev.revision=q.revision+1;ok(r.reply(Tdp.carrierEncode(rev))==1&&!s.ready()&&s.state().startsWith("眼镜拒绝"),"wrong revision refused and stops");
+            s.fileDone(0);ok(!s.busy(),"file terminal after refusal");}
+        for(int result:new int[]{Tdp.BUSY,Tdp.STALE,Tdp.BAD_PACKET})try(Glasses g=new Glasses()){Rig r=new Rig();TdpSession s=r.s;r.open(g);r.now+=0.2;s.sendTestRect();
+            Tdp.Reply q=Tdp.carrierDecode(15,g.handle(r.packet,r.now));q.result=result;int before=r.sends;ok(r.reply(Tdp.carrierEncode(q))==1&&!s.ready()&&r.sends==before,"error result "+result+" stops");}
+        try(Glasses g=new Glasses()){Rig r=new Rig();TdpSession s=r.s;r.open(g);r.now+=0.2;s.sendTestRect();
+            Tdp.Reply q=Tdp.carrierDecode(15,g.handle(r.packet,r.now));q.result=Tdp.NO_SESSION;q.sid=0;ok(r.reply(Tdp.carrierEncode(q))==1&&s.state().startsWith("眼镜显示会话未打开"),"NO_SESSION sid 0 stops with the open-page hint");}
+        try(Glasses g=new Glasses()){Rig r=new Rig();TdpSession s=r.s;r.open(g);Tdp.Reply c=new Tdp.Reply();c.result=Tdp.CLOSED;c.sid=7392;c.width=512;c.height=128;
+            ok(r.reply(Tdp.carrierEncode(c))<0&&!s.ready()&&s.state().equals("眼镜实体退出，停止所有发送"),"unsolicited CLOSED stops");}
+        // Focus 3: a ready session sends no renewal once in the background.
+        try(Glasses g=new Glasses()){Rig r=new Rig();TdpSession s=r.s;r.open(g);ok(s.ready()&&!s.busy(),"ready idle");
+            r.now+=29;s.tick();int before=r.sends;s.setForeground(false);r.now+=31;s.tick();r.pump();ok(r.sends==before&&!s.ready(),"background suppresses renewal");
         }
         // Refused submission is not sent: no file lock.
         try(Glasses g=new Glasses()){Rig r=new Rig();r.s.setForeground(true);r.refuse=true;ok(!r.s.query()&&!r.s.busy()&&r.s.state().equals("查询未提交"),"refused query");}

@@ -15,6 +15,8 @@ final class ImageUploadUI {
     private final Activity a;private EditorialUI.Screen s;private ImageView preview;private TextView state,info;private byte[] pixels;private ImageUpload upload;
     private ImageUploadUI(Activity a){this.a=a;}
     static void show(Activity a){new ImageUploadUI(a).open();}
+    /** Opened over another lab page; closed runs when this page is dismissed. */
+    static void show(Activity a,Runnable closed){ImageUploadUI u=new ImageUploadUI(a);u.open();u.s.dialog.setOnDismissListener(d->{if(u.upload!=null&&u.upload.pending())u.upload.disconnect();closed.run();});}
     private boolean gone(){return a.isFinishing()||a.isDestroyed()||!s.dialog.isShowing();}
     private static double now(){return SystemClock.elapsedRealtime()/1000.0;}
     private void open(){
