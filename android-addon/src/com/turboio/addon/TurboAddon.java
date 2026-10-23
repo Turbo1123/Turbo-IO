@@ -386,7 +386,7 @@ public final class TurboAddon {
         TurboStyle.row(host,box,"◌","模型与对话",mode()==2?"自有模型 · 流式回答":"官方 / 自有模型与个人提示词",()->{dialog.dismiss();showSettings();});
         TurboStyle.row(host,box,"◎","联网搜索与知识库","TinyFish · Codex · 工具开关",()->{dialog.dismiss();showTools();});
         TurboStyle.row(host,box,"≋","录音与全天智记","选择本机音频，导出或分享",()->{dialog.dismiss();RecordingExports.show(host,false);});
-        TurboStyle.row(host,box,"▤","文字与对话存档","Markdown · 本机转写 · 系统分享",()->new AlertDialog.Builder(host).setTitle("导出内容").setItems(new String[]{"分享 AI 对话 Markdown","选择本机转写文件"},(d,w)->{dialog.dismiss();if(w==0)shareArchive(host);else RecordingExports.show(host,true);}).setNegativeButton("取消",null).show());
+        TurboStyle.row(host,box,"▤","文字与对话存档","Markdown · 本机转写 · 系统分享",()->new AlertDialog.Builder(host).setTitle("导出内容").setItems(new String[]{"分享 AI 对话 Markdown","选择本机转写文件","转写文字 → 自有模型整理","全天智记导出"},(d,w)->{dialog.dismiss();if(w==0)shareArchive(host);else if(w==1)RecordingExports.show(host,true);else if(w==2)RecordingTextUI.show(host);else RecordingTextUI.exportLifelog(host);}).setNegativeButton("取消",null).show());
         TurboStyle.button(host,box,"诊断与测试",false,()->new AlertDialog.Builder(host).setTitle("诊断 · 不含密钥").setMessage(status()+"\n"+NavGlasses.connection()+"\n"+NavGlasses.status()).setNeutralButton("随机回复",(d,w)->setTestMode()).setNegativeButton("清空上下文",(d,w)->{cancel();HISTORY.clear();}).setPositiveButton("关闭",null).show());
         TurboStyle.gap(host,box,14);box.addView(TurboStyle.text(host,"ANDROID  /  1.0.5 移植基线\n保留官方连接与原有功能。当前仍是旧功能基线，不代表已完成 iOS 全量移植。",12,TurboStyle.MUTED));
     }
