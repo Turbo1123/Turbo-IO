@@ -144,6 +144,12 @@ javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/t
 java -cp build/test com.turboio.addon.KnowledgeViewTest
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/AlwaysOnAudio.java tests/AlwaysOnAudioTest.java
 java -cp build/test com.turboio.addon.AlwaysOnAudioTest
+mkdir -p build/test/ride-golden
+DR=../firmware-research/strix-1.0.5.5-tvp2/src
+cc -Wall -Wextra -Werror -I$DR/didi-v1 -I$DR/navigation-runtime-v1 tests/ride_golden.c $DR/didi-v1/ride.c $DR/navigation-runtime-v1/nav_runtime.c -o build/test/ride-golden/generate
+build/test/ride-golden/generate build/test/ride-golden
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{DrWire,DrText,DrTool}.java tests/DrCoreTest.java
+java -cp build/test com.turboio.addon.DrCoreTest build/test/ride-golden
 mkdir -p build/test-menu-flow
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-menu-flow tests/menuflow/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/MenuLayout.java
 java -cp build/test-menu-flow:build/test com.turboio.addon.MenuLayoutTest
