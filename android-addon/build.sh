@@ -114,6 +114,12 @@ javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/t
 java -cp build/test com.turboio.addon.RoadFetchTest
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{RoadFrames,NativeNavCodec}.java tests/RoadFramesTest.java
 java -cp build/test com.turboio.addon.RoadFramesTest ../official-addon/ios107-edition/tests/maps
+mkdir -p build/test/english-golden
+EN=../firmware-research/strix-1.0.5.5-tvp2/src/context-english-v1
+cc -Wall -Wextra -Werror -I$EN tests/english_golden.c $EN/english_wire.c $EN/english_view.c $EN/english_progress.c $EN/english_transfer.c -o build/test/english-golden/generate
+build/test/english-golden/generate build/test/english-golden
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/CeWire.java tests/CeWireTest.java
+java -cp build/test com.turboio.addon.CeWireTest build/test/english-golden
 mkdir -p build/test-menu-flow
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-menu-flow tests/menuflow/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/MenuLayout.java
 java -cp build/test-menu-flow:build/test com.turboio.addon.MenuLayoutTest
