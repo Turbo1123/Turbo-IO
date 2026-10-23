@@ -152,6 +152,12 @@ javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/t
 java -cp build/test com.turboio.addon.DrCoreTest build/test/ride-golden
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{DrRpc,DrService}.java tests/DrServiceTest.java
 java -cp build/test com.turboio.addon.DrServiceTest
+mkdir -p build/test/timg-golden
+IM=../firmware-research/strix-1.0.5.5-tvp2/src/image-upload-test
+cc -Wall -Wextra -Werror -DTIO_IMAGE_RX_WIDE=1 -I$IM -I../firmware-research/strix-1.0.5.5-tvp2 tests/timg_golden.c $IM/image_receiver.c $IM/image_mailbox.c $IM/image_test.c -o build/test/timg-golden/generate
+build/test/timg-golden/generate build/test/timg-golden
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{Timg,ImageUpload}.java tests/TimgTest.java
+java -cp build/test com.turboio.addon.TimgTest build/test/timg-golden
 mkdir -p build/test-menu-flow
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-menu-flow tests/menuflow/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/MenuLayout.java
 java -cp build/test-menu-flow:build/test com.turboio.addon.MenuLayoutTest
