@@ -22,6 +22,12 @@ public final class TimgTest {
         ImageUpload e=new ImageUpload((pkt,dev,task,s2)->{});e.authorize("AA",77,0);e.tick(30);ok(e.state().equals("session_expired")&&!e.send(px,30.5),"30 s window");
         ImageUpload d=new ImageUpload((pkt,dev,task,s2)->{});d.authorize("AA",77,0);d.send(px,1);d.disconnect();ok(d.state().equals("disconnected_result_unknown"),"disconnect while pending");
         ImageUpload f=new ImageUpload((pkt,dev,task,s2)->{});f.authorize("AA",77,0);f.send(px,1);f.fileResult("BB","x",false);ok(f.state().equals("submitting"),"foreign file result ignored");
+        // Uncertain transport outcome is not a definite failure (iOS: only failed/rejected is file_failed).
+        ImageUpload q=new ImageUpload((pkt,dev,task,s2)->{});q.authorize("AA",77,0);q.send(px,1);q.fileOutcome("AA",q.task(),TransferGate.State.UNCERTAIN);ok(q.state().equals("timeout_result_unknown")&&!q.send(px,3),"uncertain → result unknown, no retry");
+        ImageUpload w=new ImageUpload((pkt,dev,task,s2)->{});w.authorize("AA",77,0);w.send(px,1);w.fileOutcome("AA",w.task(),TransferGate.State.FAILED);ok(w.state().equals("file_failed"),"failed → file_failed");
+        ImageUpload c=new ImageUpload((pkt,dev,task,s2)->{});c.authorize("AA",77,0);c.send(px,1);c.fileOutcome("AA",c.task(),TransferGate.State.CONFIRMED);ok(c.state().equals("file_received_waiting_renderer"),"confirmed → file received");
+        // A throwing sender must not escape into the host; it becomes a submission failure.
+        ImageUpload x=new ImageUpload((pkt,dev,task,s2)->{throw new IllegalArgumentException();});x.authorize("AA",77,0);ok(x.send(px,1)&&x.state().equals("submission_failed"),"sender exception → submission_failed");
         System.out.println("TimgTest: "+n+" checks; golden packet, fit, luma, state machine");
     }
 }

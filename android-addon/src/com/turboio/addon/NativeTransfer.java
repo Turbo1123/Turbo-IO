@@ -47,14 +47,18 @@ public final class NativeTransfer {
     private static boolean blocked(String name,boolean own,long now){return OtaController.busy()||OfficialOtaBridge.busy()||context==null||writing||(gate!=null&&gate.busy())||(!messageOwner.isEmpty()&&!own)||now<quarantine||!external.isEmpty()||NavGlasses.active()||(ReaderBridge.active()&&!name.equals("turbo-reader.twr"))||(NativeNavigation.active()&&!name.equals("turbo-navigation.tnv"))||(MusicBridge.active()&&!name.equals("turbo-music.tmu"));}
     /** Whether sendOwned would accept a file of this name right now (same refusal rule, plus a connected peer). */
     static boolean canSubmit(String name){long now=SystemClock.elapsedRealtime();external.values().removeIf(deadline->deadline<now);return !blocked(name,false,now)&&!connected().isEmpty();}
+    /** The TVP2 image receiver's file (TIMG v2 wide): the only 4-letter extension, and the only payload over the budget. */
+    static final String TIMG="turbo-photo.timg";static final int TIMG_WIRE=65568;
+    private static boolean named(String name,boolean own){return name!=null&&(name.matches("turbo-[a-z-]+\\.[a-z]{3}")||name.equals(TIMG)||own&&name.matches("[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}"));}
+    static boolean admits(String name,boolean own,int length){return named(name,own)&&length>=1&&(length<=(own?48000:20700)||name.equals(TIMG)&&length==TIMG_WIRE);}
     static boolean sendOwned(String leaseOwner,String name,byte[] bytes,long request,long session,long timeout,Completion callback){
         if(Looper.myLooper()!=Looper.getMainLooper())throw new IllegalStateException("main thread required");
         boolean own=!leaseOwner.isEmpty()&&leaseOwner.equals(messageOwner);
-        if(name==null||!(name.matches("turbo-[a-z-]+\\.[a-z]{3}")||own&&name.matches("[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}"))||timeout<1000||timeout>60000||callback==null)throw new IllegalArgumentException();
+        if(!named(name,own)||timeout<1000||timeout>60000||callback==null)throw new IllegalArgumentException();
         long now=SystemClock.elapsedRealtime();external.values().removeIf(deadline->deadline<now);
         if(blocked(name,own,now)){mark("其他传输/显示会话尚未结束，请先退出；未发送");return false;}
         String current=connected();if(current.isEmpty()){mark("请先在官方 App 连接一副眼镜");return false;}
-        if(bytes==null||bytes.length<1||bytes.length>(own?48000:20700)){mark("命令超出预算，未发送");return false;}
+        if(bytes==null||!admits(name,own,bytes.length)){mark("命令超出预算，未发送");return false;}
         sentCount++;trace("send file="+name+" bytes="+bytes.length+" request="+request+" session="+session);gate=new TransferGate();gate.begin(current,name,request,session,now,timeout);peer=current;task="";filename=name;completion=callback;early.clear();spool=null;writing=true;byte[] data=bytes.clone();mark("准备发送 · "+data.length+" 字节");
         TransferGate owner=gate;IO.execute(()->{File file=null;try{File root=new File(context.getFilesDir(),"turboio-spool");if(!root.isDirectory()&&!root.mkdirs())throw new IOException();File[] retained=root.listFiles();if(retained==null||retained.length>=32)throw new IOException("spool limit");File dir=new File(root,UUID.randomUUID().toString());if(!dir.mkdir())throw new IOException();file=new File(dir,name);try(FileOutputStream out=new FileOutputStream(file)){out.write(data);out.getFD().sync();}File ready=file;
                 MAIN.post(()->{if(gate!=owner)return;writing=false;spool=ready;try{gate.tick(connected(),SystemClock.elapsedRealtime());if(!gate.busy()){settle();return;}Object manager=NavReflect.field(NavReflect.type(HostAbi.manager()),"h"),small=NavReflect.field(NavReflect.type(HostAbi.core()),"b");Object id=NavReflect.call(manager,HostAbi.file(),ready,peer,small,UUID.randomUUID().toString());task=id instanceof String?(String)id:"";gate.submitted(task);mark("正在发送 · 等待文件与眼镜回执");while(!early.isEmpty())fileEvent(early.removeFirst());settle();MAIN.postDelayed(tick,250);}catch(Exception e){gate.failed();settle();}});

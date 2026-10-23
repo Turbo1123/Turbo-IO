@@ -24,14 +24,21 @@ final class ImageUpload {
         byte[] data=Timg.packet(pixels,session,frame+1);if(data==null)return false;
         frame++;CRC32 c=new CRC32();c.update(pixels);crc=c.getValue();task=UUID.randomUUID().toString();sentAt=now;pending=true;submitted=fileOK=false;long gen=++generation;String t=task;
         publish("submitting");
-        sender.send(data,device,t,ok->{if(gen!=generation||!t.equals(task)||!pending||uncertain)return;
-            if(!ok){if(fileOK){refresh();return;}pending=false;active=false;publish("submission_failed");return;}submitted=true;refresh();});
+        Consumer<Boolean> done=ok->{if(gen!=generation||!t.equals(task)||!pending||uncertain)return;
+            if(!ok){if(fileOK){refresh();return;}pending=false;active=false;publish("submission_failed");return;}submitted=true;refresh();};
+        try{sender.send(data,device,t,done);}catch(RuntimeException e){done.accept(false);}
         return true;
     }
     private void refresh(){if(uncertain)return;if(fileOK)publish("file_received_waiting_renderer");else if(submitted)publish("transferring");}
     void fileResult(String dev,String t,boolean success){
         if(!pending||uncertain||!Objects.equals(dev,device)||!Objects.equals(t,task))return;
         if(!success){active=false;pending=false;publish("file_failed");return;}fileOK=true;pending=false;refresh();
+    }
+    /** Shared-gate outcome: CONFIRMED is file delivery; only FAILED/REJECTED are definite failures; anything else is unknown. */
+    void fileOutcome(String dev,String t,TransferGate.State st){
+        if(st==TransferGate.State.CONFIRMED){fileResult(dev,t,true);return;}
+        if(st==TransferGate.State.FAILED||st==TransferGate.State.REJECTED){fileResult(dev,t,false);return;}
+        if(!pending||uncertain||!Objects.equals(dev,device)||!Objects.equals(t,task))return;uncertain=true;active=false;publish("timeout_result_unknown");
     }
     void tick(double now){
         if(Double.isNaN(now)||now<lastTime)return;lastTime=now;

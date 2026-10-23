@@ -17,6 +17,10 @@ public class HostEventTest {
   NativeTransfer.event("messageReceived",message("LAUNCHER",Arrays.asList(8,1)));
   NativeTransfer.event("messageReceived",null);NativeTransfer.event(null,message("LAUNCHER",data));
   ok(launcher==before);ok(NewsTele.count==3);
+  // Phase 5a: the TIMG file is the one 4-letter-extension name and the one exact 64 KiB+32 size admitted.
+  ok(NativeTransfer.admits("turbo-photo.timg",false,65568)&&!NativeTransfer.admits("turbo-photo.timg",false,65567)&&!NativeTransfer.admits("turbo-photo.timg",false,65569));
+  ok(NativeTransfer.admits("turbo-photo.timg",false,1000)&&!NativeTransfer.admits("turbo-other.timg",false,1000)&&!NativeTransfer.admits("turbo-x.tdpx",false,10));
+  ok(NativeTransfer.admits("turbo-ride.tdr",false,20700)&&!NativeTransfer.admits("turbo-ride.tdr",false,20701)&&!NativeTransfer.admits("turbo-ride.tdr",false,65568)&&NativeTransfer.admits("turbo-ride.tdr",true,48000)&&!NativeTransfer.admits("turbo-ride.tdr",false,0));
   System.out.println("HostEventTest: "+checks+" production callback checks; no device/file/network I/O");
  }
 }

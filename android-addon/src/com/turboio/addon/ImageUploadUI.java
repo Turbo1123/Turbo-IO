@@ -30,7 +30,7 @@ final class ImageUploadUI {
         b.addView(EditorialUI.text(a,"本实验每轮仅提交一张。已有任务不自动重发；先确认结束并退出眼镜页面，再开启下一轮。仅发送当前图片，不启动 OTA，不上传云端。",13,EditorialUI.MUTED));
         upload=new ImageUpload((packet,device,task,submitted)->{
             long frame=readU32(packet,20),sid=readU32(packet,24);
-            boolean sent=NativeTransfer.send(Timg.FILE,packet,frame,sid,15000,(st,result)->{if(upload!=null)upload.fileResult(device,task,st==TransferGate.State.CONFIRMED);render();});
+            boolean sent=NativeTransfer.send(Timg.FILE,packet,frame,sid,15000,(st,result)->{if(upload!=null)upload.fileOutcome(device,task,st);render();});
             // The receiver has no app-level ACK: settle the shared gate on file delivery only.
             if(sent)NativeTransfer.ack(device,frame,sid,0);submitted.accept(sent);});
         upload.changed=this::render;render();
