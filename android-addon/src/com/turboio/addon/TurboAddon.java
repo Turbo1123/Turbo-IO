@@ -51,6 +51,9 @@ public final class TurboAddon {
     private static final String REVISION = "android-105-integration-08";
     private TurboAddon() {}
 
+    /** Host NotificationsHandlerService.onNotificationPosted/Removed, after the official handling (package.mjs wrap). */
+    public static void notificationPosted(Object service,android.service.notification.StatusBarNotification sbn){NotificationTap.posted(service,sbn);}
+    public static void notificationRemoved(Object service,android.service.notification.StatusBarNotification sbn){NotificationTap.removed(service,sbn);}
     public static void install(Activity host) {
         if (Looper.myLooper() != Looper.getMainLooper()) { MAIN.post(() -> install(host)); return; }
         app = host.getApplicationContext(); activity = new WeakReference<>(host);

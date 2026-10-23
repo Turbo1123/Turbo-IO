@@ -31,6 +31,7 @@ function fakeHost(n){
   put(n.listener,['.field public final synthetic a:'+outer,'.method public final onAsrResult(Ljava/lang/String;ZLjava/lang/String;)V','.method public final onNlpResult(Lcom/rayneo/airuntime/controller/NlpResult;)V','.method public final onResponseComplete()V']);
   if(!n.noStop)put(outer,['.method public final s(Ljava/lang/String;ZZ)V','    const-string v1, "stop_assistant"','.end method']);
   put('Lcom/rayneo/venus/MainActivity;',['.method public final onPostResume()V']);
+  if(!n.noNotify)put('Lim/zoe/labs/flutter_notification_listener/NotificationsHandlerService;',['.method public final onNotificationPosted(Landroid/service/notification/StatusBarNotification;)V','.method public final onNotificationRemoved(Landroid/service/notification/StatusBarNotification;)V']);
   put('Lcom/rayneo/rayneo_venus_sdk_plugin/j;',['.method public final z(Ljava/lang/String;Ljava/util/Map;)V']);
   put(T+'u;',['.field public static volatile h:'+T+'u;','.method public static g()Ljava/util/List;','.method public final '+n.send+'('+M+'Lkotlin/jvm/functions/Function2;)V','.method public final '+n.file+'(Ljava/io/File;Ljava/lang/String;'+C+'q;Ljava/lang/String;)Ljava/lang/String;']);
   put(M,['.method public constructor <init>([BLjava/lang/String;Ljava/lang/String;'+S+'h;'+S+'Q;'+T+'b;ZZ'+C+'p;Lkotlin/jvm/functions/Function2;)V','.field public final b:Ljava/lang/String;','.field public final c:'+S+'h;','.field public final e:[B','.field public k:Lkotlin/jvm/functions/Function2;']);
@@ -61,6 +62,9 @@ try { assert.equal(verifyHost(h106,profileFor(SHA_106)).ota.message,'LX3/Q;'); }
 // Voice exit needs the official stop entry; a host without it is refused before any mutation.
 const hNoStop=fakeHost({...n107,noStop:true});
 try { assert.throws(()=>verifyHost(hNoStop,profileFor(SHA_107)),/stop/); } finally { fs.rmSync(hNoStop,{recursive:true}); }
+// Notification history needs the host's listener service entry points.
+const hNoNotify=fakeHost({...n107,noNotify:true});
+try { assert.throws(()=>verifyHost(hNoNotify,profileFor(SHA_107)),/NotificationsHandlerService/); } finally { fs.rmSync(hNoNotify,{recursive:true}); }
 const h107b=fakeHost(n107);
-try { assert.equal(verifyHost(h107b,profileFor(SHA_107)).voiceStop,'Lq8/c;'); } finally { fs.rmSync(h107b,{recursive:true}); }
-console.log('Host profile tests passed (19 assertions).');
+try { const v=verifyHost(h107b,profileFor(SHA_107));assert.equal(v.voiceStop,'Lq8/c;');assert.ok(v.notifications.endsWith('NotificationsHandlerService.smali')); } finally { fs.rmSync(h107b,{recursive:true}); }
+console.log('Host profile tests passed (21 assertions).');

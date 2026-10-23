@@ -52,6 +52,10 @@ export function verifyHost(root,profile) {
    const body=at<0?'':text.split('\n').slice(at,at+400).join('\n'),end=body.indexOf('.end method');
    if(at<0||end<0||!body.slice(0,end).includes('"stop_assistant"'))throw new Error('Host ABI mismatch: voice stop entry '+voiceStop);}
   const activity=expect('Lcom/rayneo/venus/MainActivity;',['.method public final onPostResume()V']);
+  // Notification history observes the host's own NotificationListenerService (original runs first).
+  const notifications=expect('Lim/zoe/labs/flutter_notification_listener/NotificationsHandlerService;',[
+    '.method public final onNotificationPosted(Landroid/service/notification/StatusBarNotification;)V',
+    '.method public final onNotificationRemoved(Landroid/service/notification/StatusBarNotification;)V']);
   const event=expect('Lcom/rayneo/rayneo_venus_sdk_plugin/j;',['.method public final z(Ljava/lang/String;Ljava/util/Map;)V']);
   const sendHeader='.method public final '+abi.send+'('+M+'Lkotlin/jvm/functions/Function2;)V';
   const fileHeader='.method public final '+abi.file+'(Ljava/io/File;Ljava/lang/String;'+C+'q;Ljava/lang/String;)Ljava/lang/String;';
@@ -79,5 +83,5 @@ export function verifyHost(root,profile) {
     if(!fs.readFileSync(classFile(root,S+'h;'),'utf8').includes('"MARS_FOTA"'))throw new Error('Missing MARS_FOTA');
     ota={queue,sender,queueClass:abi.queue,senderClass:T+'u;',message:M,queueHeader,fileHeader,fileMethod:abi.file};
   }
-  return {listener,activity,event,ota,abi,voiceStop,version:profile.version,code:profile.code};
+  return {listener,activity,event,ota,abi,voiceStop,notifications,version:profile.version,code:profile.code};
 }
