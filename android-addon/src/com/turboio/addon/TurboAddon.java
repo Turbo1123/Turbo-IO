@@ -67,7 +67,7 @@ public final class TurboAddon {
         OfficialOtaPreparation.init(app);
         OfficialOtaBridge.init(app);
         BackgroundWork.init(app);MusicPlayer.init(app);ReaderLibrary.init(app);CloudCaption.init(app);BackgroundWork.register("新闻",NewsTele::stop);
-        NativeTransfer.init(app);FocusController.init(app);AppController.init(app);CardTransport.init();NativeNavigation.init(app);CeBridge.init(app);Ride.service(app);GlassesLog.init(app);
+        NativeTransfer.init(app);FocusController.init(app);AppController.init(app);CardTransport.init();NativeNavigation.init(app);CeBridge.init(app);Ride.service(app);GlassesLog.init(app);TodoRuntime.init(app);
         ViewGroup root = host.findViewById(android.R.id.content);
         if (root.findViewWithTag("turboio-entry") != null) return;
         TextView button = new TextView(host);
@@ -132,6 +132,7 @@ public final class TurboAddon {
     public static void dispatchNlp(Object source,Object response) {
         serial(() -> { String nlpSession;try{nlpSession=str(get(response,"SessionId"));}catch(Exception e){nlpSession="";}
             if(EXIT_GATE.blocks(nlpSession)){diagnostic="语音退出后的回复已丢弃";return;}
+            try{TodoRuntime.observeNlp(source,response);}catch(RuntimeException ignored){}
             if(!onNlp(source,response)) try {invoke(source,"onNlpResult",response);observeSpeech(source,response);}catch(Exception ignored){diagnostic="官方 NLP 分发失败";} });
     }
     public static void dispatchComplete(Object source) {
@@ -211,6 +212,8 @@ public final class TurboAddon {
     public static boolean onComplete(Object source) {
         return !Boolean.TRUE.equals(BYPASS.get()) && source == listener && owns;
     }
+    /** Deliver an NLP result straight to the official listener (never re-intercepted by our dispatcher). */
+    static void deliverNlp(Object listener,Object response) throws Exception { invoke(listener,"onNlpResult",response); }
     private static void invoke(Object target, String method, Object... values) throws Exception {
         Class<?>[] signature = new Class<?>[values.length];
         for(int i=0;i<values.length;i++) signature[i] = values[i].getClass();

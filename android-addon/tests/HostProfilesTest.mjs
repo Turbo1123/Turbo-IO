@@ -36,6 +36,8 @@ function fakeHost(n){
   put('Lcom/rayneo/rayneo_venus_sdk_plugin/f;',['.method public constructor <init>()V','.field public final y:'+n.alwaysOn]);
   put(n.alwaysOn,n.noDump?['.method public final k()Ljava/util/LinkedHashMap;']:['.method public final f(ZZZZ)V','.method public final k()Ljava/util/LinkedHashMap;']);
   put(T+'u;',['.field public static volatile h:'+T+'u;','.method public static g()Ljava/util/List;','.method public final '+n.send+'('+M+'Lkotlin/jvm/functions/Function2;)V','.method public final '+n.file+'(Ljava/io/File;Ljava/lang/String;'+C+'q;Ljava/lang/String;)Ljava/lang/String;']);
+  put('Lcom/rayneo/airuntime/controller/NlpResult;',['.method public constructor <init>()V','.method public final setCommand(Lcom/rayneo/airuntime/controller/NlpCommand;)V','.method public final getCommand()Lcom/rayneo/airuntime/controller/NlpCommand;']);
+  put('Lcom/rayneo/airuntime/controller/NlpCommand;',['.method public constructor <init>()V','.method public final setName(Ljava/lang/String;)V','.method public final setParams(Ljava/util/Map;)V','.method public final setCommandRequestId(Ljava/lang/String;)V','.method public final setOtherState(Ljava/util/Map;)V','.method public final getParams()Ljava/util/Map;']);
   put(M,['.method public constructor <init>([BLjava/lang/String;Ljava/lang/String;'+S+'h;'+S+'Q;'+T+'b;ZZ'+C+'p;Lkotlin/jvm/functions/Function2;)V','.field public final b:Ljava/lang/String;','.field public final c:'+S+'h;','.field public final e:[B','.field public k:Lkotlin/jvm/functions/Function2;']);
   put(T+'C;',['.field public final a:Ljava/lang/String;','.method public final b()Z']);
   put('Lcom/amap/api/maps/MapsInitializer;',['.method public static setApiKey(Ljava/lang/String;)V']);

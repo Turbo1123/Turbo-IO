@@ -37,7 +37,7 @@ public final class GlassesLog {
 
     /** Queue tap (host thread): LAUNCHER traffic is route evidence; an official type-16 log request is blocked while we own one. */
     static boolean queue(String business,String device,byte[] payload){
-        A2uiFrame.Frame f=A2uiFrame.decode(payload);if(f==null)return true;
+        if(payload.length>8192)return true;A2uiFrame.Frame f=A2uiFrame.decode(payload);if(f==null)return true;
         if("LAUNCHER".equals(business)){routeDevice=device;routeAt=SystemClock.elapsedRealtime();return true;}
         if(f.type==16){synchronized(GlassesLog.class){if(gate!=null&&gate.ownsRequest(device))return false;}}
         return true;

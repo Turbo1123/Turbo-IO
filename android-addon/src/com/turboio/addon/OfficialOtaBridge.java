@@ -118,7 +118,7 @@ public final class OfficialOtaBridge {
  private static void inspect(){
   final String peer;final long generation;
   synchronized(OfficialOtaBridge.class){
-   if(pending||armed||checking||!foreground||OtaController.busy()||DisplayBridge.active()||HdCast.active()){note="只读预检条件未满足；未授权";return;}
+   if(pending||armed||checking||!foreground||OtaController.busy()||DisplayBridge.active()||HdCast.active()||TodoRuntime.busy()){note="只读预检条件未满足；未授权";return;}
    peer=NativeTransfer.connected();if(peer.isEmpty()){note="没有唯一连接眼镜";return;}
    checking=true;generation=++epoch;note="只读核对官方目录；不会授权或发送固件";
   }
@@ -133,7 +133,7 @@ public final class OfficialOtaBridge {
  private static void authorize(String token){
   final String peer;final long generation;
   synchronized(OfficialOtaBridge.class){
-   if(!OtaPackage.TOKEN.equals(token)||pending||armed||checking||!foreground||OtaController.busy()||DisplayBridge.active()||HdCast.active()){note="授权条件未满足";return;}
+   if(!OtaPackage.TOKEN.equals(token)||pending||armed||checking||!foreground||OtaController.busy()||DisplayBridge.active()||HdCast.active()||TodoRuntime.busy()){note="授权条件未满足";return;}
    if(gate==null||!gate.readyToArm(SystemClock.elapsedRealtime())){note="请先完成只读预检，确认版本/电量/空闲均为true后再授权";return;}
    peer=NativeTransfer.connected();if(peer.isEmpty()){note="没有唯一连接眼镜";return;}
    // Service startup is asynchronous; grant only after it reports ready.

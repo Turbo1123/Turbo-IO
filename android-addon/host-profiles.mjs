@@ -68,6 +68,9 @@ export function verifyHost(root,profile) {
     sendHeader,fileHeader]);
   expect(M,['.method public constructor <init>([BLjava/lang/String;Ljava/lang/String;'+S+'h;'+S+'Q;'+T+'b;ZZ'+C+'p;Lkotlin/jvm/functions/Function2;)V']);
   expect(T+'C;',['.field public final a:Ljava/lang/String;','.method public final b()Z']);
+  // Phase 3b todo replay: official NLP result/command are constructed and filled by reflection.
+  expect('Lcom/rayneo/airuntime/controller/NlpResult;',['.method public constructor <init>()V','.method public final setCommand(Lcom/rayneo/airuntime/controller/NlpCommand;)V','.method public final getCommand()Lcom/rayneo/airuntime/controller/NlpCommand;']);
+  expect('Lcom/rayneo/airuntime/controller/NlpCommand;',['.method public constructor <init>()V','.method public final setName(Ljava/lang/String;)V','.method public final setParams(Ljava/util/Map;)V','.method public final setCommandRequestId(Ljava/lang/String;)V','.method public final setOtherState(Ljava/util/Map;)V','.method public final getParams()Ljava/util/Map;']);
   expect('Lcom/amap/api/maps/MapsInitializer;',['.method public static setApiKey(Ljava/lang/String;)V']);
   expect('Lcom/amap/api/location/AMapLocationClient;',['.method public static setApiKey(Ljava/lang/String;)V']);
   expect('Lcom/amap/api/services/core/ServiceSettings;',['.method public static getInstance()Lcom/amap/api/services/core/ServiceSettings;', '.method public setApiKey(Ljava/lang/String;)V']);

@@ -20,6 +20,7 @@ final class DiagnosticsUI {
         b.addView(EditorialUI.text(a,TurboAddon.status()+"\n"+NativeTransfer.diagnostic(),13,EditorialUI.MUTED));
         EditorialUI.button(a,b,"字幕导航 · 常亮与换文",false,()->SubtitleHudUI.show(a));
         EditorialUI.button(a,b,"眼镜日志 · 仅本机",false,()->GlassesLogUI.show(a));
+        EditorialUI.button(a,b,"待办协议验收",false,()->TodoUI.show(a));
         // TDG1 glasses runtime status
         b.addView(EditorialUI.text(a,"眼镜运行状态 · TDG1",17,EditorialUI.INK));
         b.addView(EditorialUI.text(a,"需 TVP2。开启后自动记录 10 分钟，可返回音乐/导航正常使用。每 5 秒本机存盘；不保存歌词、对话或密钥，报告不含设备标识。不自动重连或续期。",13,EditorialUI.MUTED));

@@ -9,8 +9,9 @@ public final class QueueTap {
         try{
             if(message==null||message==OWN.get())return true;
             Object biz=NavReflect.field(message,"c");if(!(biz instanceof Enum))return true;String name=((Enum<?>)biz).name();
-            if(!"LAUNCHER".equals(name)&&!"LOG_REPORT".equals(name))return true;
-            Object d=NavReflect.field(message,"b"),p=NavReflect.field(message,"e");if(!(d instanceof String)||!(p instanceof byte[])||((byte[])p).length>8192)return true;
+            if(!"LAUNCHER".equals(name)&&!"LOG_REPORT".equals(name)&&!"SCHEDULE_TODO".equals(name))return true;
+            Object d=NavReflect.field(message,"b"),p=NavReflect.field(message,"e");if(!(d instanceof String)||!(p instanceof byte[])||((byte[])p).length>262144)return true;
+            if("SCHEDULE_TODO".equals(name)){if(((byte[])p).length<=262144)TodoRuntime.queue((String)d,(byte[])p);return true;}
             return GlassesLog.queue(name,(String)d,(byte[])p);
         }catch(Throwable t){return true;}
     }
