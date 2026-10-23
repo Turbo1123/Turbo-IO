@@ -105,7 +105,7 @@ public final class TurboAddon {
     }
     // Android delivers these callbacks on ShareHandler, unlike the iOS hook's
     // main-queue controller. Queue original + extension work together in order.
-    private static volatile String exitedSession="";
+    private static final VoiceExit.Gate EXIT_GATE=new VoiceExit.Gate();
     public static void dispatchAsr(Object source, String text, boolean finished, String session) {
         serial(() -> {
             try { invokeTyped(source,"onAsrResult",new Class<?>[]{String.class,boolean.class,String.class},new Object[]{text,finished,session}); }
@@ -114,19 +114,22 @@ public final class TurboAddon {
             // listener's own stop path; the rest of that ASR session is ignored so a late delta cannot reopen it.
             if(finished&&prefs!=null&&prefs.getBoolean("voice_exit",false)&&VoiceExit.matches(text)){
                 VoiceExit.Stopper stopper=VoiceExit.resolve(source);
-                if(stopper!=null){cancel();exitedSession=session==null?"":session;diagnostic=stopper.stop()?"语音退出已调用官方停止入口；等待镜片确认":"语音退出调用失败";return;}
+                if(stopper!=null){cancel();boolean stopped=stopper.stop();EXIT_GATE.exited(session,stopped);diagnostic=stopped?"语音退出已调用官方停止入口；等待镜片确认":"语音退出调用失败";if(stopped)return;}
                 diagnostic="当前版本停止入口未通过校验，语音退出未执行";
             }
-            if(session!=null&&!exitedSession.isEmpty()&&session.equals(exitedSession))return;
+            if(EXIT_GATE.blocks(session))return;
             if(text!=null&&!text.isEmpty())VoiceSpeech.asr(source,session,finished);
             onAsr(source,text,finished,session);
         });
     }
     public static void dispatchNlp(Object source,Object response) {
-        serial(() -> { if(!onNlp(source,response)) try {invoke(source,"onNlpResult",response);observeSpeech(source,response);}catch(Exception ignored){diagnostic="官方 NLP 分发失败";} });
+        serial(() -> { String nlpSession;try{nlpSession=str(get(response,"SessionId"));}catch(Exception e){nlpSession="";}
+            if(EXIT_GATE.blocks(nlpSession)){diagnostic="语音退出后的回复已丢弃";return;}
+            if(!onNlp(source,response)) try {invoke(source,"onNlpResult",response);observeSpeech(source,response);}catch(Exception ignored){diagnostic="官方 NLP 分发失败";} });
     }
     public static void dispatchComplete(Object source) {
-        serial(() -> { if(!onComplete(source)) try {invoke(source,"onResponseComplete");VoiceSpeech.finish(source);}catch(Exception ignored){diagnostic="官方完成分发失败";} });
+        serial(() -> { if(EXIT_GATE.active())return; // exited turn: no completion, no read-out
+            if(!onComplete(source)) try {invoke(source,"onResponseComplete");VoiceSpeech.finish(source);}catch(Exception ignored){diagnostic="官方完成分发失败";} });
     }
     private static void observeSpeech(Object source,Object response){try{
         if(!ChatPolicy.eligible(str(get(response,"Domain")),str(get(response,"Intent")),str(get(response,"Sub")),Boolean.TRUE.equals(get(response,"Offline")),get(response,"Command")!=null))return;

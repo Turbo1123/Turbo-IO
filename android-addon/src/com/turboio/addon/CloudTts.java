@@ -13,6 +13,8 @@ final class CloudTts {
     interface Pcm{boolean available();boolean write(byte[] pcm16le);void stop();}
     interface Key{String get();}
     static final String DEFAULT_ENDPOINT="wss://dashscope.aliyuncs.com/api-ws/v1/inference";
+    /** Unplayed PCM a player may hold: a full 1800-character answer at ≥4 chars/s is ≤450 s × 48 kB/s ≈ 21.6 MB. */
+    static final long PCM_BUDGET_BYTES=24L*1024*1024;
     private static final String STOP="。！？!?；;\n",SOFT="，,、：: ";
 
     /** TIOVoiceTTSChunk: cut at a stop mark (index ≥3), else a soft mark once ≥65 chars, else at min(len,180) once that is ≥140,
@@ -47,6 +49,9 @@ final class CloudTts {
 
     private final Transport transport;private final Pcm pcm;private final Key key;private final String endpoint;
     private final ArrayDeque<String> queue=new ArrayDeque<>();private String full="",pending="",taskId="",status="云端待命";
+    private java.util.function.Consumer<String> statusListener;
+    synchronized void onStatus(java.util.function.Consumer<String> l){statusListener=l;}
+    private void set(String s){status=s;java.util.function.Consumer<String> l=statusListener;if(l!=null)l.accept(s);}
     private int segments,characters;private long generation;private boolean open,ready,finalRequested,finishSent,networkFinished;
     CloudTts(Transport transport,Pcm pcm,Key key){this(transport,pcm,key,DEFAULT_ENDPOINT);}
     CloudTts(Transport transport,Pcm pcm,Key key,String endpoint){this.transport=transport;this.pcm=pcm;this.key=key;this.endpoint=endpointValid(endpoint)?endpoint:DEFAULT_ENDPOINT;}
@@ -54,11 +59,11 @@ final class CloudTts {
     synchronized void beginTurn(){cancel();}
     synchronized void cancel(){
         generation++;if(open)transport.close();open=ready=finalRequested=finishSent=networkFinished=false;pcm.stop();
-        queue.clear();full="";pending="";taskId="";segments=characters=0;status="云端待命";
+        queue.clear();full="";pending="";taskId="";segments=characters=0;set("云端待命");
     }
     /** Cumulative answer text; must extend the previous text for this turn. */
     synchronized void append(String text,boolean fin){
-        if(text==null||(!full.isEmpty()&&!text.startsWith(full))||finalRequested&&!text.equals(full)){status="TTS 文本未追加";return;}
+        if(text==null||(!full.isEmpty()&&!text.startsWith(full))||finalRequested&&!text.equals(full)){set("TTS 文本未追加");return;}
         String added=text.substring(full.length());full=text;
         if(!added.isEmpty()&&characters<1800){String part=added.substring(0,Math.min(added.length(),1800-characters));pending+=part;characters+=part.length();}
         if(fin)finalRequested=true;
@@ -69,9 +74,9 @@ final class CloudTts {
         if(ready)flush();
     }
     private void start(){
-        String k=key.get();if(k==null||k.isEmpty()){status="未配置 TTS Key";queue.clear();return;}
-        if(!pcm.available()){status="眼镜音频未连接";queue.clear();return;}
-        taskId=UUID.randomUUID().toString();open=true;status="正在连接实时 TTS";long mine=generation;
+        String k=key.get();if(k==null||k.isEmpty()){set("未配置 TTS Key");queue.clear();return;}
+        if(!pcm.available()){set("眼镜音频未连接");queue.clear();return;}
+        taskId=UUID.randomUUID().toString();open=true;ready=false;finishSent=false;set("正在连接实时 TTS");long mine=generation;
         transport.open(endpoint,k,new Listener(){
             public void text(String json){control(mine,json);}
             public void binary(byte[] b){audio(mine,b);}
@@ -81,9 +86,9 @@ final class CloudTts {
     }
     private synchronized void control(long mine,String json){
         if(mine!=generation)return;String e=event(json);
-        if(e.equals("task-started")){ready=true;status="实时合成中";flush();}
+        if(e.equals("task-started")){ready=true;set("实时合成中");flush();}
         else if(e.equals("task-failed"))fail("TTS 服务返回失败");
-        else if(e.equals("task-finished")){networkFinished=true;open=false;transport.close();status="播放完成";}
+        else if(e.equals("task-finished")){networkFinished=true;open=false;transport.close();set("播放完成");}
     }
     private void flush(){
         if(!ready||!open)return;
@@ -93,8 +98,8 @@ final class CloudTts {
     private synchronized void audio(long mine,byte[] b){
         if(mine!=generation||b==null||b.length<2||b.length>512*1024)return;
         if(!pcm.available()){fail("眼镜音频未连接");return;}
-        if(pcm.write(b))status="眼镜正在播放";else fail("眼镜音频播放失败");
+        if(pcm.write(b))set("眼镜正在播放");else fail("眼镜音频播放失败");
     }
-    private synchronized void lost(long mine,String reason){if(mine!=generation||networkFinished)return;if(open){open=false;status="TTS 连接中断";queue.clear();}}
-    private void fail(String why){if(open)transport.close();open=ready=false;queue.clear();pcm.stop();status=why;}
+    private synchronized void lost(long mine,String reason){if(mine!=generation||networkFinished)return;if(open){open=false;ready=false;set("TTS 连接中断");}}
+    private void fail(String why){if(open)transport.close();open=ready=false;queue.clear();pcm.stop();set(why);}
 }

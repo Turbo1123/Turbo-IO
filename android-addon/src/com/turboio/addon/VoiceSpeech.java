@@ -25,11 +25,11 @@ final class VoiceSpeech {
     static boolean enabled(){return prefs!=null&&prefs.getBoolean("tts_enabled",false);}
     static void foreground(boolean value){foreground=value;if(!value)stop("App 进入后台，停止前台测试朗读");}
     private static boolean phoneAllowed(){return prefs.getBoolean("tts_phone",false);}
-    static String status(){return cloud()&&cloudTts!=null?cloudTts.status():status;}
+    static String status(){return status;}
     private static boolean cloud(){return prefs!=null&&"cloud".equals(prefs.getString("tts_engine","local"));}
     private static CloudTts cloudTts;private static String cloudFull="";private static PcmPlayer pcmPlayer;
     private static CloudTts cloudTts(){
-        if(cloudTts==null){pcmPlayer=new PcmPlayer();cloudTts=new CloudTts(new WsTransport(),pcmPlayer,()->{try{return SecretStore.get(app,"tts_key");}catch(Exception e){return "";}},prefs.getString("tts_endpoint",CloudTts.DEFAULT_ENDPOINT));}
+        if(cloudTts==null){pcmPlayer=new PcmPlayer();cloudTts=new CloudTts(new WsTransport(),pcmPlayer,()->{try{return SecretStore.get(app,"tts_key");}catch(Exception e){return "";}},prefs.getString("tts_endpoint",CloudTts.DEFAULT_ENDPOINT));CloudTts mine=cloudTts;cloudTts.onStatus(st->MAIN.post(()->{if(cloudTts==mine&&cloud())mark(st);}));}
         return cloudTts;
     }
     /** DashScope duplex socket on the shared bounded RFC6455 client. */
@@ -41,25 +41,30 @@ final class VoiceSpeech {
     }
     /** PCM16 LE mono 24 kHz to the Bluetooth media output on its own thread, so a slow AudioTrack never blocks callers. */
     private static final class PcmPlayer implements CloudTts.Pcm{
-        private final java.util.concurrent.LinkedBlockingQueue<byte[]> queue=new java.util.concurrent.LinkedBlockingQueue<>();private volatile int queued;private volatile Thread thread;private AudioTrack track;
+        private final java.util.concurrent.LinkedBlockingQueue<byte[]> queue=new java.util.concurrent.LinkedBlockingQueue<>();
+        private final java.util.concurrent.atomic.AtomicLong queued=new java.util.concurrent.atomic.AtomicLong();private Thread thread;
         public boolean available(){return phoneAllowed()||output()!=null;}
         public synchronized boolean write(byte[] pcm){
-            if(queued+pcm.length>4*1024*1024)return false;queued+=pcm.length;queue.offer(pcm.clone());
-            if(thread==null){Thread t=new Thread(this::run,"TurboIO-tts-pcm");thread=t;t.start();}return true;
+            if(queued.get()+pcm.length>CloudTts.PCM_BUDGET_BYTES)return false;queued.addAndGet(pcm.length);queue.offer(pcm.clone());
+            if(thread==null){Thread t=new Thread(()->run(Thread.currentThread()),"TurboIO-tts-pcm");thread=t;t.start();}return true;
         }
-        private void run(){
+        /** Leaves only when idle and nothing was queued meanwhile (checked under the lock), so a late write is never stranded. */
+        private synchronized boolean retire(Thread self){if(thread!=self)return true;if(!queue.isEmpty())return false;thread=null;return true;}
+        private void run(Thread self){
             AudioAttributes attr=new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build();
-            AudioFocusRequest f=new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK).setAudioAttributes(attr).build();
+            AudioFocusRequest f=new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK).setAudioAttributes(attr).setOnAudioFocusChangeListener(change->{if(change<0)MAIN.post(()->fail("音频焦点变化，停止朗读"));},MAIN).build();
+            AudioTrack t=null;
             try{if(audio.requestAudioFocus(f)!=AudioManager.AUDIOFOCUS_REQUEST_GRANTED){MAIN.post(()->mark("未获得音频焦点，云端朗读未播放"));return;}
                 int min=AudioTrack.getMinBufferSize(24000,AudioFormat.CHANNEL_OUT_MONO,AudioFormat.ENCODING_PCM_16BIT);
-                AudioTrack t=new AudioTrack.Builder().setAudioAttributes(attr).setAudioFormat(new AudioFormat.Builder().setSampleRate(24000).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).setEncoding(AudioFormat.ENCODING_PCM_16BIT).build()).setBufferSizeInBytes(Math.max(min*4,48000)).setTransferMode(AudioTrack.MODE_STREAM).build();
-                synchronized(this){track=t;}AudioDeviceInfo route=output();if(route!=null)t.setPreferredDevice(route);else if(!phoneAllowed()){MAIN.post(()->mark("眼镜音频未连接"));return;}
+                t=new AudioTrack.Builder().setAudioAttributes(attr).setAudioFormat(new AudioFormat.Builder().setSampleRate(24000).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).setEncoding(AudioFormat.ENCODING_PCM_16BIT).build()).setBufferSizeInBytes(Math.max(min*4,48000)).setTransferMode(AudioTrack.MODE_STREAM).build();
+                AudioDeviceInfo route=output();if(route!=null)t.setPreferredDevice(route);else if(!phoneAllowed()){MAIN.post(()->mark("眼镜音频未连接"));return;}
                 t.play();
-                while(Thread.currentThread()==thread){byte[] b=queue.poll(3,java.util.concurrent.TimeUnit.SECONDS);if(b==null)break;queued-=b.length;if(t.write(b,0,b.length)<0)break;}
-            }catch(Exception e){MAIN.post(()->mark("眼镜音频播放失败"));}
-            finally{synchronized(this){if(track!=null){try{track.stop();}catch(RuntimeException ignored){}track.release();track=null;}if(thread==Thread.currentThread())thread=null;}audio.abandonAudioFocusRequest(f);}
+                while(true){byte[] b=queue.poll(3,java.util.concurrent.TimeUnit.SECONDS);if(b==null){if(retire(self))break;continue;}queued.addAndGet(-b.length);if(t.write(b,0,b.length)<0)break;}
+            }catch(InterruptedException e){/* stop()/new turn: silent, not a playback failure */}
+            catch(Exception e){MAIN.post(()->mark("眼镜音频播放失败"));}
+            finally{if(t!=null){try{t.pause();t.flush();t.stop();}catch(RuntimeException ignored){}t.release();}retire(self);audio.abandonAudioFocusRequest(f);}
         }
-        public synchronized void stop(){Thread t=thread;thread=null;queue.clear();queued=0;if(track!=null)try{track.pause();track.flush();}catch(RuntimeException ignored){}if(t!=null)t.interrupt();}
+        public synchronized void stop(){Thread t=thread;thread=null;queue.clear();queued.set(0);if(t!=null)t.interrupt();}
     }
     private static void mark(String s){status=s;for(Runnable r:new ArrayList<>(listeners))try{r.run();}catch(RuntimeException ignored){}}
     static void stop(String reason){if(cloudTts!=null)cloudTts.cancel();cloudFull="";generation++;queue.clear();buffer.reset();official="";activeId="";source=null;session="";speaking=received=blocked=false;
@@ -142,6 +147,6 @@ final class VoiceSpeech {
         new AlertDialog.Builder(a).setTitle("阿里 Flash TTS 配置").setView(box).setNegativeButton("取消",null).setPositiveButton("保存",(d,w)->{
             String url=endpoint.getText().toString().trim();if(!CloudTts.endpointValid(url)){EditorialUI.notice(a,"服务地址不符合要求，未保存");return;}
             try{String k=key.getText().toString().trim();if(!k.isEmpty())SecretStore.put(app,"tts_key",k);}catch(Exception e){EditorialUI.notice(a,"Key 保存失败");return;}
-            prefs.edit().putString("tts_endpoint",url).apply();cloudTts=null;stop("云端 TTS 配置已保存");}).show();
+            prefs.edit().putString("tts_endpoint",url).apply();stop("云端 TTS 配置已保存");cloudTts=null;/* old engine stopped before it is replaced */}).show();
     }
 }

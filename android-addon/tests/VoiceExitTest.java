@@ -17,6 +17,11 @@ public final class VoiceExitTest {
         Outer o=new Outer();VoiceExit.Stopper st=VoiceExit.resolve(new Listener(o));ok(st!=null,"resolves");
         ok(st.stop()&&o.calls==1&&o.args[0]==null&&Boolean.FALSE.equals(o.args[1])&&Boolean.FALSE.equals(o.args[2]),"official stop s(null,false,false) once");
         ok(VoiceExit.resolve(new WrongListener())==null&&VoiceExit.resolve(new NoField())==null&&VoiceExit.resolve(null)==null,"no entry on other shapes");
+        // Session gate (iOS voiceExited): after a successful exit the same session's ASR, NLP and completion are dropped;
+        // a failed stop never gates; a different session clears the gate.
+        VoiceExit.Gate g=new VoiceExit.Gate();ok(!g.blocks("s1"),"open");g.exited("s1",false);ok(!g.blocks("s1"),"failed stop does not gate");
+        g.exited("s1",true);ok(g.blocks("s1")&&g.blocks("s1"),"exited session gated");ok(!g.blocks("s2")&&!g.blocks("s1"),"new session clears gate");
+        g.exited("s3",true);ok(!g.blocks(null)&&g.blocks("s3"),"null session never gated");ok(g.active(),"active until a new session");g.blocks("s4");ok(!g.active(),"cleared by new session");
         System.out.println("VoiceExitTest: "+n+" checks; exact phrases, official stop entry");
     }
 }

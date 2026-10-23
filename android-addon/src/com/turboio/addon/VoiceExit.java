@@ -27,4 +27,12 @@ final class VoiceExit {
             return ()->{try{m.invoke(outer,null,false,false);return true;}catch(Exception e){return false;}};
         }catch(Exception e){return null;}
     }
+    /** iOS voiceExited: after a successful stop, drop that session's remaining ASR, NLP and completion so a late
+     * reply cannot reopen the page or be read aloud. A failed stop never gates; any other session clears the gate. */
+    static final class Gate{
+        private String session="";
+        synchronized void exited(String sid,boolean stopped){if(stopped&&sid!=null&&!sid.isEmpty())session=sid;}
+        synchronized boolean active(){return !session.isEmpty();}
+        synchronized boolean blocks(String sid){if(sid==null||session.isEmpty())return false;if(sid.equals(session))return true;session="";return false;}
+    }
 }

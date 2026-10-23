@@ -42,6 +42,16 @@ public final class CloudTtsTest {
         int textChars=0;for(String x:cap.sent)if(x.contains("continue-task")){int i=x.indexOf("\"text\":\"")+8;textChars+=x.indexOf('"',i)-i;}ok(textChars<=1800,"<=1800 characters");
         FakeTransport nk=new FakeTransport();CloudTts ns=new CloudTts(nk,new FakePcm(),()->"");ns.beginTurn();ns.append("你好你好。",true);ok(nk.opens==0&&ns.status().contains("未配置 TTS Key"),"no key, no connection");
         FakePcm off=new FakePcm();off.route=false;FakeTransport nr=new FakeTransport();CloudTts rs=new CloudTts(nr,off,()->"k");rs.beginTurn();rs.append("你好你好。",true);ok(nr.opens==0&&rs.status().contains("眼镜音频未连接"),"no bluetooth, no connection");
+        // Reconnect after a dropped socket: the new task waits for its own task-started, and still gets finish-task.
+        FakeTransport rc=new FakeTransport();CloudTts r=new CloudTts(rc,new FakePcm(),()->"k");r.beginTurn();r.append("第一句话。",false);rc.listener.text(ev("task-started"));
+        rc.listener.closed("transport_or_protocol_error");int before=rc.sent.size();r.append("第一句话。第二句话。",true);
+        ok(rc.opens==2&&rc.sent.size()==before+1&&rc.last().contains("run-task"),"reconnect sends only run-task first");
+        rc.listener.text(ev("task-started"));ok(rc.sent.stream().skip(before).anyMatch(x->x.contains("continue-task"))&&rc.last().contains("finish-task"),"then text and finish-task");
+        // Status changes are pushed to the UI listener (failure, playing, finished).
+        List<String> seen=new ArrayList<>();FakeTransport st=new FakeTransport();CloudTts sv=new CloudTts(st,new FakePcm(),()->"k");sv.onStatus(seen::add);sv.beginTurn();sv.append("你好你好。",true);
+        st.listener.text(ev("task-started"));st.listener.binary(new byte[480]);st.listener.text(ev("task-failed"));ok(seen.contains("眼镜正在播放")&&seen.contains("TTS 服务返回失败"),"status pushed");
+        // PCM budget covers a full 1800-character answer (≥ 4 chars/s at 48 kB/s).
+        ok(CloudTts.PCM_BUDGET_BYTES>=1800L/4*48000,"pcm budget covers the per-answer cap");
         System.out.println("CloudTtsTest: "+n+" checks; chunker, endpoint, duplex flow, key privacy, late audio, caps");
     }
 }
