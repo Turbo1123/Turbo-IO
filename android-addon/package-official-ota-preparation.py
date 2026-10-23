@@ -13,10 +13,10 @@ import zipfile
 ROUTES = (b'http://127.0.0.1:18794/g/xxxxxxxA78p2M', b'http://127.0.0.1:18794/g/xxxxxxxxxxCCXhB')
 # original libapp.so SHA-256 -> (patched SHA-256, version tag, slot offsets)
 PROFILES = {
-    '78214ba0e1057871315da1cee17d860415c8b913521e59afc2748e45ead64c6c':
-        ('851e0c59babc656e4eb4f47e00f3947605c3ddba530eeef4b65e7942e2898541', '105', (0x86e1f5, 0xd95b8)),
     'e9ab4326681c0b53892550b04e03284b2bba2e30adcf22033b8e23e5b3bc66af':
         ('96cc9a9f4634a2321e06790d0f062cd36e6420ef69c6166eb5bab41608fb917e', '106', (0x885c9a, 0xe1ffc)),
+    'a35159a82c0916f62ed6c4da271a40217300cc6678b29c54f2591d9fb592a45c':
+        ('48ffd34352bf23eca928ad9c2f576347c4965a5af5ca05a35c1f1ed2ffc9fd50', '107', (0x88512e, 0xe1e48)),
 }
 NATIVE = 'lib/arm64-v8a/libapp.so'
 MARKER = 'assets/turboio/official-ota-preparation.txt'
