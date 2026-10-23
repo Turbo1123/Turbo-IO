@@ -21,6 +21,8 @@ final class OfficialOtaGate {
  private int chunks,apCovered;
  private long bytes;
  private final TreeMap<Integer,Integer> apRanges=new TreeMap<>();
+ // Last version-read OsVersion: preflight accepts any pinned base, post-install readback needs the target.
+ private Object osVersion;
  OfficialOtaGate(Journal j){journal=j;Arrays.fill(requested,-1);Arrays.fill(fresh,-1);}
  Phase phase(){return phase;}String error(){return error;}String peer(){return peer;}
  boolean pending(){return started;}int chunks(){return chunks;}int covered(){return apCovered;}
@@ -31,7 +33,7 @@ final class OfficialOtaGate {
   peer=device;Arrays.fill(requested,-1);Arrays.fill(fresh,-1);Arrays.fill(good,false);
  }
  void arm(OtaPackage candidate,String device,String token,long now){
-  if(phase!=Phase.LOCKED||candidate==null||!peer.equals(device)||!"TAP1-TEST-01".equals(token))throw new IllegalStateException("arm denied");
+  if(phase!=Phase.LOCKED||candidate==null||!peer.equals(device)||!OtaPackage.TOKEN.equals(token))throw new IllegalStateException("arm denied");
   firmware=candidate;grant=now+900000;last=now;phase=Phase.ARMED;error="";
  }
  void revoke(){if(started)return;phase=Phase.LOCKED;grant=0;firmware=null;}
@@ -47,7 +49,7 @@ final class OfficialOtaGate {
   if(started&&phase!=Phase.UNKNOWN&&phase!=Phase.INSTALLING&&deadline>0&&now>=deadline)fail("official response timeout");
  }
  private boolean recent(int t,long now,long ttl){return good[t]&&fresh[t]>=0&&now>=fresh[t]&&now-fresh[t]<=ttl;}
- boolean freshBoot(long now){return recent(1,now,60000)&&recent(11,now,60000);}
+ boolean freshBoot(long now){return recent(1,now,60000)&&OtaPackage.VERSION.equals(osVersion)&&recent(11,now,60000);}
  boolean readyToArm(long now){return recent(1,now,PREFLIGHT_TTL_MS)&&recent(2,now,PREFLIGHT_TTL_MS)&&recent(11,now,PREFLIGHT_TTL_MS);}
  String idleEvidence(long now){return "idleGood="+good[11]+" replyAgeMs="+(fresh[11]<0?-1:now-fresh[11])+" pendingAgeMs="+(requested[11]<0?-1:now-requested[11]);}
  boolean queryPending(int type,long now){return requested[type]>=0&&now-requested[type]<=15000;}
@@ -102,7 +104,7 @@ final class OfficialOtaGate {
    if(f.type==1||f.type==2||f.type==3||f.type==11){
     if(requested[f.type]<0||now-requested[f.type]>15000)return;
     requested[f.type]=-1;fresh[f.type]=now;good[f.type]=false;
-    if(f.type==1)good[1]=OtaPackage.VERSION.equals(j.get("OsVersion"))&&"idle".equals(j.get("OtaValidationState"))&&Boolean.TRUE.equals(j.get("OtaValidationConfirmed"))&&BoundedJson.list(j.get("PackageTypes")).contains("files");
+    if(f.type==1){osVersion=j.get("OsVersion");good[1]=OtaPackage.BASES.contains(osVersion)&&"idle".equals(j.get("OtaValidationState"))&&Boolean.TRUE.equals(j.get("OtaValidationConfirmed"))&&BoundedJson.list(j.get("PackageTypes")).contains("files");}
     else if(f.type==2)good[2]=BoundedJson.number(j.get("BatteryLevel"),0,100)>=50;
     else good[f.type]=Boolean.TRUE.equals(j.get("Result"));
     return;

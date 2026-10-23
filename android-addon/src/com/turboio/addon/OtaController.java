@@ -36,7 +36,11 @@ public final class OtaController {
  static boolean critical(){return pending;}
  private static String fingerprint(String peer){return OtaPackage.hash("SHA-256",peer.getBytes(StandardCharsets.UTF_8));}
  private static void record(String event){if(log.size()==96)log.remove(0);log.add(SystemClock.elapsedRealtime()+" "+event);}
- static String status(){String base="ANDROID 1.0.5 · OTA-02 / INTEGRATION-08k\n"+note+"\n候选："+(firmware==null?"未载入":OtaPackage.NAME+" · 15/15 校验通过")+"\nAP：9,590,856 字节 · 只有 AP 与原厂不同\n";
+ /** A pending journal from an old TAP1 self-sender run cannot be read back here (TVP2 build only
+  * accepts Strix OS 1.0.5.5), so say how to leave it instead of offering buttons that cannot work. */
+ static String staleJournalNote(){return "检测到旧版（TAP1 自发包）升级记录，结果未确认，本版无法回读或解除；为安全起见已拦截官方升级与部分眼镜业务。\n"
+  +"1. 确认眼镜已自然重启并回到首页、功能正常；\n2. 在系统设置 → 应用 → 雷鸟 AI → 存储，清除数据后重新登录；\n3. 如眼镜无法回首页，不要再次刷写，保留现状并联系开发者。";}
+ static String status(){String base="ANDROID · OTA-02 / INTEGRATION-08k\n"+note+"\n候选："+(firmware==null?"未载入":OtaPackage.NAME+" · 15/15 校验通过")+"\nAP："+String.format(java.util.Locale.ROOT,"%,d",OtaPackage.AP_SIZE)+" 字节 · 只有 AP 与原厂不同\n";
   if(session!=null)base+="阶段："+session.state()+"\n电量："+(session.battery()<0?"待读取":session.battery()+"%")+"\n授权："+(session.state()==OtaSession.State.AUTHORIZED?"1":"0")+"\n请求片数："+session.chunks()+" · SDK 已确认消息："+sdkConfirmed+"\nAP 请求覆盖："+session.covered()+" / "+OtaPackage.AP_SIZE+" 字节\n";
   return base+"结果保护："+(pending?"待回读，不可重试":"未开始刷写")+"\n"+(session==null&&pending&&journal!=null?"上次记录："+journal.getString("phase","UNKNOWN")+" · "+journal.getString("chunks","0")+" 片":"")+"\n"+(session==null?"":session.recoveryStatus(SystemClock.elapsedRealtime())+"\n"+session.error());
  }
@@ -82,9 +86,9 @@ public final class OtaController {
   if(s==OtaSession.State.READBACK){note="原厂启动校验已确认、眼镜空闲；仍须检查桌面和 TAP1 功能后解除保护";OtaService.finish();}
  }
  private static final Runnable tick=new Runnable(){public void run(){long now=SystemClock.elapsedRealtime();String peer=NativeTransfer.otaConnection();restoreSession(peer,now);if(session!=null){session.check(peer,now);settle();}if(installSeen>0&&now-installSeen>600000)OtaService.finish();if(pending||session!=null&&session.owns())MAIN.postDelayed(this,pending&&(session==null||session.state()==OtaSession.State.UNKNOWN||session.state()==OtaSession.State.INSTALLING||session.state()==OtaSession.State.READBACK)?1000:250);}};
- private static void send(byte[] bytes){if(bytes==null||session==null||session.state()==OtaSession.State.UNKNOWN||session.state()==OtaSession.State.LOCKED)return;if(sending){fail("发送队列冲突，未重试");return;}long token=generation,serial=++sendSerial;try{if(!session.peer().equals(NativeTransfer.connected()))throw new IllegalStateException();Object manager=NavReflect.field(NavReflect.type("E3.u"),"h"),biz=NavReflect.call(NavReflect.type("P3.h"),"valueOf","MARS_FOTA"),priority=NavReflect.call(NavReflect.type("E3.b"),"valueOf","NORMAL");Object message=NavReflect.make("E3.Q",bytes,UUID.randomUUID().toString(),session.peer(),biz,null,priority,false,false,null,null);sending=true;
+ private static void send(byte[] bytes){if(bytes==null||session==null||session.state()==OtaSession.State.UNKNOWN||session.state()==OtaSession.State.LOCKED)return;if(sending){fail("发送队列冲突，未重试");return;}long token=generation,serial=++sendSerial;try{if(!session.peer().equals(NativeTransfer.connected()))throw new IllegalStateException();Object manager=NavReflect.field(NavReflect.type(HostAbi.manager()),"h"),biz=NavReflect.call(NavReflect.type(HostAbi.business()),"valueOf","MARS_FOTA"),priority=NavReflect.call(NavReflect.type(HostAbi.priority()),"valueOf","NORMAL");Object message=NavReflect.make(HostAbi.message(),bytes,UUID.randomUUID().toString(),session.peer(),biz,null,priority,false,false,null,null);sending=true;
    Object callback=NavReflect.proxy("kotlin.jvm.functions.Function2",(name,args)->{boolean ok=args.length>1&&args[1]==null;MAIN.post(()->{if(token!=generation||serial!=sendSerial||!sending)return;sending=false;if(!ok){fail("官方 SDK 未确认发送；升级结果待核对");return;}sdkConfirmed++;drain();});});
-   OWN_MESSAGE.set(message);try{NavReflect.call(manager,"u",message,callback);}finally{OWN_MESSAGE.remove();}
+   OWN_MESSAGE.set(message);try{NavReflect.call(manager,HostAbi.send(),message,callback);}finally{OWN_MESSAGE.remove();}
   }catch(Exception e){fail("无法提交到官方 OTA 通道，未自动重试");}}
  private static void drain(){while(!sending&&!inbound.isEmpty()&&session!=null){byte[] b=inbound.removeFirst();byte[] answer=session.accept(session.peer(),b,SystemClock.elapsedRealtime());settle();if(answer!=null)send(answer);}}
  private static void enqueueFault(String why){long token=generation;if(!FAULT_QUEUED.compareAndSet(false,true))return;MAIN.post(()->{FAULT_QUEUED.set(false);if(token==generation&&busy())fail(why);});}
@@ -94,7 +98,7 @@ public final class OtaController {
   }catch(RuntimeException e){return intercepting();}}
  /** Exact SDK queue hook. Owned identity can only be set during our synchronous u(). */
  public static synchronized boolean allowQueue(Object message){try{Object biz=NavReflect.field(message,"c");if(!(biz instanceof Enum))return false;String name=((Enum<?>)biz).name();if(!"MARS_FOTA".equals(name)){if(!INTERACTIVE.contains(name))return true;return bootstrap()&&!intercepting();}if(!bootstrap())return false;if(intercepting())return message==OWN_MESSAGE.get();if(message==OWN_MESSAGE.get())return true;Object data=NavReflect.field(message,"e");if(data instanceof byte[])try{OtaFrame f=OtaFrame.decode((byte[])data);if(f.type==4){if(preparing){enqueueFault("官方也在请求升级；本次准备已撤销");return false;}officialBusyUntil=SystemClock.elapsedRealtime()+1800000;}else if(preparing&&f.type>=5&&f.type<=9)enqueueFault("发现原厂升级传输，保留原厂通路并撤销实验准备");}catch(RuntimeException ignored){if(preparing)enqueueFault("原厂 OTA 消息格式未知，本次准备已撤销");}return true;}catch(Exception e){return false;}}
- public static void blocked(Object message){try{Object callback=NavReflect.field(message,"k");if(callback!=null)NavReflect.call(callback,"invoke",message,NavReflect.field(NavReflect.type("P3.A"),"r"));}catch(Exception ignored){}}
+ public static void blocked(Object message){try{Object callback=NavReflect.field(message,"k");if(callback!=null)NavReflect.call(callback,"invoke",message,NavReflect.field(NavReflect.type(HostAbi.error()),"r"));}catch(Exception ignored){}}
  public static boolean allowFile(){return bootstrap()&&!intercepting();}
  static void serviceLost(){if(pending&&session!=null&&session.state()!=OtaSession.State.INSTALLING&&session.state()!=OtaSession.State.READBACK&&session.state()!=OtaSession.State.UNKNOWN)fail("升级保障服务已丢失；结果待确认，禁止自动恢复");}
 }

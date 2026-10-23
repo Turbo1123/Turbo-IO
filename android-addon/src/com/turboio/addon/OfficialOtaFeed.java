@@ -44,7 +44,7 @@ final class OfficialOtaFeed implements Closeable {
    if(out.put(k,v)!=null)throw new IOException("duplicate query");
   }return out;
  }
- static boolean firmware(Map<String,String> q){return "firmware".equals(q.get("packageType"))&&"strix OS".equals(q.get("packageName"))&&"S3".equals(q.get("glassesType"))&&"android".equals(q.get("deviceType"))&&"01.00.04.0012".equals(q.get("versionCode"));}
+ static boolean firmware(Map<String,String> q){return "firmware".equals(q.get("packageType"))&&"strix OS".equals(q.get("packageName"))&&"S3".equals(q.get("glassesType"))&&"android".equals(q.get("deviceType"))&&OtaPackage.BASE_CODES.contains(q.get("versionCode"));}
  static final class Reply {int code=200;byte[] body=new byte[0];String type="application/json",range="";boolean head;}
  synchronized Reply reply(String request){
   Reply r=new Reply();try{
@@ -60,10 +60,10 @@ final class OfficialOtaFeed implements Closeable {
    if(Arrays.asList(PATHS).contains(path)){
     Map<String,String> q=query(target);queries++;boolean match=firmware(q);if(match)firmwareQueries++;
     // Values are never retained: these booleans cannot expose IDs, tokens or headers.
-    queryShape="firmware="+"firmware".equals(q.get("packageType"))+", app="+"app".equals(q.get("packageType"))+", S3="+"S3".equals(q.get("glassesType"))+", android="+"android".equals(q.get("deviceType"))+", name="+"strix OS".equals(q.get("packageName"))+", version="+"01.00.04.0012".equals(q.get("versionCode"));
-    Object data=null;if(match&&archive!=null)data=OtaFrame.object("taskName",guarded?"TAP1-TEST-01 GUARDED":"TAP1-TEST-01 PREPARATION ONLY","appName","Strix OS","packageName","Strix OS","versionName","0100040012","versionCode",100040012,"upgradeType",1,"userScope",0,"updateDesc",guarded?"TAP1-TEST-01 experimental firmware. AP-only; requires separate one-time authorization. Risk of device failure. Do not install without confirmation.":"TEST: download and verify on phone only. Glasses upgrade sending is disabled.","appIcon","","apkSize",archive.length,"apkMd5",md5,"downloadUrl","http://127.0.0.1:"+listener.getLocalPort()+"/p/"+token+"/Strix_OS_1.0.4.12.zip");
+    queryShape="firmware="+"firmware".equals(q.get("packageType"))+", app="+"app".equals(q.get("packageType"))+", S3="+"S3".equals(q.get("glassesType"))+", android="+"android".equals(q.get("deviceType"))+", name="+"strix OS".equals(q.get("packageName"))+", version="+OtaPackage.BASE_CODES.contains(q.get("versionCode"));
+    Object data=null;if(match&&archive!=null)data=OtaFrame.object("taskName",guarded?OtaPackage.TOKEN+" GUARDED":OtaPackage.TOKEN+" PREPARATION ONLY","appName","Strix OS","packageName","Strix OS","versionName",OtaPackage.FEED_VERSION,"versionCode",OtaPackage.FEED_CODE,"upgradeType",1,"userScope",0,"updateDesc",guarded?OtaPackage.TOKEN+" experimental firmware. AP-only; requires separate one-time authorization. Risk of device failure. Do not install without confirmation.":"TEST: download and verify on phone only. Glasses upgrade sending is disabled.","appIcon","","apkSize",archive.length,"apkMd5",md5,"downloadUrl","http://127.0.0.1:"+listener.getLocalPort()+"/p/"+token+"/"+OtaPackage.DIRECTORY+".zip");
     r.body=BoundedJson.canonical(OtaFrame.object("error_code",1000,"error_msg","success","data",data));
-   }else if(archive!=null&&target.equals("/p/"+token+"/Strix_OS_1.0.4.12.zip")){
+   }else if(archive!=null&&target.equals("/p/"+token+"/"+OtaPackage.DIRECTORY+".zip")){
     r.type="application/zip";r.body=archive;
     if(h.containsKey("range")){
      String v=h.get("range");if(!v.matches("bytes=[0-9]{1,10}-[0-9]{0,10}")){r.code=416;r.body=new byte[0];return r;}

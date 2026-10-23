@@ -23,7 +23,8 @@ final class OtaSession {
  private byte[] frame(int type,Object j){return OtaFrame.encode(type,j,null);}
  private byte[] query(State next,int type,long now){state=next;deadline=now+15000;return frame(type,null);}
  byte[] prepare(String device,long now){if(state!=State.LOCKED||firmware==null||device==null||device.isEmpty())throw new IllegalStateException("prepare denied");peer=device;preparation=now+900000;error="";return query(State.CHECK_VERSION,1,now);}
- void authorize(String token,String current,long now){check(current,now);if(state!=State.READY||!"TAP1".equals(token)||now-fresh>120000)throw new IllegalStateException("fresh checks and TAP1 required");state=State.AUTHORIZED;grant=Math.min(preparation,now+900000);}
+ // TVP2-only: the legacy self-sender is retired; firmware goes through the official GUARD flow.
+ void authorize(String token,String current,long now){check(current,now);throw new IllegalStateException("self-sender retired; use the official TVP2 GUARD flow");}
  void validateStart(String current,long now){check(current,now);if(state!=State.AUTHORIZED||now>=grant||now-fresh>120000||battery<50)throw new IllegalStateException("authorization expired");}
  byte[] start(String current,long now){validateStart(current,now);started=true;state=State.STARTING;deadline=now+30000;grant=0;return frame(4,OtaFrame.object("Mode",2));}
  void fail(String reason,long now){error=reason;state=started||recovering?State.UNKNOWN:State.LOCKED;deadline=0;grant=0;bootValidated=false;if(state==State.UNKNOWN&&recoveryGuard==null)recoveryGuard=new OtaRecoveryGuard(peer,now,true);}

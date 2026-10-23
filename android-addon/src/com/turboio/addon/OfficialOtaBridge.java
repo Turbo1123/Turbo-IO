@@ -111,21 +111,21 @@ public final class OfficialOtaBridge {
  static synchronized void serviceLost(){if(enabled()&&gate!=null&&gate.active()){gate.fail("foreground service lost");settle();}}
  static synchronized void cancel(){epoch++;if(gate!=null&&!pending){gate.revoke();armed=false;settle();note="未使用授权已撤销；没有自动开始";}}
  private static OtaPackage freeze()throws IOException{
-  File root=app.getFilesDir();File[] dirs={new File(root,"ota/Strix_OS_1.0.4.12"),new File(root.getParentFile(),"app_flutter/ota/Strix_OS_1.0.4.12")};File only=null;
+  File root=app.getFilesDir();File[] dirs={new File(root,"ota/"+OtaPackage.DIRECTORY),new File(root.getParentFile(),"app_flutter/ota/"+OtaPackage.DIRECTORY)};File only=null;
   for(File d:dirs)if(d.exists()){if(only!=null)throw new IOException("ambiguous directory");only=d;}
   if(only==null)throw new IOException("not prepared");return OtaPackage.freezeDirectory(only.toPath());
  }
  private static void inspect(){
   final String peer;final long generation;
   synchronized(OfficialOtaBridge.class){
-   if(pending||armed||checking||!foreground||OtaController.busy()){note="只读预检条件未满足；未授权";return;}
+   if(pending||armed||checking||!foreground||OtaController.busy()||DisplayBridge.active()||HdCast.active()||TodoRuntime.busy()){note="只读预检条件未满足；未授权";return;}
    peer=NativeTransfer.connected();if(peer.isEmpty()){note="没有唯一连接眼镜";return;}
    checking=true;generation=++epoch;note="只读核对官方目录；不会授权或发送固件";
   }
   new Thread(()->{boolean ok=false;try{freeze();ok=true;}catch(Exception ignored){}final boolean valid=ok;
    MAIN.post(()->{synchronized(OfficialOtaBridge.class){checking=false;
     if(generation!=epoch||pending||armed||!foreground||!peer.equals(NativeTransfer.connected())||!valid){note="目录/连接校验未通过；未授权";settle();return;}
-    try{bindCurrent(peer,SystemClock.elapsedRealtime());sendReadOnly(peer,1);sendReadOnly(peer,2);sendReadOnly(peer,11);note="官方目录 15/15 校验通过；已提交版本/电量/空闲只读查询，等待实际回执。授权仍为0。";}
+    try{bindCurrent(peer,SystemClock.elapsedRealtime());sendReadOnly(peer,1);sendReadOnly(peer,2);sendReadOnly(peer,11);note="官方目录 "+OtaPackage.PIN_COUNT+"/"+OtaPackage.PIN_COUNT+" 校验通过；已提交版本/电量/空闲只读查询，等待实际回执。授权仍为0。";}
     catch(Exception e){note="目录校验通过，但只读查询提交失败；未授权";}settle();
    }});
   },"TurboIO-official-ota-inspect").start();
@@ -133,12 +133,12 @@ public final class OfficialOtaBridge {
  private static void authorize(String token){
   final String peer;final long generation;
   synchronized(OfficialOtaBridge.class){
-   if(!"TAP1-TEST-01".equals(token)||pending||armed||checking||!foreground||OtaController.busy()){note="授权条件未满足";return;}
+   if(!OtaPackage.TOKEN.equals(token)||pending||armed||checking||!foreground||OtaController.busy()||DisplayBridge.active()||HdCast.active()||TodoRuntime.busy()){note="授权条件未满足";return;}
    if(gate==null||!gate.readyToArm(SystemClock.elapsedRealtime())){note="请先完成只读预检，确认版本/电量/空闲均为true后再授权";return;}
    peer=NativeTransfer.connected();if(peer.isEmpty()){note="没有唯一连接眼镜";return;}
    // Service startup is asynchronous; grant only after it reports ready.
    try{app.startForegroundService(new Intent(app,OtaService.class));}catch(RuntimeException e){note="前台服务启动失败，禁止授权";return;}
-   checking=true;generation=++epoch;note="重新核对官方目录并冻结 15 个成员；尚未授权";
+   checking=true;generation=++epoch;note="重新核对官方目录并冻结 "+OtaPackage.PIN_COUNT+" 个成员；尚未授权";
   }
   new Thread(()->{
    OtaPackage frozen=null;try{frozen=freeze();}catch(Exception ignored){}final OtaPackage result=frozen;
@@ -159,12 +159,12 @@ public final class OfficialOtaBridge {
   TextView label=EditorialUI.text(a,status(),14,EditorialUI.LIME);s.body.addView(label);
   EditorialUI.button(a,s.body,"1 · 开启 15 分钟官方只下载",false,()->{if(pending||armed||feed==null){EditorialUI.notice(a,"请先处理结果保护或撤销授权");return;}DocumentPicker.pick(a,OtaPackage.ZIP_SIZE,b->{new Thread(()->{try{feed.arm(b);note="来源已开放；请去官方更新页下载，先不要安装";}catch(Exception e){note="指定包校验失败，未开放来源";}},"TurboIO-official-source").start();});});
   EditorialUI.button(a,s.body,"2 · 只读预检（不授权、不刷写）",false,OfficialOtaBridge::inspect);
-  EditorialUI.button(a,s.body,"3 · 校验目录并允许一次试刷",false,()->{EditText input=new EditText(a);input.setSingleLine(true);input.setHint("TAP1-TEST-01");new AlertDialog.Builder(a).setTitle("单次授权，不自动开始").setMessage("先完成只读预检。确认眼镜无任务、电量至少50%，且已了解实验风险。只放行已校验 TAP1-TEST-01；输入完整标记后，返回官方页面开始。手机保持前台与供电。").setView(input).setNegativeButton("取消",null).setPositiveButton("授权",(d,w)->authorize(input.getText().toString().trim())).show();});
+  EditorialUI.button(a,s.body,"3 · 校验目录并允许一次试刷",false,()->{EditText input=new EditText(a);input.setSingleLine(true);input.setHint(OtaPackage.TOKEN);new AlertDialog.Builder(a).setTitle("单次授权，不自动开始").setMessage("先完成只读预检。确认眼镜无任务、电量至少50%，且已了解实验风险。只放行已校验 "+OtaPackage.TOKEN+"；输入完整标记后，返回官方页面开始。手机保持前台与供电。").setView(input).setNegativeButton("取消",null).setPositiveButton("授权",(d,w)->authorize(input.getText().toString().trim())).show();});
   EditorialUI.button(a,s.body,"撤销未使用授权 / 关闭来源",false,()->{cancel();if(feed!=null)feed.disarm();});
   EditorialUI.button(a,s.body,"返回官方 App",false,()->s.dialog.dismiss());
-  s.body.addView(EditorialUI.text(a,"通过片数仅代表出站内容校验，不代表眼镜接收或安装成功。任何断连/异常均不自动重发。升级结束后先等待自然重启，核对官方启动结果与镜片显示TEST标记。",13,EditorialUI.MUTED));
+  s.body.addView(EditorialUI.text(a,"通过片数仅代表出站内容校验，不代表眼镜接收或安装成功。任何断连/异常均不自动重发。升级结束后先等待自然重启，核对官方启动结果与镜片"+OtaPackage.MARKER+"。",13,EditorialUI.MUTED));
   EditorialUI.button(a,s.body,"已自然回首页：允许只读回查",false,()->EditorialUI.confirm(a,"确认升级已结束并回到首页？","若眼镜仍在更新、黑屏或结果不明，请不要确认。不重置、不重刷；只查询同一眼镜。",OfficialOtaBridge::readback));
-  EditorialUI.button(a,s.body,"已检查显示TEST：解除结果保护",false,()->EditorialUI.confirm(a,"已核对同一眼镜显示TEST及其他功能？","必须先有新的启动校验和空闲回执。版本号相同不等于测试 AP 刷入成功。这里只解除保护，不重试。",OfficialOtaBridge::release));
+  EditorialUI.button(a,s.body,"已检查"+OtaPackage.MARKER+"：解除结果保护",false,()->EditorialUI.confirm(a,"已核对同一眼镜"+OtaPackage.MARKER+"及其他功能？","必须先有新的启动校验和空闲回执。版本号相同不等于测试 AP 刷入成功。这里只解除保护，不重试。",OfficialOtaBridge::release));
   Runnable refresh=new Runnable(){public void run(){if(!s.dialog.isShowing())return;label.setText(status());MAIN.postDelayed(this,500);}};MAIN.post(refresh);s.dialog.setOnDismissListener(d->MAIN.removeCallbacks(refresh));
  }
  private static synchronized void readback(){
@@ -174,9 +174,9 @@ public final class OfficialOtaBridge {
  }
  private static void sendReadOnly(String peer,int type)throws Exception{
   if(type!=1&&type!=2&&type!=11)throw new IllegalArgumentException("not read only");
-  Object manager=NavReflect.field(NavReflect.type("E3.u"),"h"),biz=NavReflect.call(NavReflect.type("P3.h"),"valueOf","MARS_FOTA"),priority=NavReflect.call(NavReflect.type("E3.b"),"valueOf","NORMAL");
-  Object message=NavReflect.make("E3.Q",OtaFrame.encode(type,null,null),UUID.randomUUID().toString(),peer,biz,null,priority,false,false,null,null);
-  Object callback=NavReflect.proxy("kotlin.jvm.functions.Function2",(name,args)->{});NavReflect.call(manager,"u",message,callback);
+  Object manager=NavReflect.field(NavReflect.type(HostAbi.manager()),"h"),biz=NavReflect.call(NavReflect.type(HostAbi.business()),"valueOf","MARS_FOTA"),priority=NavReflect.call(NavReflect.type(HostAbi.priority()),"valueOf","NORMAL");
+  Object message=NavReflect.make(HostAbi.message(),OtaFrame.encode(type,null,null),UUID.randomUUID().toString(),peer,biz,null,priority,false,false,null,null);
+  Object callback=NavReflect.proxy("kotlin.jvm.functions.Function2",(name,args)->{});NavReflect.call(manager,HostAbi.send(),message,callback);
  }
  private static synchronized void release(){
   String peer=NativeTransfer.otaConnection();long now=SystemClock.elapsedRealtime();
