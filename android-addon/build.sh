@@ -158,6 +158,12 @@ cc -Wall -Wextra -Werror -DTIO_IMAGE_RX_WIDE=1 -I$IM -I../firmware-research/stri
 build/test/timg-golden/generate build/test/timg-golden
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{Timg,ImageUpload,TransferGate}.java tests/TimgTest.java
 java -cp build/test com.turboio.addon.TimgTest build/test/timg-golden
+mkdir -p build/test/tdp-golden
+TDPF=../firmware-research/strix-1.0.5.5-tvp2/src/display-runtime-v1;TDPI=../official-addon/ios107-edition
+cc -Wall -Wextra -Werror -I$TDPF -I$TDPI tests/tdp_golden.c $TDPF/display_client.c $TDPF/display_carrier.c $TDPF/display_runtime.c $TDPI/DisplayDelta.c -o build/test/tdp-golden/generate
+build/test/tdp-golden/generate build/test/tdp-golden
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/Tdp.java tests/TdpTest.java
+java -cp build/test com.turboio.addon.TdpTest build/test/tdp-golden
 mkdir -p build/test-menu-flow
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-menu-flow tests/menuflow/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/MenuLayout.java
 java -cp build/test-menu-flow:build/test com.turboio.addon.MenuLayoutTest
