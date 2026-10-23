@@ -60,7 +60,7 @@ public final class TurboAddon {
         OfficialOtaPreparation.init(app);
         OfficialOtaBridge.init(app);
         BackgroundWork.init(app);MusicPlayer.init(app);ReaderLibrary.init(app);CloudCaption.init(app);BackgroundWork.register("新闻",NewsTele::stop);
-        NativeTransfer.init(app);FocusController.init(app);AppController.init(app);CardTransport.init();NativeNavigation.init(app);
+        NativeTransfer.init(app);FocusController.init(app);AppController.init(app);CardTransport.init();NativeNavigation.init(app);CeBridge.init(app);
         ViewGroup root = host.findViewById(android.R.id.content);
         if (root.findViewWithTag("turboio-entry") != null) return;
         TextView button = new TextView(host);
