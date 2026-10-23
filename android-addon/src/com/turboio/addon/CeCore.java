@@ -65,6 +65,8 @@ final class CeCore {
         system.put("role","system");system.put("content",SYSTEM);user.put("role","user");user.put("content",new String(BoundedJson.canonical(selection),StandardCharsets.UTF_8));format.put("type","json_object");
         out.put("model",model);out.put("stream",false);out.put("max_tokens",4096L);out.put("response_format",format);out.put("messages",Arrays.asList(system,user));return out;
     }
+    /** Bearer key: 1–8192 printable ASCII characters, so no platform header error can ever echo it. */
+    static boolean keyValid(String key){if(key==null||key.isEmpty()||key.length()>8192)return false;for(int i=0;i<key.length();i++){char c=key.charAt(i);if(c<0x21||c>0x7e)return false;}return true;}
     /** https, host, no user/query/fragment; "/chat/completions" appended once. */
     static String endpoint(String endpoint){
         String bad="仅允许无账号、查询参数和片段的 HTTPS 模型地址";if(endpoint==null||endpoint.length()>2048)throw fail("模型地址或凭据无效");

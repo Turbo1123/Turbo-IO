@@ -59,12 +59,16 @@ public final class CeTransferTest {
         List<CeWire.Card> longCard=cards(1);longCard.set(0,new CeWire.Card("abcdefghijklmnopqrstuvwxyz","q","m","e",true));bad.start(longCard,"CET4",5,480,false,false,0,1792990000L,java.time.ZoneOffset.UTC);ok(e.last.equals("候选超出眼镜显示预算或格式无效，未截断；请重新生成更短表达。"),"invalid card refused");
         e.ota=true;bad.start(cards(1),"CET4",5,480,false,false,0,1792990000L,java.time.ZoneOffset.UTC);ok(e.last.equals("固件升级保护中，不发送学习数据。"),"OTA protection");e.ota=false;
         bad.start(cards(1),"CET4",5,480,false,false,0,1792990000L,java.time.ZoneOffset.UTC);String before=e.last;bad.start(cards(1),"CET4",5,480,false,false,0,1792990000L,java.time.ZoneOffset.UTC);ok(e.last.equals("上一轮传输尚未释放；请等待完成或重新连接后查询。"),"one at a time "+before);
+        // Channel refused before anything left the phone: reported as not submitted, not as an unknown outcome.
+        Fake z=new Fake(){public boolean send(byte[] p,long request,long session){return false;}};z.peer="AA";CeSession ns=new CeSession(z,z,z);ns.start(cards(1),"CET4",5,480,false,false,0,1792990000L,java.time.ZoneOffset.UTC);
+        ok(!ns.active()&&ns.lastNotSubmitted()&&!ns.lastDeliveryConfirmed(),"not submitted");
+        ok(!syn.lastNotSubmitted()&&!unk.lastNotSubmitted(),"submitted sessions are not 'not submitted'");
         // Progress: only the current peer's progress is kept for history.
         Fake pr=new Fake();pr.peer="AA";CeSession ps=new CeSession(pr,pr,pr);byte[] prog=Files.readAllBytes(g.resolve("progress.bin"));ps.progress("BB",prog);ok(pr.progressPeers.isEmpty(),"other peer ignored");ps.progress("AA",prog);ok(pr.progressPeers.equals(Collections.singletonList("AA")),"current peer recorded");
         System.out.println("CeTransferTest: "+n+" checks; golden sender, retry, failures, session, history hooks");
     }
     static void drive(CeSession s,Fake f,long now){for(int guard=0;guard<40&&s.active();guard++){byte[] p=f.sent.get(f.sent.size()-1);int before=f.sent.size();s.reply(f.peer,reply(p));s.completed(TransferGate.State.CONFIRMED,now+=10);s.pump(now+=10);if(f.sent.size()==before&&s.active())s.pump(now+=10);}}
-    static final class Fake implements CeSession.Carrier,CeSession.Store,CeSession.History{
+    static class Fake implements CeSession.Carrier,CeSession.Store,CeSession.History{
         String peer="",last="",rememberedTarget="";boolean terminal,ota;long querySeq,lastTx,rememberedDay;int remembered;
         List<byte[]> sent=new ArrayList<>();List<Long> requests=new ArrayList<>(),sessions=new ArrayList<>();List<long[]> acked=new ArrayList<>();List<String> progressPeers=new ArrayList<>();
         public String peer(){return peer;}public boolean otaProtected(){return ota;}

@@ -40,7 +40,7 @@ final class CeBridge {
         auto.read=done->readArchive((rows,error)->done.accept(rows,error));
         auto.generate=CeBridge::generate;
         auto.send=(cards,s,done)->{if(!Boolean.TRUE.equals(context().get("canSend"))){done.accept(false);return;}
-            send(cards,(String)s.get("target"),((Number)s.get("count")).intValue(),((Number)s.get("minute")).intValue(),true,false,(text,terminal)->{if(terminal)done.accept(session.lastDeliveryConfirmed());});};
+            send(cards,(String)s.get("target"),((Number)s.get("count")).intValue(),((Number)s.get("minute")).intValue(),true,false,(text,terminal)->{if(terminal)done.accept(session.lastDeliveryConfirmed()?Boolean.TRUE:session.lastNotSubmitted()?null:Boolean.FALSE);});};
         auto.reviews=(day,target,count)->history.reviews(NativeTransfer.connected(),target,LocalDate.now().toEpochDay(),count);
         MAIN.postDelayed(autoTick,15000);
     }
@@ -78,7 +78,8 @@ final class CeBridge {
         try{c.key=SecretStore.get(app);}catch(Exception e){c.key="";}
         c.model=p.getString("model","deepseek-flash");c.disableThinking=ChatPolicy.thinkingDisabled(p.contains("disable_thinking")?p.getBoolean("disable_thinking",true):null);
         String raw=p.getString("endpoint","https://api.deepseek.com/chat/completions");
-        if(c.key==null||c.key.isEmpty()||c.key.length()>8192||CeCore.control(c.key)){c.error="请先配置自定义模型。";return c;}
+        if(c.key==null||c.key.isEmpty()){c.error="请先配置自定义模型。";return c;}
+        if(!CeCore.keyValid(c.key)){c.key="";c.error="模型地址或凭据无效";return c;}
         try{c.endpoint=CeCore.endpoint(raw);}catch(IllegalArgumentException e){c.error=e.getMessage();}
         return c;
     }
@@ -88,16 +89,17 @@ final class CeBridge {
         Config c=config();byte[] body;
         try{if(c.error!=null)throw new IllegalArgumentException(c.error);body=CeCore.body(selection,c.model,c.disableThinking);}catch(IllegalArgumentException e){String why=e.getMessage();MAIN.post(()->once.accept(null,why));return ()->{};}
         Map<String,Object> frozen=selection;
-        Future<?> job=NET.submit(()->{String error=null;List<Map<String,Object>> cards=null;HttpURLConnection h=null;
+        Future<?> job=NET.submit(()->{String error=null;List<Map<String,Object>> cards=null;HttpURLConnection h=null;byte[] reply=null;
+            // Transport stage: every failure maps to a fixed text — platform messages may echo headers (the key).
             try{h=(HttpURLConnection)new URL(c.endpoint).openConnection();h.setInstanceFollowRedirects(false);h.setUseCaches(false);h.setConnectTimeout(15000);h.setReadTimeout(60000);h.setRequestMethod("POST");h.setDoOutput(true);
                 h.setRequestProperty("Content-Type","application/json");h.setRequestProperty("Accept","application/json");h.setRequestProperty("Authorization","Bearer "+c.key);
                 try(OutputStream o=h.getOutputStream()){o.write(body);}
-                int code=h.getResponseCode();if(code!=200||h.getContentLengthLong()>65536)throw new IllegalArgumentException("模型服务拒绝请求或返回内容过大；未保存候选");
-                byte[] reply;try(InputStream in=h.getInputStream()){reply=BoundedHTTP.read(in,65536);}catch(IOException e){if(String.valueOf(e.getMessage()).contains("size limit"))throw new IllegalArgumentException("模型响应超过 64 KiB，已停止");throw e;}
-                Object json;try{json=BoundedJson.readDevice(reply);}catch(RuntimeException e){json=null;}
-                cards=CeCore.validate(json,frozen);
-            }catch(IllegalArgumentException e){error=e.getMessage();}catch(IOException|RuntimeException e){error="模型连接失败或超时；不会自动重复上传片段";}
+                int code=h.getResponseCode();if(code!=200||h.getContentLengthLong()>65536)error="模型服务拒绝请求或返回内容过大；未保存候选";
+                else try(InputStream in=h.getInputStream()){reply=BoundedHTTP.read(in,65536);}catch(IOException e){error=String.valueOf(e.getMessage()).equals("size limit")?"模型响应超过 64 KiB，已停止":"模型连接失败或超时；不会自动重复上传片段";}
+            }catch(Throwable e){error="模型连接失败或超时；不会自动重复上传片段";}
             finally{if(h!=null)h.disconnect();}
+            // Validation stage: only CeCore's own fixed per-field messages reach the page.
+            if(error==null)try{Object json;try{json=BoundedJson.readDevice(reply);}catch(RuntimeException e){json=null;}cards=CeCore.validate(json,frozen);}catch(IllegalArgumentException e){error=e.getMessage();}catch(RuntimeException e){error="模型返回无效";}
             List<Map<String,Object>> r=cards;String err=error;MAIN.post(()->once.accept(r,err));});
         return ()->{job.cancel(true);MAIN.post(()->once.accept(null,"已取消生成，未发送到眼镜"));};
     }
@@ -107,6 +109,6 @@ final class CeBridge {
         Config c=config();String peer=NativeTransfer.connected(),scope=CeLifelog.scope(dirs());
         boolean ready=c.error==null&&!c.model.isEmpty()&&!scope.isEmpty()&&peer!=null&&!peer.isEmpty();
         Map<String,Object> m=new HashMap<>();m.put("destination",c.endpoint);m.put("model",c.model);m.put("scope",scope);m.put("peer",sha256(peer));m.put("zone",ZoneId.systemDefault().getId());m.put("ready",ready);
-        m.put("canSend",ready&&!NativeTransfer.busy()&&!session.active()&&!OtaController.busy()&&!OfficialOtaBridge.busy());return m;
+        m.put("canSend",ready&&NativeTransfer.canSubmit(FILE)&&!session.active());return m;
     }
 }

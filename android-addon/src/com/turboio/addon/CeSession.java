@@ -21,17 +21,19 @@ final class CeSession {
     private final Carrier carrier;private final Store store;private final History history;
     private final CeTransfer transfer=new CeTransfer();
     private String peer="",target="";private List<CeWire.Card> cards=Collections.emptyList();private byte[] bundle,progressPacket;
-    private long querySeq,day,unixNow;private boolean active,querying,inFlight,synthetic,delivered;private CeWire.Ack queryAck;
+    private long querySeq,day,unixNow;private boolean active,querying,inFlight,synthetic,delivered,submitted;private CeWire.Ack queryAck;
     CeSession(Carrier carrier,Store store,History history){this.carrier=carrier;this.store=store;this.history=history;}
     boolean active(){return active;}
     boolean lastDeliveryConfirmed(){return delivered&&!active;}
+    /** The last session ended before any packet was handed to the carrier: nothing left the phone. */
+    boolean lastNotSubmitted(){return !active&&!submitted;}
 
     private void end(String note){transfer.cancel();active=querying=inFlight=false;bundle=null;cards=Collections.emptyList();queryAck=null;carrier.note(note,true);}
 
     /** Starts a delivery; every refusal ends with a terminal note. unixNow seconds; zone selects the learning day. */
     void start(List<CeWire.Card> list,String targetCode,int count,int minute,boolean reminder,boolean syntheticTest,long now,long unixNow,ZoneId zone){
         if(active){carrier.note("上一轮传输尚未释放；请等待完成或重新连接后查询。",true);return;}
-        delivered=false;synthetic=syntheticTest;progressPacket=null;
+        delivered=false;submitted=false;synthetic=syntheticTest;progressPacket=null;
         if(carrier.otaProtected()){end("固件升级保护中，不发送学习数据。");return;}
         String current=carrier.peer();if(current==null||current.isEmpty()){end("眼镜未连接。");return;}
         int t=TARGETS.indexOf(targetCode);
@@ -46,7 +48,7 @@ final class CeSession {
     }
     private void issue(byte[] packet,long request,long session){
         if(carrier.otaProtected()||!peer.equals(carrier.peer())){end("升级保护或设备连接变化，已停止发送。");return;}
-        if(!carrier.send(packet,request,session)){end("传输通道忙或未连接，未发送；不会自动重发。");return;}inFlight=true;
+        if(!carrier.send(packet,request,session)){end("传输通道忙或未连接，未发送；不会自动重发。");return;}inFlight=true;submitted=true;
         if(querying)carrier.note("正在回查 TEL1 能力与题库编号…",false);
         else carrier.note(String.format(Locale.ROOT,"发送题库 · 第 %d / %d 包 · %d / %d 字节",transfer.seq(),2+(transfer.total()+CeWire.CHUNK_MAX-1)/CeWire.CHUNK_MAX,transfer.next(),transfer.total()),false);
     }

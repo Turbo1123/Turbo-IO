@@ -57,6 +57,11 @@ public final class CeAutoTest {
         e.now=at("2026-10-26T08:00");CeAuto r4=e.plan(dir.resolve("r4.json").toFile());r4.enable(settings("CET4",2,1200));r4.tick();e.reads.get(e.reads.size()-1).accept(new Object[]{Arrays.asList(new CeLifelog.Row("昨天讨论预算","2026-10-25T02:00:00Z")),null});
         r4.suspend();ok(e.cancelled&&"uncertain".equals(r4.snapshot().get("phase")),"suspend cancels generation");
         ((BiConsumer<List<Map<String,Object>>,String>)e.generates.get(e.generates.size()-1)[1]).accept(Arrays.asList(card("budget")),null);ok("uncertain".equals(r4.snapshot().get("phase")),"late generation result ignored");
+        // A send the channel refused (nothing submitted) returns to queued and is retried on a later tick.
+        e.now=at("2026-10-27T08:00");e.reviews=new ArrayList<>();CeAuto q=e.plan(dir.resolve("q.json").toFile());q.enable(settings("CET6",3,1200));q.tick();e.reads.get(e.reads.size()-1).accept(new Object[]{Arrays.asList(new CeLifelog.Row("我们讨论明天的计划","2026-10-26T02:00:00Z")),null});
+        ((BiConsumer<List<Map<String,Object>>,String>)e.generates.get(e.generates.size()-1)[1]).accept(Arrays.asList(card("plan")),null);q.tick();
+        ((Consumer<Boolean>)e.sends.get(e.sends.size()-1)[2]).accept(null);ok("queued".equals(q.snapshot().get("phase")),"not submitted → queued");
+        int before=e.sends.size();q.tick();ok(e.sends.size()==before+1,"retried on the next tick");
         System.out.println("CeAutoTest: "+n+" checks; consent, once-per-day, window, binding, restart, storage");
     }
 }

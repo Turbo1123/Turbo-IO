@@ -102,6 +102,8 @@ final class CeAuto {
             state.put("phase","sending");state.put("note","正在查询能力并发送题库。");if(!save())return;
             busy=true;long mine=++epoch;Map<String,Object> s=new LinkedHashMap<>();s.put("target",settings.get("target"));s.put("count",settings.get("count"));s.put("minute",settings.get("minute"));s.put("reminder",true);
             send.send((List<Map<String,Object>>)state.get("cards"),s,confirmed->{if(epoch!=mine)return;busy=false;
+                // null: the channel refused before anything was submitted — keep the deck queued for a later tick.
+                if(confirmed==null){state.put("phase","queued");state.put("note","题库已备好，等待连接与空闲通道。");save();return;}
                 if(!matches(binding,today)){state.put("phase","uncertain");state.put("note","发送期间环境变化，请手动核对眼镜。");}
                 else if(Boolean.TRUE.equals(confirmed)){state.put("phase","delivered");state.put("delivered",today);state.put("note","眼镜已确认保存，等待所设时间邀请；手机不再重复推送。");state.remove("cards");}
                 else{state.put("phase","uncertain");state.put("note","传输未确认，停止自动重发；请在手动页核对。");}save();});

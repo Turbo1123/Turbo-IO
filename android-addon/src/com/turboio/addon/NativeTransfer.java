@@ -44,12 +44,15 @@ public final class NativeTransfer {
     static boolean send(String name,byte[] bytes,long request,long session,long timeout,Completion callback){
         return sendOwned("",name,bytes,request,session,timeout,callback);
     }
+    private static boolean blocked(String name,boolean own,long now){return OtaController.busy()||OfficialOtaBridge.busy()||context==null||writing||(gate!=null&&gate.busy())||(!messageOwner.isEmpty()&&!own)||now<quarantine||!external.isEmpty()||NavGlasses.active()||(ReaderBridge.active()&&!name.equals("turbo-reader.twr"))||(NativeNavigation.active()&&!name.equals("turbo-navigation.tnv"))||(MusicBridge.active()&&!name.equals("turbo-music.tmu"));}
+    /** Whether sendOwned would accept a file of this name right now (same refusal rule, plus a connected peer). */
+    static boolean canSubmit(String name){long now=SystemClock.elapsedRealtime();external.values().removeIf(deadline->deadline<now);return !blocked(name,false,now)&&!connected().isEmpty();}
     static boolean sendOwned(String leaseOwner,String name,byte[] bytes,long request,long session,long timeout,Completion callback){
         if(Looper.myLooper()!=Looper.getMainLooper())throw new IllegalStateException("main thread required");
         boolean own=!leaseOwner.isEmpty()&&leaseOwner.equals(messageOwner);
         if(name==null||!(name.matches("turbo-[a-z-]+\\.[a-z]{3}")||own&&name.matches("[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}"))||timeout<1000||timeout>60000||callback==null)throw new IllegalArgumentException();
         long now=SystemClock.elapsedRealtime();external.values().removeIf(deadline->deadline<now);
-        if(OtaController.busy()||OfficialOtaBridge.busy()||context==null||writing||(gate!=null&&gate.busy())||(!messageOwner.isEmpty()&&!own)||now<quarantine||!external.isEmpty()||NavGlasses.active()||(ReaderBridge.active()&&!name.equals("turbo-reader.twr"))||(NativeNavigation.active()&&!name.equals("turbo-navigation.tnv"))||(MusicBridge.active()&&!name.equals("turbo-music.tmu"))){mark("其他传输/显示会话尚未结束，请先退出；未发送");return false;}
+        if(blocked(name,own,now)){mark("其他传输/显示会话尚未结束，请先退出；未发送");return false;}
         String current=connected();if(current.isEmpty()){mark("请先在官方 App 连接一副眼镜");return false;}
         if(bytes==null||bytes.length<1||bytes.length>(own?48000:20700)){mark("命令超出预算，未发送");return false;}
         sentCount++;trace("send file="+name+" bytes="+bytes.length+" request="+request+" session="+session);gate=new TransferGate();gate.begin(current,name,request,session,now,timeout);peer=current;task="";filename=name;completion=callback;early.clear();spool=null;writing=true;byte[] data=bytes.clone();mark("准备发送 · "+data.length+" 字节");

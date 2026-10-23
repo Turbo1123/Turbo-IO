@@ -25,6 +25,8 @@ public final class CeCoreTest {
         ok(CeCore.endpoint("https://api.deepseek.com").equals("https://api.deepseek.com/chat/completions")&&CeCore.endpoint("https://x.example/v1/").equals("https://x.example/v1/chat/completions")&&CeCore.endpoint("https://x.example/v1/chat/completions").equals("https://x.example/v1/chat/completions"),"endpoint normalized");
         for(String bad:new String[]{"http://x.example","https://u:p@x.example","https://x.example/v1?k=1","https://x.example/#f","ftp://x"})ok(fails(()->CeCore.endpoint(bad)).equals("仅允许无账号、查询参数和片段的 HTTPS 模型地址"),"endpoint "+bad);
         byte[] body=CeCore.body(sel,"m",true);ok(new String(body,StandardCharsets.UTF_8).contains("\"thinking\":{\"type\":\"disabled\"}")&&!new String(CeCore.body(sel,"m",false),StandardCharsets.UTF_8).contains("thinking"),"thinking switch");
+        // Model key: printable ASCII only, so no platform header error can echo it.
+        ok(CeCore.keyValid("sk-abcDEF123_-.")&&!CeCore.keyValid("sk-abc\u00a0")&&!CeCore.keyValid("sk-“x”")&&!CeCore.keyValid("sk abc")&&!CeCore.keyValid("")&&!CeCore.keyValid(null),"key charset");
         // Validation.
         List<Map<String,Object>> good=CeCore.validate(response("{\"cards\":["+card("s0001","评审 postpone","original_english","postpone")+","+card("s0002","前一天","generated_expression","evening")+"]}","stop"),sel);
         ok(good.size()==2&&good.get(0).get("sourceLabel").equals("记录中出现的英文")&&good.get(1).get("sourceLabel").equals("根据记录生成的表达")&&good.get(0).get("receivedAt").equals("2026-10-23T02:00:00Z")&&good.get(0).get("timeBasis").equals("source_timestamp"),"valid cards labelled");
