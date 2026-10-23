@@ -173,6 +173,8 @@ javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/t
 java -cp build/test com.turboio.addon.SubtitleTrialTest
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{BoundedJson,HostBusiness,A2uiFrame,GlassesLogContract,GlassesLogGate}.java tests/GlassesLogTest.java
 java -cp build/test com.turboio.addon.GlassesLogTest
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/GlassesLogFiles.java tests/GlassesLogFilesTest.java
+java -cp build/test com.turboio.addon.GlassesLogFilesTest
 mkdir -p build/test/hd-golden
 VPF=../firmware-research/strix-1.0.5.5-tvp2/src/video-player-v1
 cc -Wall -Wextra -Werror -I$VPF tests/hd_golden.c $VPF/player.c -o build/test/hd-golden/generate
