@@ -27,6 +27,11 @@ public final class NavigationUI {
     private Application.ActivityLifecycleCallbacks lifecycle;
     private NavSimulation simulation;private Object simulationMarker;private TextView simulationStatus;
     private int simulationSpeed=1,runEpoch;private Button pauseSimulation;private boolean nativeDisplay=true,alwaysOn;
+    // TNR3 vector mini-map (iOS NavigationRoadMap.inc): off by default; live/simulated frames use AMap's GPS→GCJ
+    // converter, the public-area replay stays entirely in WGS-84 (identity) and never locates or fetches.
+    private final ExecutorService roadNetwork=Executors.newSingleThreadExecutor();
+    private RoadScene roads,replayRoads;private RoadFetch roadFetch;private Switch roadSwitch;private TextView roadStatus;
+    private RoadFrames.Replay replay;private long replayStart;private boolean roadOn,replaying;
     public static void show(Activity a){if(current!=null){current.dialog.show();return;}current=new NavigationUI(a);current.open();}
     public static void shutdown(){if(current!=null)current.dialog.dismiss();}
     private NavigationUI(Activity a){host=a;}
@@ -60,7 +65,8 @@ public final class NavigationUI {
         TurboStyle.button(host,lens,"开始模拟导航并显示到眼镜",true,()->begin(true));
         pauseSimulation=TurboStyle.button(host,lens,"暂停模拟",false,()->{});pauseSimulation.setEnabled(false);
         pauseSimulation.setOnClickListener(v->{if(simulation!=null&&running){simulation.pause(!simulation.paused(),SystemClock.elapsedRealtime());pauseSimulation.setText(simulation.paused()?"继续模拟":"暂停模拟");renderSimulation();}});
-        TurboStyle.button(host,lens,"停止导航 / 关闭眼镜显示",false,()->{stopGuidance();stopDisplay();});
+        TurboStyle.button(host,lens,"停止导航 / 关闭眼镜显示",false,()->{stopGuidance();stopDisplay();revokeRoads();});
+        buildRoadControls(lens);
         TurboStyle.button(host,box,"测试眼镜显示 · 7392（非真实路线）",false,()->new AlertDialog.Builder(host).setTitle("纯显示测试").setMessage("确认眼镜没有录音、字幕、提词或语音任务。仅显示固定测试文字，不开始定位或录音；TNV1模式只发固定示例，测试完请点停止。").setNegativeButton("取消",null).setPositiveButton("眼镜空闲，开始",(d,w)->startDisplay("导航显示测试 7392\n前方右转 80 米\n测试数据 · 非真实路线")).show());
         TurboStyle.button(host,box,"确认眼镜已退出",false,()->new AlertDialog.Builder(host).setMessage("请实际确认眼镜已回首页；此操作不代表设备回执。").setNegativeButton("取消",null).setPositiveButton("已回首页",(d,w)->confirmDisplayIdle()).show());
         TurboStyle.gap(host,box,12);box.addView(TurboStyle.text(host,"研究预览 · 请保持此页前台\n使用宿主已有高德组件；首版为路线 + 定位引导，不含专业导航引擎的车道级指引、实时路况重算或后台服务。定位过期/不准时暂停指引，偏航请重新规划。勿作为驾驶时唯一依据。",12,TurboStyle.MUTED));
@@ -128,6 +134,7 @@ public final class NavigationUI {
     private String routeOverview(String reason){return "路线概览 · "+destinationName+"\n全程 "+NavCore.meters(distance)+" · 约 "+Math.max(1,(duration+59)/60)+" 分钟\n"+reason;}
     private void begin(){begin(false);}
     private void begin(boolean simulated){
+        if(replaying){guidanceMessage("请先停止路网回放");return;}
         if(!routeReady())return;
         NavSessionPolicy.Action action=NavSessionPolicy.action(displayPhase());
         if(action==NavSessionPolicy.Action.CONFIRM_EXIT){
@@ -153,13 +160,13 @@ public final class NavigationUI {
             }).show();
     }
     private void clearSimulation(){simulation=null;if(pauseSimulation!=null){pauseSimulation.setEnabled(false);pauseSimulation.setText("暂停模拟");}if(simulationMarker!=null)try{NavReflect.call(simulationMarker,"remove");}catch(Exception ignored){}simulationMarker=null;}
-    private void stopGuidance(){BackgroundWork.release("导航");runEpoch++;running=false;clearSimulation();if(guidanceState!=null)guidanceState.setText("导航已停止；可以选择新路线");if(simulationStatus!=null)simulationStatus.setText("模拟未运行 · 可从起点重新开始");stopDisplay();}
+    private void stopGuidance(){BackgroundWork.release("导航");if(running||replaying)revokeRoads();replaying=false;replay=null;runEpoch++;running=false;clearSimulation();if(guidanceState!=null)guidanceState.setText("导航已停止；可以选择新路线");if(simulationStatus!=null)simulationStatus.setText("模拟未运行 · 可从起点重新开始");stopDisplay();}
     private void finishDisplayLater(){final int owner=runEpoch;main.postDelayed(()->{if(owner==runEpoch&&!running)stopDisplay();},8000);}
     private void renderSimulation(){
         NavSimulation.Frame frame=simulation.frame();stepIndex=frame.step;
         String label=simulation.paused()?"模拟 · 已暂停":"模拟 · "+simulation.speed()+"×";
         String text=frame.finished?"模拟导航已结束\n"+destinationName+"\n仅路线回放 · 非真实到达":label+" · 非真实位置\n"+steps.get(frame.step).instruction+"\n本段剩余 "+NavCore.meters(frame.remainingStep)+" · "+(frame.step+1)+"/"+steps.size()+"段";
-        hud.setText(text);offerDisplay(text);
+        hud.setText(text);offerDisplay(text);if(frame.finished)roadClear();else roadFeed(frame.point,SystemClock.elapsedRealtime(),frame.step);
         simulationStatus.setText(label+" · 进度 "+Math.round(frame.progress*100)+"% · 第 "+(frame.step+1)+" / "+steps.size()+" 段");
         guidanceState.setText(frame.finished?"模拟到达；约8秒后请求关闭显示":simulation.paused()?"已暂停推进；等待眼镜确认":"沿规划路线回放；TNV1合并最新帧，确认后至少间隔1秒，非真实定位");
         if(map!=null)try{
@@ -175,19 +182,81 @@ public final class NavigationUI {
             else if(simulation!=null){simulation.advance(SystemClock.elapsedRealtime(),phase.equals("ready"));if(phase.equals("ready"))renderSimulation();else simulationStatus.setText("等待眼镜初始化，模拟暂不推进");}
             else {
             NavSessionPolicy.Position position=NavSessionPolicy.position(fresh(),positionValidated,plannedOrigin==null||origin==null?Double.POSITIVE_INFINITY:NavCore.distance(plannedOrigin,origin));
-            if(position==NavSessionPolicy.Position.WAIT_FIX){hud.setText(routeOverview("等待准确定位 · 暂无转向指引"));offerDisplay(hud.getText().toString());guidanceState.setText("先显示路线概览；当前定位精度约 "+Math.round(accuracy)+" 米，需要15秒内、50米内的位置才更新转向。发送状态见上方。");}
-            else if(position==NavSessionPolicy.Position.REPLAN){hud.setText(routeOverview("起点位置已变化 · 请重新规划"));offerDisplay(hud.getText().toString());guidanceState.setText("当前路线仅作概览；请重新规划后开始实时指引");}
+            if(position==NavSessionPolicy.Position.WAIT_FIX){hud.setText(routeOverview("等待准确定位 · 暂无转向指引"));offerDisplay(hud.getText().toString());roadClear();guidanceState.setText("先显示路线概览；当前定位精度约 "+Math.round(accuracy)+" 米，需要15秒内、50米内的位置才更新转向。发送状态见上方。");}
+            else if(position==NavSessionPolicy.Position.REPLAN){hud.setText(routeOverview("起点位置已变化 · 请重新规划"));offerDisplay(hud.getText().toString());roadClear();guidanceState.setText("当前路线仅作概览；请重新规划后开始实时指引");}
             else{NavCore.Match match=NavCore.match(steps,origin,stepIndex);
                 positionValidated=true;guidanceState.setText("实时定位已达标，正在更新路线指引");
-                if(match.step<0||match.offRoute>60){hud.setText("已偏离规划路线\n请停止并重新规划");offerDisplay(hud.getText().toString());}
+                if(match.step<0||match.offRoute>60){hud.setText("已偏离规划路线\n请停止并重新规划");offerDisplay(hud.getText().toString());roadClear();}
                 else {stepIndex=match.step;boolean arrived=stepIndex==steps.size()-1&&NavCore.distance(origin,destination)<20;
                     String text=arrived?"已接近目的地\n"+destinationName:steps.get(stepIndex).instruction+"\n本段剩余 "+NavCore.meters(match.remainingStep)+"\n第 "+(stepIndex+1)+" / "+steps.size()+" 段";
-                    hud.setText(text);offerDisplay(text);if(arrived){running=false;finishDisplayLater();}
+                    hud.setText(text);offerDisplay(text);if(arrived){roadClear();running=false;finishDisplayLater();}else roadFeed(origin,fixAt,stepIndex);
                 }
             }
             }
         }
         main.postDelayed(this,1000);
+    }};
+    private byte[] asset(String path,int cap){try(java.io.InputStream in=host.getAssets().open(path)){return BoundedHTTP.read(in,cap);}catch(Exception e){return null;}}
+    private void alert(String title,String message){new AlertDialog.Builder(host).setTitle(title).setMessage(message).setPositiveButton("知道了",null).show();}
+    /** AMap CoordinateConverter (GPS → GCJ-02), reflected once; null on any failure so RoadScene shows no roads. */
+    private RoadScene.Converter amapConverter(){
+        return new RoadScene.Converter(){private Object converter;private java.lang.reflect.Method coord,convert;private java.lang.reflect.Constructor<?> latLng;private java.lang.reflect.Field lat,lon;
+            public double[] toMap(double la,double lo){try{
+                if(converter==null){Class<?> c=NavReflect.type("com.amap.api.maps.CoordinateConverter"),t=NavReflect.type("com.amap.api.maps.CoordinateConverter$CoordType"),l=NavReflect.type("com.amap.api.maps.model.LatLng");
+                    Object o=c.getConstructor(Context.class).newInstance(host.getApplicationContext());c.getMethod("from",t).invoke(o,NavReflect.field(t,"GPS"));
+                    coord=c.getMethod("coord",l);convert=c.getMethod("convert");latLng=l.getConstructor(double.class,double.class);lat=l.getField("latitude");lon=l.getField("longitude");converter=o;}
+                Object r=convert.invoke(coord.invoke(converter,latLng.newInstance(la,lo)));return new double[]{lat.getDouble(r),lon.getDouble(r)};
+            }catch(Throwable e){return null;}}};
+    }
+    private RoadScene.Fixtures fixtures(){return name->asset("turboio/maps/"+name+".json",RoadScene.FIXTURE_BYTES);}
+    private void buildRoadControls(LinearLayout lens){
+        roads=new RoadScene(amapConverter(),fixtures());roadFetch=new RoadFetch(roads,RoadFetch.https(),roadNetwork);
+        TurboStyle.gap(host,lens,12);lens.addView(TurboStyle.text(host,"矢量小地图 · TNR3 试验",17,TurboStyle.LIME));
+        roadSwitch=new Switch(host);roadSwitch.setText("启用路网（TNR2及后续固件）");roadSwitch.setTextColor(TurboStyle.LIME);lens.addView(roadSwitch);
+        roadSwitch.setOnCheckedChangeListener((v,on)->{if(on==roadOn)return;if(NativeNavigation.active()){roadSwitch.setChecked(roadOn);alert("请先停止眼镜导航","切换协议前先结束当前会话，避免旧固件误收新路网包。");return;}roadOn=on;roads.setEnabled(on);});
+        roadStatus=TurboStyle.text(host,"默认关闭；TNR3增加比例尺与稳定时间栏",13,0xffd2e6d7);lens.addView(roadStatus);
+        TurboStyle.button(host,lens,"公开区域路网回放（不定位）",false,this::startReplay);
+        TurboStyle.button(host,lens,"本次联网试验授权",false,()->new AlertDialog.Builder(host).setTitle("限次联网路网试验")
+            .setMessage("仅TNR2固件。将当前位置附近约1.2公里范围发送给公开Overpass图源；高德路线仍来自高德，底图为OpenStreetMap，可能有偏移或缺路。每会话最多6次、间隔至少60秒，停止导航即撤销授权。不是生产导航服务，请勿驾驶中调试。未授权时只用内置公开区域样本，不发送实际位置。")
+            .setNegativeButton("取消",null).setPositiveButton("允许本次试验",(d,w)->{roadFetch.consent();roadStatus.setText("本次联网试验已授权；请另行开启路网开关");}).show());
+    }
+    /** Stop / close: consent revoked, in-flight reply discarded, cached regions cleared (iOS halt → reset). */
+    private void revokeRoads(){if(roadFetch!=null)roadFetch.stop();if(replayRoads!=null)replayRoads.reset();replayRoads=null;}
+    private void roadClear(){if(nativeDisplay)NativeNavigation.mapOffer(null,null,null,0);}
+    /** Live or simulated frame: GCJ position (positionAt on the elapsedRealtime clock), current step as the segment. */
+    private void roadFeed(NavCore.Point p,long positionAt,int segment){
+        if(!nativeDisplay||!roadOn||p==null||routePoints.size()<2){roadClear();return;}
+        List<double[]> route=new ArrayList<>();for(NavCore.Point q:routePoints)route.add(new double[]{q.lat,q.lon});double[] position={p.lat,p.lon};route=RoadFrames.window(route,position);
+        double heading=RoadFrames.heading(route,position);long now=SystemClock.elapsedRealtime();
+        RoadScene.Result r=roads.decorate("navigating",route,position,positionAt/1000.0,Double.isFinite(heading)?heading:0,segment,now/1000.0);
+        if(r==null)roadClear();else NativeNavigation.mapOffer(r.scene,r.scene2,r.pose,Math.round(r.poseAt*1000));
+        double[] wgs=roads.wgs(position);if(wgs!=null)roadFetch.maybeRequest(wgs,now/1000.0);
+        roadStatus.setText(roads.note()+(roadFetch.consented()?" · 联网已授权":""));
+    }
+    private void startReplay(){
+        if(NativeNavigation.active()||NativeTransfer.busy()){alert("先停止眼镜导航","等待当前文件和退出回执完成后再回放。");return;}
+        if(!nativeDisplay){alert("需要 TNV1 原生导航","路网回放只通过原生导航显示，请先打开上方开关。");return;}
+        RoadFrames.Replay loaded;try{byte[] data=asset("turboio/maps/replay.json",RoadFrames.REPLAY_BYTES);loaded=new RoadFrames.Replay(BoundedJson.list(BoundedJson.readLarge(data,RoadFrames.REPLAY_BYTES,RoadScene.FIXTURE_NODES)));}
+        catch(RuntimeException e){alert("回放未加载","此包缺少已校验的公开区域样本。");return;}
+        stopGuidance();roadOn=true;roadSwitch.setChecked(true);roads.setEnabled(true);
+        replayRoads=new RoadScene((la,lo)->new double[]{la,lo},fixtures());replayRoads.setEnabled(true);
+        RoadFrames.Sample first=loaded.at(0);
+        if(!NativeNavigation.start(RoadFrames.scene(first,first.route,alwaysOn))){guidanceMessage("没有开始：显示通道未就绪，请检查下方状态");return;}
+        replay=loaded;replayStart=SystemClock.elapsedRealtime();replaying=true;
+        guidanceMessage("公开区域道路回放 · 非实际定位");main.post(replayTick);
+    }
+    /** 5 Hz replay (iOS roadDemoTick): interpolated sample → TNV1 frame + TNR3 map; ends with the last sample. */
+    private final Runnable replayTick=new Runnable(){public void run(){
+        if(closed||!replaying||replay==null)return;String phase=NativeNavigation.phase();
+        if(!phase.equals("ready")&&!phase.equals("starting")){replaying=false;replay=null;revokeRoads();guidanceState.setText("眼镜显示已结束或连接中断；回放已停止");return;}
+        long now=SystemClock.elapsedRealtime();RoadFrames.Sample s=replay.at((now-replayStart)/1000.0);
+        if(s==null){replaying=false;replay=null;stopDisplay();revokeRoads();guidanceState.setText("回放结束；已请求关闭眼镜显示");return;}
+        try{NativeNavigation.offer(RoadFrames.scene(s,s.route,alwaysOn));}catch(RuntimeException e){guidanceState.setText("回放帧超出预算，未发送");}
+        RoadScene.Result r=replayRoads.decorate("navigating",s.route,s.position,now/1000.0,s.heading,s.segment,now/1000.0);
+        if(r==null)roadClear();else NativeNavigation.mapOffer(r.scene,r.scene2,r.pose,Math.round(r.poseAt*1000));
+        hud.setText("公开区域回放 · 非实际定位\n"+RoadFrames.turn(s.icon)+"\n"+(s.road.isEmpty()?"按照道路实际指示通行":"进入 "+s.road));
+        roadStatus.setText(replayRoads.note()+" · 回放 "+Math.min(replay.size(),(now-replayStart)/1000+1)+" / "+replay.size()+" 秒");
+        main.postDelayed(this,200);
     }};
     private String displayPhase(){return nativeDisplay?NativeNavigation.phase():NavGlasses.phase();}
     private String displayStatus(){return nativeDisplay?NativeNavigation.status():NavGlasses.status();}
@@ -204,7 +273,7 @@ public final class NavigationUI {
         return NativeNavRoute.scene(steps,Math.min(stepIndex,steps.size()-1),point,remaining,duration,sim,alwaysOn,arrived);
     }
     private void error(Exception e){Throwable t=e;while(t instanceof InvocationTargetException&&((InvocationTargetException)t).getTargetException()!=null)t=((InvocationTargetException)t).getTargetException();String code="";try{code="（高德错误码 "+NavReflect.call(t,"getErrorCode")+"）";}catch(Exception ignored){}state.setText("操作未完成"+code+"，请检查网络、定位权限和 Android 高德配置");}
-    private void close(){BackgroundWork.release("导航");if(closed)return;closed=true;generation++;searchGeneration++;runEpoch++;running=false;clearSimulation();main.removeCallbacksAndMessages(null);stopDisplay();NavGlasses.listen(null);NativeNavigation.listen(null);network.shutdownNow();if(lifecycle!=null)host.getApplication().unregisterActivityLifecycleCallbacks(lifecycle);
+    private void close(){BackgroundWork.release("导航");if(closed)return;closed=true;generation++;searchGeneration++;runEpoch++;running=false;replaying=false;revokeRoads();roadNetwork.shutdownNow();clearSimulation();main.removeCallbacksAndMessages(null);stopDisplay();NavGlasses.listen(null);NativeNavigation.listen(null);network.shutdownNow();if(lifecycle!=null)host.getApplication().unregisterActivityLifecycleCallbacks(lifecycle);
         if(locationClient!=null)try{NavReflect.call(locationClient,"stopLocation");NavReflect.call(locationClient,"onDestroy");}catch(Exception ignored){}
         if(mapView!=null)try{NavReflect.call(mapView,"onPause");NavReflect.call(mapView,"onDestroy");}catch(Exception ignored){}current=null;
     }
