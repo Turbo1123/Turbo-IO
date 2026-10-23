@@ -28,6 +28,14 @@ public final class CameraCodecTest {
         ok(throwsIAE(()->CameraCodec.quantize(new byte[CameraCodec.PIXELS+4],2))&&throwsIAE(()->CameraCodec.quantize(new byte[16],3)));
         ok(CameraCodec.budget(128,72,2)==2.5&&CameraCodec.budget(192,108,4)==5.5&&CameraCodec.budget(256,144,2)==6.5&&CameraCodec.budget(256,144,4)==8.0&&CameraCodec.budget(256,144,8)==0&&CameraCodec.budget(320,180,4)==0);
         ok(CameraCodec.PROFILES.length==4&&Arrays.equals(CameraCodec.PROFILES[3],new int[]{256,144,4})&&CameraCodec.DEFAULT_PROFILE==3);
+        // Fit, not fill: a 640x480 luma plane (row stride 704) into 256x144 keeps the whole image (192x144) with black bars.
+        int yw=640,yh=480,stride=704;byte[] y=new byte[stride*yh];Arrays.fill(y,(byte)200);for(int r=0;r<yh;r++)for(int x=yw;x<stride;x++)y[r*stride+x]=(byte)255; // padding must never be sampled
+        y[240*stride+320]=(byte)17;byte[] fit=CameraCodec.fit(y,yw,yh,stride,256,144);ok(fit.length==256*144);
+        boolean bars=true,inside=true,padding=true;for(int r=0;r<144;r++)for(int x=0;x<256;x++){int v=fit[r*256+x]&255;if(x<32||x>=224)bars&=v==0;else{inside&=v==200||v==17;padding&=v!=255;}}
+        ok(bars&&inside&&padding);ok((fit[72*256+128]&255)==17);
+        // A wider-than-16:9 source gets bars top and bottom instead; nothing is cropped.
+        byte[] wide=new byte[1000*100];Arrays.fill(wide,(byte)90);byte[] wf=CameraCodec.fit(wide,1000,100,1000,256,144);boolean tb=true;for(int x=0;x<256;x++){tb&=wf[x]==0&&wf[143*256+x]==0&&(wf[72*256+x]&255)==90;}ok(tb);
+        ok(throwsIAE(()->CameraCodec.fit(y,yw,yh,600,256,144))&&throwsIAE(()->CameraCodec.fit(y,yw,yh,stride,300,144)));
         System.out.println("CameraCodecTest: "+n+" checks against C golden bytes");
     }
 }

@@ -52,6 +52,15 @@ public final class CameraCodec {
         }
         return Arrays.copyOf(out,k);
     }
+    /** Whole source, letterboxed (fit, not fill) into one of the profile sizes; bars are black.
+     * Nearest sample with integer mapping; row padding beyond {@code width} is never read. Mirrors TCEncodeImage. */
+    public static byte[] fit(byte[] y,int width,int height,int rowStride,int w,int h){
+        if(y==null||width<=0||height<=0||rowStride<width||(long)rowStride*(height-1)+width>y.length||budget(w,h,2)==0)throw new IllegalArgumentException("fit");
+        int dw,dh;if((long)width*h>=(long)height*w){dw=w;dh=Math.max(1,(int)((long)height*w/width));}else{dh=h;dw=Math.max(1,(int)((long)width*h/height));}
+        int ox=(w-dw)/2,oy=(h-dh)/2;byte[] out=new byte[w*h];
+        for(int r=0;r<dh;r++){int sy=(int)((long)r*height/dh);int src=sy*rowStride,dst=(oy+r)*w+ox;for(int x=0;x<dw;x++)out[dst+x]=y[src+(int)((long)x*width/dw)];}
+        return out;
+    }
     /** Seconds a frame may take before it is aborted (tc_preview_frame_budget); 0 = unsupported geometry. */
     public static double budget(int w,int h,int bits){
         if(bits!=2&&bits!=4)return 0;if(w==128&&h==72)return 2.5;if(w==192&&h==108)return 5.5;if(w==256&&h==144)return bits==2?6.5:8.0;return 0;
