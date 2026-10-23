@@ -169,6 +169,8 @@ javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/t
 java -cp build/test com.turboio.addon.TdpSessionTest build/test/tdp-golden/oracle
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/DisplayCopy.java tests/DisplayCopyTest.java
 java -cp build/test com.turboio.addon.DisplayCopyTest
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{NavCore,BoundedJson,SubtitleTrial}.java tests/SubtitleTrialTest.java
+java -cp build/test com.turboio.addon.SubtitleTrialTest
 mkdir -p build/test/hd-golden
 VPF=../firmware-research/strix-1.0.5.5-tvp2/src/video-player-v1
 cc -Wall -Wextra -Werror -I$VPF tests/hd_golden.c $VPF/player.c -o build/test/hd-golden/generate
