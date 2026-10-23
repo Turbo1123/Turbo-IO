@@ -12,6 +12,12 @@ mkdir -p build/test-hostabi
 javac -encoding UTF-8 -source 8 -target 8 -d build/test-hostabi src/com/turboio/addon/HostAbi.java tests/HostAbiTest.java
 java -Dturboio.host=1.0.6 -cp build/test-hostabi com.turboio.addon.HostAbiTest X3.Q t u X3.u i4.h j4.q
 java -Dturboio.host=1.0.7 -cp build/test-hostabi com.turboio.addon.HostAbiTest Y3.S t u Y3.u j4.h k4.q
+# Un-forced probe: newest host first, a 1.0.6 tree with a Y3.u decoy stays 1.0.6, nothing found falls back to 1.0.6.
+for stub in v106 v107 decoy; do mkdir -p build/test-hostabi-$stub && javac -encoding UTF-8 -source 8 -target 8 -d build/test-hostabi-$stub $(find tests/hostabi/$stub -name '*.java'); done
+java -cp build/test-hostabi:build/test-hostabi-v106 com.turboio.addon.HostAbiTest X3.Q t u X3.u i4.h j4.q
+java -cp build/test-hostabi:build/test-hostabi-v107 com.turboio.addon.HostAbiTest Y3.S t u Y3.u j4.h k4.q
+java -cp build/test-hostabi:build/test-hostabi-v106:build/test-hostabi-decoy com.turboio.addon.HostAbiTest X3.Q t u X3.u i4.h j4.q
+java -cp build/test-hostabi com.turboio.addon.HostAbiTest X3.Q t u X3.u i4.h j4.q
 node tests/OtaHooksTest.mjs
 node tests/OfficialOtaSourceTest.mjs
 python3 tests/ApkAssemblyTest.py
@@ -100,5 +106,10 @@ javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/t
 java -cp build/test NativeNavTest build/test/nav-golden
 javac -encoding UTF-8 -source 8 -target 8 -cp "$android_jar" -d build/classes src/com/turboio/addon/*.java
 jar cf build/turboio-addon.jar -C build/classes .
+# Official GUARD bridge manual release. Fakes first; android.jar and the add-on classes only satisfy
+# class loading for UI code that never runs here.
+rm -rf build/test-ota-bridge && mkdir -p build/test-ota-bridge
+javac -encoding UTF-8 -source 8 -target 8 -cp "$android_jar:build/classes" -d build/test-ota-bridge $(find tests/otabridge -name '*.java') src/com/turboio/addon/{OfficialOtaBridge,OfficialOtaGate,OfficialOtaFeed,OfficialOtaPreflightPoll,OtaRecoveryGuard,OtaPackage,OtaFrame,BoundedJson,HostAbi,HostBusiness}.java
+java -cp "build/test-ota-bridge:$android_jar:build/classes" com.turboio.addon.OfficialOtaReleaseTest
 "$build_tools/d8" --lib "$android_jar" --min-api 29 --output build/dex build/turboio-addon.jar
 shasum -a 256 build/dex/classes.dex
