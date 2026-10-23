@@ -6,21 +6,24 @@ import java.util.*;
 
 /** Small strict, bounded JSON profile for SDK documents; never evaluates code. */
 public final class BoundedJson {
-    private final String s; private final boolean device; private int at, nodes;
-    private BoundedJson(String s,boolean device){this.s=s;this.device=device;}
+    private final String s; private final boolean device; private final int maxNodes; private int at, nodes;
+    private BoundedJson(String s,boolean device,int maxNodes){this.s=s;this.device=device;this.maxNodes=maxNodes;}
     public static Object read(byte[] bytes){return read(bytes,false);}
     /** Glasses-owned documents (dashboard config): decimals/large numbers kept as BigDecimal, later duplicate key wins, like NSJSONSerialization on iOS. */
     public static Object readDevice(byte[] bytes){return read(bytes,true);}
-    private static Object read(byte[] bytes,boolean device){
-        if(bytes==null||bytes.length>65536)throw new IllegalArgumentException("JSON budget");
-        String s=utf8(bytes);BoundedJson p=new BoundedJson(s,device);Object value=p.value(0);p.space();
+    /** Public map documents (bundled OSM fixtures, Overpass replies): device number rules with their own explicit size and node bounds. */
+    public static Object readLarge(byte[] bytes,int maxBytes,int maxNodes){return read(bytes,true,maxBytes,maxNodes);}
+    private static Object read(byte[] bytes,boolean device){return read(bytes,device,65536,4096);}
+    private static Object read(byte[] bytes,boolean device,int maxBytes,int maxNodes){
+        if(bytes==null||bytes.length>maxBytes)throw new IllegalArgumentException("JSON budget");
+        String s=utf8(bytes);BoundedJson p=new BoundedJson(s,device,maxNodes);Object value=p.value(0);p.space();
         if(p.at!=s.length())throw new IllegalArgumentException("Trailing JSON");return value;
     }
     public static String utf8(byte[] bytes){try{return StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes)).toString();}catch(CharacterCodingException e){throw new IllegalArgumentException("Invalid UTF-8");}}
     private void space(){while(at<s.length()&&" \r\n\t".indexOf(s.charAt(at))>=0)at++;}
     private char next(){if(at>=s.length())throw new IllegalArgumentException("Incomplete JSON");return s.charAt(at++);}
     private Object value(int depth){
-        if(depth>16||++nodes>4096)throw new IllegalArgumentException("JSON complexity");space();char c=next();
+        if(depth>16||++nodes>maxNodes)throw new IllegalArgumentException("JSON complexity");space();char c=next();
         if(c=='"')return string();
         if(c=='{'){Map<String,Object> map=new TreeMap<>();space();if(at<s.length()&&s.charAt(at)=='}'){at++;return map;}
             while(true){space();if(next()!='"')throw new IllegalArgumentException("JSON key");String key=string();if(map.containsKey(key)&&!device)throw new IllegalArgumentException("Duplicate JSON key");space();if(next()!=':')throw new IllegalArgumentException("JSON colon");map.put(key,value(depth+1));space();c=next();if(c=='}')return map;if(c!=',')throw new IllegalArgumentException("JSON object");}}
