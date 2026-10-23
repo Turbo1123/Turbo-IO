@@ -77,6 +77,9 @@ cc -Wall -Wextra -Werror -I../official-addon/ios107-edition tests/menu_golden.c 
 build/test/menu-golden/generate build/test/menu-golden
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{HexCarrier,MenuCodec}.java tests/MenuCodecTest.java
 java -cp build/test com.turboio.addon.MenuCodecTest build/test/menu-golden
+mkdir -p build/test-menu-flow
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-menu-flow tests/menuflow/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/MenuLayout.java
+java -cp build/test-menu-flow:build/test com.turboio.addon.MenuLayoutTest
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/ChatPolicy.java tests/ChatPolicyTest.java
 java -cp build/test ChatPolicyTest
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/SpeechBuffer.java tests/SpeechBufferTest.java
