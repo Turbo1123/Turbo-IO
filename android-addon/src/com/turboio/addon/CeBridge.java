@@ -23,7 +23,8 @@ final class CeBridge {
     private static String note="尚未发送";private static BiConsumer<String,Boolean> listener,pending;
 
     static synchronized void init(Context c){
-        if(app!=null)return;app=c.getApplicationContext();prefs=app.getSharedPreferences("turboio_english",0);File root=new File(app.getFilesDir(),"turboio/english");
+        if(app!=null)return;app=c.getApplicationContext();prefs=app.getSharedPreferences("turboio_english",0);// no_backup: study cards, transcript-derived history and the automation queue stay out of system backup.
+        File root=new File(app.getNoBackupFilesDir(),"turboio/english");IO.execute(()->{try{NotificationTap.delete(new File(app.getFilesDir(),"turboio/english"));}catch(Throwable ignored){}});
         history=new CeHistory(new File(root,"reviews.json"));
         session=new CeSession(new CeSession.Carrier(){
             public String peer(){return NativeTransfer.connected();}

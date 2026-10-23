@@ -17,7 +17,7 @@ final class NotificationHistoryUI {
     static void show(Activity a){
         NotificationRuntime rt=NotificationTap.runtime(a);EditorialUI.Screen s=new EditorialUI.Screen(a,"通知历史");LinearLayout b=s.body;
         b.addView(EditorialUI.text(a,"来自官方 App 通知监听 · 仅本机",17,EditorialUI.INK));
-        b.addView(EditorialUI.text(a,"默认关闭。开启后持续保存至手动关闭；不调用模型、不上传云端，并排除本归档的系统备份。保留最近 30 天，最多 2000 条 / 8 MiB 正文，超过时清理最早记录。\n需要在系统设置中允许雷鸟 App 读取通知。无法补回开启前或 App 被终止期间的通知；常驻/前台服务通知和本 App 自身通知不保存。",13,EditorialUI.MUTED));
+        b.addView(EditorialUI.text(a,"默认关闭。开启后持续保存至手动关闭；不调用模型、不上传云端，并存放在不参与系统备份的目录。保留最近 30 天，最多 2000 条 / 8 MiB 正文，超过时清理最早记录。\n需要在系统设置中允许雷鸟 App 读取通知。无法补回开启前或 App 被终止期间的通知；常驻/前台服务通知和本 App 自身通知不保存。",13,EditorialUI.MUTED));
         TextView state=EditorialUI.text(a,"",13,EditorialUI.INK);
         Switch[] sw=new Switch[1];boolean[] quiet={false};
         sw[0]=EditorialUI.toggle(a,b,"保存官方 App 收到的通知",rt.enabled(),(v,on)->{
@@ -33,11 +33,11 @@ final class NotificationHistoryUI {
         LinearLayout list=EditorialUI.column(a);b.addView(list);
         b.addView(EditorialUI.text(a,"记录的是官方 App 收到的通知，不代表镜片一定显示过。相同内容去重；更新和移除事件保留为历史，不删除原文。",13,EditorialUI.MUTED));
         EditorialUI.button(a,b,"清空",false,()->new AlertDialog.Builder(a).setTitle("清空通知历史？").setMessage("删除 TurboIO 保存在本机的通知正文，不影响其他 App 或眼镜原厂通知。此操作不可撤销；若保存开关仍开启，之后的新通知仍会记录。")
-            .setNegativeButton("取消",null).setPositiveButton("清空",(d,w)->READ.execute(()->{rt.invalidate();boolean ok=rt.store().clear();MAIN.post(()->{if(!ok)new AlertDialog.Builder(a).setTitle("未能完整清空").setMessage("请解锁手机后重试。").setPositiveButton("知道了",null).show();});})).show());
+            .setNegativeButton("取消",null).setPositiveButton("清空",(d,w)->READ.execute(()->{rt.invalidate();boolean ok;try{ok=rt.store().clear();}catch(Throwable t){ok=false;}boolean done=ok;MAIN.post(()->{if(!done)new AlertDialog.Builder(a).setTitle("未能完整清空").setMessage("请解锁手机后重试。").setPositiveButton("知道了",null).show();});})).show());
         final List<Map<String,Object>>[] shown=new List[]{Collections.emptyList()};final boolean[] loading={false};
         Runnable refresh=new Runnable(){public void run(){
             if(loading[0])return;loading[0]=true;String q=query.getText().toString();
-            READ.execute(()->{rt.store().prune(System.currentTimeMillis()/1000.0);List<Map<String,Object>> rows=rt.store().search(q,2000);Map<String,Object> st=rt.status();
+            READ.execute(()->{List<Map<String,Object>> rows;Map<String,Object> st;try{rt.store().prune(System.currentTimeMillis()/1000.0);rows=rt.store().search(q,2000);st=rt.status();}catch(Throwable t){MAIN.post(()->loading[0]=false);return;}
                 MAIN.post(()->{loading[0]=false;if(!s.dialog.isShowing())return;
                     String err=String.valueOf(st.get("error"));
                     state.setText((rt.enabled()?"正在监听官方通知":"未开启 · 不保存正文")+"\n"+(!err.isEmpty()&&!err.equals("null")?err:"本次保存 "+st.get("inserted")+" · 去重 "+st.get("duplicates")+" · 队列丢弃 "+st.get("overflow")+" · 写入失败 "+st.get("writeFailures")+"\nTNA1-ANDROID-01 · 未修改眼镜固件"));

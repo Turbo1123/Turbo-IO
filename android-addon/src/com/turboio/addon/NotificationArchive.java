@@ -32,43 +32,46 @@ final class NotificationArchive {
     }
     private static String fold(String s){return Normalizer.normalize(s,Normalizer.Form.NFD).replaceAll("\\p{M}+","").toLowerCase(Locale.ROOT);}
 
-    static final class Store{
-        private static final class Entry{final String id;final double received;final long seq;final byte[] line;final Map<String,Object> record;Entry(String id,double r,long s,byte[] l,Map<String,Object> rec){this.id=id;received=r;seq=s;line=l;record=rec;}}
+    /** Append-only log. Caps evict down to 90% (hysteresis) and the file is compacted only when dead bytes exceed
+     * 25% of it or 1 MiB, or when load skipped corrupt lines — never a full rewrite per notification. */
+    static class Store{
+        private static final class Entry{final String id;final double received;final long seq;final int length;final Map<String,Object> record;Entry(String id,double r,long s,int l,Map<String,Object> rec){this.id=id;received=r;seq=s;length=l;record=rec;}}
         private final File dir,log;private final Map<String,Entry> byId=new HashMap<>();private final TreeSet<Entry> order=new TreeSet<>((x,y)->x.received!=y.received?Double.compare(x.received,y.received):Long.compare(x.seq,y.seq));
-        private long bytes,seq,evicted;private boolean loaded,dirty;private String error="";
+        private long bytes,fileBytes,seq,evicted,compactions;private boolean loaded,corrupt;private String error="";
         Store(File dir){this.dir=dir;log=new File(dir,"notifications.log");}
         private boolean open(){
             if(loaded)return true;if(!dir.isDirectory()&&!dir.mkdirs()){error="无法创建本机归档目录";return false;}
             dir.setReadable(false,false);dir.setReadable(true,true);dir.setExecutable(false,false);dir.setExecutable(true,true);
             if(log.isFile())try(BufferedReader in=new BufferedReader(new InputStreamReader(new FileInputStream(log),StandardCharsets.UTF_8))){String line;
-                while((line=in.readLine())!=null){byte[] b=line.getBytes(StandardCharsets.UTF_8);Map<String,Object> r=null;
+                while((line=in.readLine())!=null){byte[] b=line.getBytes(StandardCharsets.UTF_8);fileBytes+=b.length+1;Map<String,Object> r=null;
                     if(b.length<=MAX_RECORD)try{r=BoundedJson.map(BoundedJson.readLarge(b,MAX_RECORD,64));}catch(RuntimeException e){r=null;}
-                    if(!valid(r)||byId.containsKey((String)r.get("id"))){dirty=true;continue;}add(r,b);}
+                    if(!valid(r)||byId.containsKey((String)r.get("id"))){corrupt=true;continue;}add(r,b.length+1);}
             }catch(IOException e){error="数据库暂不可用；请解锁手机后重试";return false;}
             loaded=true;return true;
         }
-        private void add(Map<String,Object> r,byte[] line){Entry e=new Entry((String)r.get("id"),((Number)r.get("receivedAt")).doubleValue(),seq++,line,r);byId.put(e.id,e);order.add(e);bytes+=line.length;}
-        private void remove(Entry e){order.remove(e);byId.remove(e.id);bytes-=e.line.length;evicted++;dirty=true;}
+        private void add(Map<String,Object> r,int length){Entry e=new Entry((String)r.get("id"),((Number)r.get("receivedAt")).doubleValue(),seq++,length,r);byId.put(e.id,e);order.add(e);bytes+=length;}
+        private void remove(Entry e){order.remove(e);byId.remove(e.id);bytes-=e.length;evicted++;}
         private boolean rewrite(){
-            File tmp=new File(dir,"notifications.log.tmp");
-            try(FileOutputStream out=new FileOutputStream(tmp)){for(Entry e:order){out.write(e.line);out.write('\n');}out.getFD().sync();}catch(IOException e){tmp.delete();error="保存失败；空间不足或数据库不可用";return false;}
-            tmp.setReadable(false,false);tmp.setReadable(true,true);if(!tmp.renameTo(log)){error="保存失败；空间不足或数据库不可用";return false;}dirty=false;return true;
+            File tmp=new File(dir,"notifications.log.tmp");long written=0;
+            try(FileOutputStream out=new FileOutputStream(tmp)){for(Entry e:order){byte[] line=BoundedJson.canonical(e.record);out.write(line);out.write('\n');written+=line.length+1;}out.getFD().sync();}catch(IOException e){tmp.delete();error="保存失败；空间不足或数据库不可用";return false;}
+            tmp.setReadable(false,false);tmp.setReadable(true,true);if(!tmp.renameTo(log)){error="保存失败；空间不足或数据库不可用";return false;}
+            fileBytes=written;corrupt=false;compactions++;return true;
         }
         /** "inserted", "duplicate" or "error"; never content. */
         synchronized String insert(Map<String,Object> record,double now){
             if(!valid(record)||!(now>0)||!open())return "error";if(byId.containsKey((String)record.get("id")))return "duplicate";
             byte[] line=BoundedJson.canonical(record);if(line.length>MAX_RECORD)return "error";
             try(FileOutputStream out=new FileOutputStream(log,true)){out.write(line);out.write('\n');out.getFD().sync();}catch(IOException e){error="保存失败；空间不足或数据库不可用";return "error";}
-            log.setReadable(false,false);log.setReadable(true,true);add(record,line);
+            log.setReadable(false,false);log.setReadable(true,true);fileBytes+=line.length+1;add(record,line.length+1);
             if(!prune(now))return "error";error="";return "inserted";
         }
-        /** 30-day window, then ≤2000 records, then ≤8 MiB of record bytes (oldest first); compacts when anything changed. */
+        /** 30-day window, then ≤2000 records and ≤8 MiB (evicting oldest down to 90% once a cap is hit). */
         synchronized boolean prune(double now){
             if(!open())return false;
             while(!order.isEmpty()&&order.first().received<now-RETAIN)remove(order.first());
-            while(order.size()>MAX_RECORDS)remove(order.first());
-            while(bytes>MAX_BYTES&&!order.isEmpty())remove(order.first());
-            return !dirty||rewrite();
+            if(order.size()>MAX_RECORDS)while(order.size()>MAX_RECORDS*9/10)remove(order.first());
+            if(bytes>MAX_BYTES)while(bytes>MAX_BYTES*9/10&&!order.isEmpty())remove(order.first());
+            long dead=fileBytes-bytes;return !(corrupt||dead>Math.max(1024*1024,fileBytes/4))||rewrite();
         }
         /** Newest first; case- and diacritic-insensitive over app name, app id, title, subtitle and content. */
         synchronized List<Map<String,Object>> search(String query,int limit){
@@ -78,7 +81,7 @@ final class NotificationArchive {
                 if(match)out.add(new TreeMap<>(r));}
             return out;
         }
-        synchronized Map<String,Object> status(){open();Map<String,Object> s=new LinkedHashMap<>();s.put("count",(long)order.size());s.put("bytes",bytes);s.put("evictedThisRun",evicted);s.put("error",error);return s;}
-        synchronized boolean clear(){if(!open())return false;order.clear();byId.clear();bytes=0;dirty=true;return rewrite();}
+        synchronized Map<String,Object> status(){open();Map<String,Object> s=new LinkedHashMap<>();s.put("count",(long)order.size());s.put("bytes",bytes);s.put("evictedThisRun",evicted);s.put("compactions",compactions);s.put("error",error);return s;}
+        synchronized boolean clear(){if(!open())return false;order.clear();byId.clear();bytes=0;return rewrite();}
     }
 }

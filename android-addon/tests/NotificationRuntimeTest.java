@@ -22,6 +22,13 @@ public final class NotificationRuntimeTest {
         NotificationRuntime.Extractor bad=o->{throw new RuntimeException("boom");};NotificationRuntime broken=new NotificationRuntime(store,queue::add,bad,"h",()->now[0]);broken.setEnabled(true);broken.posted(note("x","t",false,"p"));
         ok(((Number)broken.status().get("invalid")).intValue()==1,"extractor failure counted, never thrown");
         ok(!rt.status().toString().contains("张三"),"status has no content");
+        // Errors on the add-on executor are contained; app labels resolve off the listener thread.
+        NotificationArchive.Store failing=new NotificationArchive.Store(dir.toFile()){@Override synchronized String insert(Map<String,Object> r,double now){throw new OutOfMemoryError("simulated");}};
+        NotificationRuntime oom=new NotificationRuntime(failing,queue::add,ex,"h",()->now[0]);oom.setEnabled(true);oom.posted(note("o1","t",false,"com.x"));
+        boolean contained=true;try{for(Runnable r:new ArrayList<>(queue))r.run();}catch(Throwable t){contained=false;}queue.clear();ok(contained&&((Number)oom.status().get("writeFailures")).intValue()==1,"Error on the executor contained and counted");
+        int[] labels={0};NotificationRuntime.Extractor bare=o->{NotificationRuntime.Fields f=ex.fields(o);f.appName=null;return f;};
+        NotificationRuntime lazy=new NotificationRuntime(store,queue::add,bare,"h",()->now[0]);lazy.labeler=pkg->{labels[0]++;return "标签";};lazy.setEnabled(true);lazy.posted(note("lab","t",false,"com.y"));
+        ok(labels[0]==0,"no label lookup on the listener thread");for(Runnable r:new ArrayList<>(queue))r.run();queue.clear();ok(labels[0]==1&&store.search("com.y",5).get(0).get("appName").equals("标签"),"label resolved on the executor");
         System.out.println("NotificationRuntimeTest: "+n+" checks; opt-in, event ids, skips, queue bound, generation");
     }
 }

@@ -26,7 +26,10 @@ public final class NotificationArchiveTest {
         // 2000 records.
         Path d2=Files.createTempDirectory("tna2");NotificationArchive.Store m=new NotificationArchive.Store(d2.toFile());double t=1792990000;
         for(int i=0;i<2001;i++)ok(m.insert(rec("k"+i,"t"+i,"c",t+i),t+i).equals("inserted"),"insert "+i);
-        ok(((Number)m.status().get("count")).intValue()==2000&&m.search("t0",3000).stream().noneMatch(x->x.get("title").equals("t0"))&&m.search("",1).get(0).get("title").equals("t2000"),"≤2000, oldest evicted");
+        ok(((Number)m.status().get("count")).intValue()<=2000&&m.search("t0",3000).stream().noneMatch(x->x.get("title").equals("t0"))&&m.search("",1).get(0).get("title").equals("t2000"),"≤2000, oldest evicted");
+        long before=((Number)m.status().get("compactions")).longValue();for(int i=2001;i<2101;i++)m.insert(rec("k"+i,"t"+i,"c",t+i),t+i);
+        ok(((Number)m.status().get("compactions")).longValue()-before<=2,"hysteresis: 100 inserts at the cap compact at most twice ("+(((Number)m.status().get("compactions")).longValue()-before)+")");
+        NotificationArchive.Store reopened=new NotificationArchive.Store(d2.toFile());reopened.prune(t+2200);ok(((Number)reopened.status().get("count")).intValue()<=2000&&reopened.search("",1).get(0).get("title").equals("t2100")&&reopened.search("t1 ",5).isEmpty(),"evicted records stay evicted after reopen");
         // 8 MiB.
         Path d3=Files.createTempDirectory("tna3");NotificationArchive.Store b=new NotificationArchive.Store(d3.toFile());char[] chunk=new char[20000];Arrays.fill(chunk,'字');
         for(int i=0;i<150;i++)ok(b.insert(rec("b"+i,"t"+i,new String(chunk),t+i),t+i).equals("inserted"),"big "+i);
