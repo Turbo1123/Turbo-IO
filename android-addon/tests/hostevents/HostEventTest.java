@@ -38,4 +38,5 @@ class NavGlasses {static boolean active(){return false;}static void event(String
 class NativeNavigation {static boolean active(){return false;}}
 class ReaderBridge {static boolean active(){return false;}}
 class MusicBridge {static boolean active(){return false;}}
+class DisplayBridge {static boolean active(){return false;}}
 class NewsTele {static int count;static void receive(String peer,byte[] data){if(!peer.equals("test-peer"))throw new AssertionError();count++;}}
