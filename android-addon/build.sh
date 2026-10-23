@@ -173,6 +173,9 @@ cc -Wall -Wextra -Werror -I$VPF tests/hd_golden.c $VPF/player.c -o build/test/hd
 build/test/hd-golden/generate build/test/hd-golden
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{Vp,HdEncoder}.java tests/HdTest.java
 java -cp build/test com.turboio.addon.HdTest build/test/hd-golden
+cc -Wall -Wextra -Werror -I$VPF tests/hd_oracle.c $VPF/player.c -o build/test/hd-golden/oracle
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/HdLink.java tests/HdLinkTest.java
+java -cp build/test com.turboio.addon.HdLinkTest build/test/hd-golden/oracle
 mkdir -p build/test-menu-flow
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test-menu-flow tests/menuflow/*.java tests/musicflow/SystemClock.java src/com/turboio/addon/MenuLayout.java
 java -cp build/test-menu-flow:build/test com.turboio.addon.MenuLayoutTest
