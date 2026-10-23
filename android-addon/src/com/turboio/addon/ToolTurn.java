@@ -29,7 +29,7 @@ final class ToolTurn {
         try{
             if(arguments==null||arguments.length()>4000)return null;Object o=BoundedJson.readDevice(arguments.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             if(!(o instanceof Map)||((Map<?,?>)o).size()!=1)return null;Object t=((Map<?,?>)o).get("title");if(!(t instanceof String))return null;String s=(String)t;
-            if(s.length()>240)return null;for(int i=0;i<s.length();i++)if(Character.isISOControl(s.charAt(i))||Character.getType(s.charAt(i))==Character.CONTROL)return null;
+            if(s.length()>240)return null;for(int i=0;i<s.length();i++)if(Character.isISOControl(s.charAt(i))||Character.getType(s.charAt(i))==Character.CONTROL||Character.getType(s.charAt(i))==Character.FORMAT)return null;
             s=TodoProtocol.trim(s);return s.isEmpty()?null:s;
         }catch(RuntimeException e){return null;}
     }

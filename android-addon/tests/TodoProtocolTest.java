@@ -55,6 +55,7 @@ public final class TodoProtocolTest {
         ok("买牛奶".equals(ToolTurn.title("{\"title\":\"  买牛奶  \"}")),"title trim");
         StringBuilder x241=new StringBuilder("{\"title\":\"");for(int i=0;i<241;i++)x241.append('x');x241.append("\"}");
         for(String bad:new String[]{"{}","[]","{\"title\":1}","{\"title\":\" \"}","{\"title\":\"x\",\"due\":1}","{\"title\":\"a\\nb\"}",x241.toString(),"not json"})ok(ToolTurn.title(bad)==null,"bad title "+bad);
+        for(String fmt:new String[]{"\u200b","\u202e","\ufeff"})ok(ToolTurn.title("{\"title\":\"买"+fmt+"牛奶\"}")==null,"format char "+Integer.toHexString(fmt.charAt(0)));
         // ToolTurn batch rules (TodoToolFlowTests).
         ToolTurn t=new ToolTurn(true,true,true,true);ok(t.toolChoice().equals("auto")&&t.validate(Arrays.asList("create_todo"))==null,"single write ok");t.attempt("create_todo");ok(t.toolChoice().equals("none"),"none after a write");
         ok(t.validate(Arrays.asList("create_todo")).equals("待办写入未执行：本轮只允许一次独立创建，搜索后不执行写入。"),"repeat write refused");

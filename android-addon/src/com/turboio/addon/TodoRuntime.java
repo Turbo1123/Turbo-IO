@@ -31,7 +31,7 @@ final class TodoRuntime {
     static void queue(String dev,byte[] payload){byte[] copy=payload.clone();MAIN.post(()->observeSnapshot(dev,copy));}
     private static void observeSnapshot(String dev,byte[] payload){
         if(dev==null||dev.isEmpty()||dev.length()>200)return;TodoProtocol.Snapshot s=TodoProtocol.snapshot(payload);if(s==null)return;snapshots++;
-        if(!s.full()){baseline=null;snapshot=null;publish("收到分批列表，未将其当作全量基线");return;}
+        if(!s.full()){snapshot=null;publish("收到分批列表，未将其当作全量基线");return;}
         if(busy){
             if(!dev.equals(testDevice)){busy=false;finishTool("unknown");publish("设备发生变化；测试停止，未绑定");}
             else{TodoProtocol.Item c=TodoProtocol.newCandidate(baseline,s,testTitle);
@@ -85,7 +85,7 @@ final class TodoRuntime {
             Object other=get(cmd,"OtherState");response=copyResult(template);set(response,"Command",response.getClass().getMethod("getCommand").getReturnType(),command(response,params,other instanceof Map?(Map<?,?>)other:null));
             set(response,"Query",String.class,"创建待办 "+title);set(response,"Answer",String.class,"");set(response,"Spoken",String.class,"");
         }catch(NoSuchMethodException e){return "官方包装类型不匹配。";}catch(Exception e){return "无法构造官方包装，未调用。";}
-        baseline=snapshot;testDevice=device;testTitle=title;testWire=null;toolOperation=false;busy=true;long mine=++round;publish("仅提交一次官方创建回调；等待官方真实列表和ID，未声明成功");
+        baseline=snapshot;testDevice=device;testTitle=title;testWire=null;physicalComplete=null;toolOperation=false;busy=true;long mine=++round;publish("仅提交一次官方创建回调；等待官方真实列表和ID，未声明成功");
         injecting=true;try{TurboAddon.deliverNlp(listener,response);}catch(Exception e){busy=false;publish("官方回调调用异常；结果未知，禁止重试");}finally{injecting=false;}
         MAIN.postDelayed(()->{if(mine==round&&busy){busy=false;publish("25秒内未观察到唯一新项；结果未知，不自动重发");}},25000);
         return "已提交："+title;
@@ -106,7 +106,7 @@ final class TodoRuntime {
             set(response,"Command",response.getClass().getMethod("getCommand").getReturnType(),command(response,params,null));
         }catch(Exception e){completion.accept("not_ready");return;}
         if(!prefs().edit().putBoolean(UNRESOLVED,true).commit()){completion.accept("rejected");return;}
-        baseline=snapshot;testDevice=device;testTitle=clean;testWire=null;toolOperation=true;toolCompletion=completion;busy=true;long mine=++round;
+        baseline=snapshot;testDevice=device;testTitle=clean;testWire=null;physicalComplete=null;toolOperation=true;toolCompletion=completion;busy=true;long mine=++round;
         publish("create_todo已调用官方入口；等待真实列表，不宣称创建成功");
         injecting=true;try{TurboAddon.deliverNlp(chatListener,response);}catch(Exception e){busy=false;publish("create_todo调用异常，结果未知；禁止重试");finishTool("unknown");}finally{injecting=false;}
         MAIN.postDelayed(()->{if(mine==round&&busy&&toolOperation){busy=false;publish("create_todo未确认唯一新ID，结果未知；禁止重试");finishTool("unknown");}},25000);

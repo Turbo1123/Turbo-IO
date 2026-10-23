@@ -43,7 +43,7 @@ public final class TurboAddon {
     private static String question = "", sid = "", emitted = "", lastFinal = "";
     private static volatile long generation;
     private static volatile HttpURLConnection connection;
-    private static boolean owns, done, hasFinal;
+    private static volatile boolean owns, done, hasFinal;
     private static String diagnostic = "等待眼镜语音";
     private static int asrFinals, replacements, completions;
     private static final java.util.concurrent.atomic.AtomicInteger modelRequests = new java.util.concurrent.atomic.AtomicInteger();
@@ -345,17 +345,21 @@ public final class TurboAddon {
                 String refused=turn.validate(names);if(refused!=null){String text=answer.toString();MAIN.post(()->emit(token,text,true,refused));return;}
                 messages.put(message("assistant",answer.substring(responseStart)).put("tool_calls",list));
                 for(JSONObject call:calls.values()) {
-                    if(token!=generation)return;
+                    if(token!=generation||done)return;
                     if(++toolCount>3)throw new IOException("tool_budget");
                     JSONObject function=call.getJSONObject("function"), result;String name=function.getString("name");
                     if(name.equals("create_todo")){
                         String title=ToolTurn.title(function.getString("arguments"));
                         if(title==null||turn.todoAttempted()){String text=answer.toString();MAIN.post(()->emit(token,text,true,"待办工具参数无效或重复调用，未执行。"));return;}
                         turn.attempt(name);answer.append("\n正在提交待办并核对官方列表…\n");String progress=answer.toString();MAIN.post(()->emit(token,progress,false,null));
-                        String[] todoStatus={"unknown"};java.util.concurrent.CountDownLatch latch=new java.util.concurrent.CountDownLatch(1);
-                        MAIN.post(()->{try{TodoRuntime.createFromTool(title,st->{if(latch.getCount()>0){todoStatus[0]=st;latch.countDown();}});}catch(RuntimeException e){latch.countDown();}});
-                        latch.await(30,java.util.concurrent.TimeUnit.SECONDS);if(token!=generation)return;
-                        messages.put(message("tool",ToolTurn.result(todoStatus[0])).put("tool_call_id",call.getString("id")));continue;
+                        // The write runs on main only if this turn is still ours there (barge-in, voice exit, the official
+                        // todo gate or the 90 s timeout may have ended it while this runnable was queued).
+                        java.util.concurrent.atomic.AtomicReference<String> todoStatus=new java.util.concurrent.atomic.AtomicReference<>();java.util.concurrent.CountDownLatch latch=new java.util.concurrent.CountDownLatch(1);
+                        MAIN.post(()->{if(token!=generation||!owns||done){todoStatus.compareAndSet(null,"skipped");latch.countDown();return;}
+                            try{TodoRuntime.createFromTool(title,st->{if(todoStatus.compareAndSet(null,st))latch.countDown();});}catch(RuntimeException e){if(todoStatus.compareAndSet(null,"unknown"))latch.countDown();}});
+                        latch.await(30,java.util.concurrent.TimeUnit.SECONDS);todoStatus.compareAndSet(null,"unknown");
+                        if(token!=generation||done||"skipped".equals(todoStatus.get()))return;
+                        messages.put(message("tool",ToolTurn.result(todoStatus.get())).put("tool_call_id",call.getString("id")));continue;
                     }
                     turn.attempt(name);
                     try {result=tools.call(name,new JSONObject(function.getString("arguments")),secret);}
