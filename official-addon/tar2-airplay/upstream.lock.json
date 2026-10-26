@@ -1,0 +1,17 @@
+{
+  "uxplay": {
+    "repository": "https://github.com/FDH2/UxPlay.git",
+    "commit": "517cbb1240d9b9f69330c55b957cdd52b4175b2a",
+    "license": "GPL-3.0-or-later"
+  },
+  "libplist": {
+    "repository": "https://github.com/libimobiledevice/libplist.git",
+    "commit": "2117b8fdb6b4096455bd2041a63e59a028120136",
+    "license": "LGPL-2.1-or-later"
+  },
+  "openssl": {
+    "url": "https://github.com/openssl/openssl/releases/download/openssl-3.5.4/openssl-3.5.4.tar.gz",
+    "sha256": "967311f84955316969bdb1d8d4b983718ef42338639c621ec4c34fddef355e99",
+    "license": "Apache-2.0"
+  }
+}

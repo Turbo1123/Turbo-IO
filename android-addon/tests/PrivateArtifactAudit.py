@@ -35,7 +35,11 @@ for path in sorted((ROOT / 'src').rglob('*.java')):
     check(str(path.relative_to(ROOT)), path.read_bytes())
 
 with zipfile.ZipFile(sys.argv[1]) as apk:
-    check('APK/classes4.dex', apk.read('classes4.dex'))
+    # Addon DEX follows the vendor DEX set plus the hook DEX (classes6 on 1.0.6 and 1.0.7).
+    addon_dex = [n for n in apk.namelist() if re.fullmatch(r'classes\d*\.dex', n) and b'Lcom/turboio/addon/TurboAddon;' in apk.read(n)
+                 and b'Lcom/turboio/addon/HostAbi;' in apk.read(n)]
+    assert len(addon_dex) == 1, 'Expected exactly one addon DEX'
+    check('APK/' + addon_dex[0], apk.read(addon_dex[0]))
     for name, path in assets().items():
         data = apk.read(name)
         assert data == path.read_bytes(), f'Asset differs from reviewed source: {name}'
@@ -45,7 +49,7 @@ with zipfile.ZipFile(sys.argv[1]) as apk:
                 assert sorted(nested.namelist()) == ['app.json', 'manifest.json']
                 for item in nested.namelist():
                     check(name + '/' + item, nested.read(item))
-    classes = apk.read('classes4.dex')
+    classes = apk.read(addon_dex[0])
     assert b'Lcom/turboio/addon/ReaderWeb;' not in classes, 'Excluded web adapter packaged'
     assert b'Lcom/turboio/addon/ReaderWebProtocol;' not in classes, 'Excluded web protocol packaged'
     assert b'weread_cookie' not in classes, 'Excluded web credential entry packaged'

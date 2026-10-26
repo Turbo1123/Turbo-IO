@@ -1,0 +1,3173 @@
+{
+  "release": "NAVS3 / TMG2",
+  "date": "2026-10-19",
+  "experimental": true,
+  "host": "RayNeo AI iOS 1.0.6 (218)",
+  "firmwareAudit": {
+    "passed": true,
+    "baseline": "1.0.5.5",
+    "customChangedPayloads": [
+      "nuttx_ap.bin"
+    ],
+    "unchangedNewStockPayloads": 14,
+    "manifestPayloads": 15,
+    "archiveEntries": 16,
+    "APBytes": 7408584,
+    "APSHA256": "13c1b953ac50b91c87ebbf039b3795eb82e6c47912e7e7d2bfd911f989c14261",
+    "APMD5": "d7e88db2e1ad22651c775ec8f4740d0e",
+    "archiveSHA256": "6ae710233feec65e23816f4c89e75584de5f1abdde1f0aa8d74c4a3535ca8473",
+    "archiveMD5": "14a8454e6997a92bdde97459011aed56",
+    "whitelistedPatches": 34,
+    "startupDescriptorsPreserved": 7,
+    "deviceIO": false
+  },
+  "reproducedAPAndZIPByteIdentical": true,
+  "phonePublicSourceBuildPassed": true,
+  "offlinePhoneGroups": [
+    "stability",
+    "coordinates",
+    "replay",
+    "session",
+    "menu-layout",
+    "archive",
+    "directory",
+    "flash",
+    "feed",
+    "feed-restart",
+    "camera-link",
+    "camera-image",
+    "camera-capture"
+  ],
+  "privateNAVS3InstalledAndLoadVerified": true,
+  "publicDerivativeInstalled": false,
+  "navigationHardwareAcceptancePending": true,
+  "lockScreenNavigationFixed": false,
+  "userReportedTMG2FlashSuccess": true,
+  "fullHardwareRegressionCompleted": false,
+  "privateIPAOrCredentialsPublished": false,
+  "webReaderAdapterPublished": false,
+  "sourceScanFindings": 0,
+  "gitleaksFindings": 0,
+  "sourceFiles": [
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/ImageWireFormat.h",
+      "sha256": "0969b9b439d022a0f5af61fba19e3a637a632a4618e75943fcfe8cef790bea8a"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/README.md",
+      "sha256": "7584dca0c7415badd5c7b1a2fb5badc07d597a95f555312579098c559724834c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/assets/animation-frames.l8",
+      "sha256": "f758dd6e3cdf5fc6550238df26e46111e9d45d098b9d95f649626ea58210ee1d"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/build-inputs.json",
+      "sha256": "d668fceb7eb91816cca3a0154ecdbc37496aa4524d3ea0be6b8a347bae06cfa6"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/build.py",
+      "sha256": "a6971f598172d9ff5feeb3acd9773fd9bdc6d9da67e70d2c6146dc09481c68f1"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/include/photo-payload.c",
+      "sha256": "8c491addd54afd9d6392c94b31f1cbd2c893c968aa90a3cefdd3031f0b4be200"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/include/string.h",
+      "sha256": "025e0ab94d524bcd88fde3b299f9d7e76e6efff4cb46fdb8896f9b8bc9988c44"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/link.ld",
+      "sha256": "35529e2d6887efb3110e4e840c01dc39dac776fedae6a20c1eda62a136924df2"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/animation-runtime-v1/animation.c",
+      "sha256": "15265dc02008ab87f93cc1188c4fae80b9d2dee88e68500665b772104ea0342a"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/animation-runtime-v1/animation.h",
+      "sha256": "0db660a85d89cde870dda860f100cb405c179eab3f2776ba8ed8b89944d83176"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/animation-runtime-v1/animation_test.c",
+      "sha256": "75a49741c8f40cb64f582338cd6adb1d22f75c1efea4ed5bb47248c486d825a8"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/animation-runtime-v1/still_test.c",
+      "sha256": "e10156bc2f6356521958f5447925870fcd0d6df287045e0ff2654e3ce1e44b63"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/AppBridge.h",
+      "sha256": "a07417fde9c9ffda56b1f446649d82193549fd13ba48ffb5bb9463a9527f7edb"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/AppPackage.h",
+      "sha256": "40e06cc6baf7da456f00b0da00cfc323194f70640e9bc4721b7f421daf850837"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/AppTransport.h",
+      "sha256": "225c193ec02cf2b06b5f9c73eb9dece5dc53865bd7aba3e5572321cd43fdb4c2"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/AppUI.h",
+      "sha256": "6994298f8130e579267159948b034c4da4ddb85df26b3d528ce1cf46e88e059c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app.c",
+      "sha256": "d3829bcaf7f0391340458454727d21a3162453518fd28e96bc1f0deb93188f7e"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app.h",
+      "sha256": "d3ffaaf2803ca8112db3fc0388f658c896f15b0407e2e6ff102dbd610948781c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_abi.S",
+      "sha256": "4e33a6c6f27284f2149c27279edff139911b68eefa7acfa00f6577be901ae794"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_command.c",
+      "sha256": "ade69f730424a7bb89945ee3139b5cd97f07353eaf3b92e2991b9c1722afa599"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_command.h",
+      "sha256": "7317330658059d982c4fc1637fb1d84224cd2641cdb9b1408fa45b0e3a2b2cc3"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_files.c",
+      "sha256": "171aedaf898977515e9efd571b804ef4f6d57ddbfc5cfe60aa2128099d2f885b"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_files.h",
+      "sha256": "cbd86731d1c78fc1af4803a0521c8b20c3a1abe3ae824c4106c10ba35a2ce3b0"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_files_native.c",
+      "sha256": "adcc644b5daf52b3059dcf5e7b057520ddd854ba1c87ceb96621582281f070bf"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_lvgl.c",
+      "sha256": "647bb23340221923353b40a8cd4c775c6dd333e3eb41629ee2f6a005b58220af"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_lvgl.h",
+      "sha256": "cf2ab599c84bdf94351a697278aa1e9386befef9456458854460746a7e0fc85a"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_runner.c",
+      "sha256": "e96b7ad1d86fc4287d21adb59aedbf2830b0f5baf3dcde956538e3d8565943b8"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_runner.h",
+      "sha256": "00a1667c1a24b4940cc7ee27dd60c0fb0ab1a024add0de18cb371f94fe4c650e"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_service.c",
+      "sha256": "9b98c9140e2735b8c32572fa136213c854b7d97c4cfdf66e31d16c8b23ad4ba9"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_service.h",
+      "sha256": "cf46a67d97504c754d2a7369ca79bc43711acce987c6973c6bf3972eeb3d175d"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_shelf.c",
+      "sha256": "3a5a0972ee13faeee8aabc3f6015d9bebc47b46481d921de27b79119676df698"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_shelf.h",
+      "sha256": "1dc441af68485f5386a07ef82bc2403732661d61c05cc54ae8e33b03b2da28f6"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_store.c",
+      "sha256": "89cf0a40ef3ca157fa3c952deaffe3c4539515f034d8f3b25d30e621d9c65ea5"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_store.h",
+      "sha256": "a019c61d3fede9fe13cc2fc4e0fe80aca1d4e88686b0e2fd694b2137ebf1355b"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_view.c",
+      "sha256": "23efdf443697eceb7fa435957017224db9f5faba7dc1871e55846fb723670b72"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/app_view.h",
+      "sha256": "8390d2640e660da003d7c6f9d1ba93f1fc2a1e69b212cfbc761a8d1b740a4d53"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/app-runtime-v1/arm-include/string.h",
+      "sha256": "29af6b1cccf859084e71861f9fca81351673e963ef6f777e86cddf3740dd8752"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/camera-v1/camera.c",
+      "sha256": "561d788d5f094c5dfca5cd949c4306b9ee3e508499aedf51553b2750c8fc5cb0"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/camera-v1/camera.h",
+      "sha256": "ef45885db7d4635af2a7fd3b3008635c27c69399c86e2a3cbf3ef4ea64445b80"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/camera-v1/camera_native.c",
+      "sha256": "bfd3f2c2fa193d1f19e58d5ae4d760ca095aa68dc82d87311d0ac126d42bb9c9"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/camera-v1/camera_native.h",
+      "sha256": "8a615a1afd306d969a156b75bb8dbf910f68d6cbc7f6ec7c3443d07df4716f10"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/ContextEnglish.h",
+      "sha256": "fc42e87c42eee991969aed877ea68f12d6af1a8294508f64cfa0d062a80a7419"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/ContextEnglishBridge.h",
+      "sha256": "1fc8b98b91ac0aebe1face413c69c9ea5dde00b18819567ae738eb31e6fa1737"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/ContextEnglishClient.h",
+      "sha256": "b5bc00428560223496439f42c289e4338a7b805c500225d301b157c7a3faaf3d"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/ContextEnglishHistory.h",
+      "sha256": "f2e0be5ea3d05b789e3990bb52685eb57d9de281b443355f5355112a48b14870"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/ContextEnglishNative.h",
+      "sha256": "b75b574e3a90b2b9e098f0bf284677f1231579725826e2a0c0a500d408753816"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/ContextEnglishPanel.h",
+      "sha256": "215db0e06a7dfa7d30a0812ba0a185bd7c8874596b94d84ac73c5f2793ebd15e"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/ContextEnglishTransport.h",
+      "sha256": "e50d4d13a06ef1257fbfdac8ba33b9e3c3592b433022f44c1fff42a71ae6600b"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/ContextEnglishUI.h",
+      "sha256": "719332e855d49d21d2ac8507126da7440c930f7e2d40f7b553c8917e7019095e"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/coexist.S",
+      "sha256": "df4fcf7426a34f660c99017333baf8649940f2c0a960ba6cec4667d85042c69c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_carrier.c",
+      "sha256": "b967ddd8a536db403fa29f30651b752dac563c9eddf0a3c86f5d7d2184e09436"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_carrier.h",
+      "sha256": "a082dd49b7b203a8541e0e87578d3abe9895eae39ac1cdfceb88238a95f38d38"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_files.c",
+      "sha256": "443f3b2fd3eb5818018123f844d7d4616c254b145f97f0565132a7e621cfdfb8"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_files.h",
+      "sha256": "8f816c3cd344bac42897313b8891b01a09f533a1f59232015896943692266c6c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_files_native.c",
+      "sha256": "0f1f962fd6df0b0496e88eb159b71eb31bfde333aa0ace235feb276a87c2ad8f"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_files_test.c",
+      "sha256": "956cfcaefe2c84dfa8e8f33a8dd91e3e9b071d2a302d592fbf5470971a2cce78"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_flow.c",
+      "sha256": "e63b059d7e2d0bdadf7aa84db303a5ea45416c908e263415a830d53aac1b2b90"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_flow.h",
+      "sha256": "35154d1c56b58a7a19c48d732b08d891cf4ee4a038220664ae00c93097f07f11"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_flow_test.c",
+      "sha256": "44e15be03abb050cd69a62ec76cb7a1cdb6cdda11c4303ece56de7ce5a924547"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_lvgl.c",
+      "sha256": "acc5bd14a1ba53cfaa9c4c0a7bcae75005ddbca8c4e96eaf8d3d8d5ce40df57f"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_lvgl.h",
+      "sha256": "5865d4a1cb4a06878878ab1ce008bd7897a34d9941f0797f2664185b791f27cd"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_native.c",
+      "sha256": "8c97e3af08e9b6be670f2817a387c8e9eba0ab64c59ba10ddc8790d7e33f157c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_native.h",
+      "sha256": "ed031b37bc38e9a576885e3af7bd32efcbd98f7f1c0a7d5b97286cce9e29c2a3"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_progress.c",
+      "sha256": "17ac669ce0dd9701e6a96c51a27ab8f585a727c3d33513f92106f7d1596d0ee7"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_progress.h",
+      "sha256": "7f5dfcc53e8158786644290b48266672815e4c5250f9c6a0721f8dcfe4f192f6"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_progress_test.c",
+      "sha256": "427843cb07c5c2dcdeb665287532e4dc1bb7d9d262e2b1a0930471b62068f035"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_schedule.c",
+      "sha256": "ba7e24b7af73e1e7dec98f990ddca596088a7af06e7f0660797e84252dc5151c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_schedule.h",
+      "sha256": "a885a6e9d0f62420e3d516723497cdb171f2b3674c7e5eed4898a16c3e0472c2"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_service.c",
+      "sha256": "8e6f456aa1f9400164ee30b667325f820d08978f09d19fb35d2d930d5f48e0fd"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_service.h",
+      "sha256": "cfd70e44805882270a0413b2047619cd22179615bafca8f5571dec58d38f4d74"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_service_test.c",
+      "sha256": "31b065ca865b92a6ea2d7148d6ef2d097872f06b80cb890c227a1d719aed0f1b"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_session.c",
+      "sha256": "01bc99bb44445f2ff5d9fe3b63d7761ed8903e88981f35eb7ee3e6d365204b2e"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_session.h",
+      "sha256": "dda678d6a2c627eafda2e912a370c055874f3d008afa5193cf7391f110f86183"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_session_test.c",
+      "sha256": "67744b924e3c6634d28db21727fbdeffeffda952c841594550542409f4247343"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_store.c",
+      "sha256": "a2f0b56d6bdb44851ba30b32a8620551982ee1c05ca951b7ed1da88856ce1b0c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_store.h",
+      "sha256": "289dbb54eecfb569deca21e6a926db30ef4c3cdfd7f0d0999478aa1b3fdcd588"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_store_test.c",
+      "sha256": "373bb34d91a1d73e7638f51d364efcc5774c57008f53390e38d25ef1e6b48ef8"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_transfer.c",
+      "sha256": "28df416946c976ebcbd8006897748a013cc19d0ffef9d846cfcc2fb2a20871e9"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_transfer.h",
+      "sha256": "f144338fb65d52896c011a88d13462ab59d2b3a92c095cc2c2be0498ccfc6049"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_view.c",
+      "sha256": "dea8206787628d928734f0a1b52cc30f163b22726bb5df3e39c31c602e24cae8"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_view.h",
+      "sha256": "35eb8cd56b233ca5071879478ddd7b02c6542c3ec044234eaf283bd705c611bd"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_wire.c",
+      "sha256": "2ae22aaa91a23c715227635e982215f916b4343342b7117ce01af3c60368600b"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_wire.h",
+      "sha256": "b5cde8910d64b48b3f58a5bdbcd0859bf1c768d53e642a4007f314ebee412465"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/english_wire_test.c",
+      "sha256": "bcfe7b33c4bb0df2c9683520a368625cbddc0808e059300b3d18b6b0027dbfdf"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/head_gate.c",
+      "sha256": "f844c2268f8509b1782d8c36617223bf23b5db4001fb5f651f384586d3e605d6"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/head_gate.h",
+      "sha256": "5ef824b6855d497d0b52db2d1fda2a6f39afbe08f45ae82024003afc65580a7c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/head_lifetime.S",
+      "sha256": "49bdafab956767c20581fc32e36c35108c70825b008643599e85224b08bc12c9"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/head_lifetime.c",
+      "sha256": "f77c1e508fc4fea8f08ead70473352305af3a3f82db8849999bae337059a8f6b"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/head_lifetime.h",
+      "sha256": "d44b5f7abf904425ca586826f9f9752fe57f74e318a3e6df947ec1e84949d801"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/head_lifetime_native.c",
+      "sha256": "d5260a894cf8daa1b9f8594f8c2c3ea45744fbdd3bd0b16629a1ec1ddecc2556"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/head_lifetime_test.c",
+      "sha256": "6fd2ddc6a25eb8686bdd5952f01ad0b3a71f6c9158f814dfb2564c45d4a372b4"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/head_observer.S",
+      "sha256": "e1e3e4bd9ed49b923ed1a2be2a5921d62c0b20f9e1a29550c83a4b673b943f59"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/head_serial.S",
+      "sha256": "61f364a610d5bab98905a0edb207337f5bc1937318db82f5dfeeedde320fc9f0"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/head_serial_native.c",
+      "sha256": "6e08513dd20777b26dc1d52243d8ea3f8bac1a28cb03c8ba95c877ddf1127f07"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/context-english-v1/head_serial_native.h",
+      "sha256": "a55a2b3db48acf916b2433386c0a71081aee5af2be1d51564f4e71384c1a3fa3"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dashboard-editor-v1/editor.c",
+      "sha256": "e28f033276ecc3ac9a10461bd7e35d07558e42a3fcfe44c599ac482171be4b91"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dashboard-editor-v1/editor.h",
+      "sha256": "6ede2091193a48dd51059c04bb7069cb396ec9bf7c8055e8f63e18a71f62d95c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dashboard-editor-v1/editor_native.c",
+      "sha256": "55dfbfcd7697e103258ed412599c9521de55c3776ecc94eced7aaf8c5ef06851"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dashboard-v1/DashboardCard.h",
+      "sha256": "b364045d729441f51f4222cf805c0b44e21fa6e5b0d65c559a4233d7161af15e"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dashboard-v1/card.c",
+      "sha256": "f628bfcd3301e9b1bcc3fba66c1d6d61fb6cc5105c7c1821ae293e835c444e59"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dashboard-v1/card.h",
+      "sha256": "b0ca8b018fc7ced4d041fc0dc38530153dc0af7f8021942055495d40c0eac1e7"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dashboard-v1/icons.inc",
+      "sha256": "11aac04e3c7133ab6c3da1cfbc72e6d829a70f2c8d7eb458e1adb5c87606956a"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dashboard-v1/native.c",
+      "sha256": "92c44079c111a479252d2d898a84de480119af0a98da5339b2fec27d072a106d"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dashboard-v1/test_card.c",
+      "sha256": "5369b05feb49694ebb46155b8a394c8f677492d6264464e7f07e0e6933993e4f"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/TDPhoneBridge.h",
+      "sha256": "73f8c87a85d07afe9342feeacda2cebb4047632c6742aa9e03dceda5f9155dfc"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/TDPhoneReply.h",
+      "sha256": "478b15a033bfaac84e9d097a31bcc89c5f28bee9c8dd770aa6fed8c988cbb2b2"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/TDPhoneRun.h",
+      "sha256": "ace4a459816daf605a9eca996fe441f0debf0cfde6a2f8176befbad6fc9e3922"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/TDPhoneStore.h",
+      "sha256": "8e966e060cbd6ad683db71da01494e1ad7480c9dab7b50a9176e601b36a18feb"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/TDPhoneUI.h",
+      "sha256": "c83048f800b1594586ed1720f71f96c51a0c8dd21b55d5ca45b8bb5403eb8aad"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/command.c",
+      "sha256": "f518084202f2f0d95ea74c8fc26ab2c840a73fe4d9908fddfad3c96a9c2e95e8"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/command.h",
+      "sha256": "315f6e11e686afbeb9fe6b9c2184f1503b0923a71d6d54eac2a892d3cf1439d6"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/command_test.c",
+      "sha256": "f8905f5a2850373373a58b279c9ab2a63e85bff536adb2244dcaf97a2287a0dd"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/diagnostics.c",
+      "sha256": "6c5db8ea337099dc3e14f624e6fa09c5081a40689124a9e57ac5b3cee567f70d"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/diagnostics.h",
+      "sha256": "d4064f0d19c2a08155d971a75bc4ea2dba27c59de7bea40f09b703e83898cc3a"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/diagnostics_service.c",
+      "sha256": "b48c7c0a0960ed07481b52a981bf735aa792858b1c8ae358f5e3c5e42216d79b"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/diagnostics_service.h",
+      "sha256": "7b3081c02a537b85552a69320f64374077aa5cf6dd2e518f637f4081af1a6e0c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/diagnostics_test.c",
+      "sha256": "62318eb7bcc5389cc2e64e6ac9535b4fbcea8f39a88633f974e77973b360c50d"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/native_light.c",
+      "sha256": "686bc9afbef20848c217f5ced374deead512b9be421d3724df0dcdaeeba8b70f"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/native_light.h",
+      "sha256": "183caa677676df3b6562f69daa471f90d2e8e8b337c2000e8f0f925f9079f5a2"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/diagnostics-v1/stock_abi.h",
+      "sha256": "0cff0b2994d4617cab0e30e37363ca7f8a87b5c0d5d92d8570ba6923f4f81661"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/didi-v1/ride.c",
+      "sha256": "7d1076945ce5a8ae6b02847b6e73a15889bfa87deef6230e7528030ddbff4333"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/didi-v1/ride.h",
+      "sha256": "48c3d6eb2b846f3c1ea7b6b5d1119dc6442a490e132c28018d1519fba6437961"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/didi-v1/ride_service.c",
+      "sha256": "3b56320839c42a577d860c1b3198dc969cb690a2fd5ddfc1031f6ccef5dc7cfc"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/didi-v1/ride_service.h",
+      "sha256": "358903baad8245b89d1aaf6db08b4ae99daea64f837e77605a05570b77401c20"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/didi-v1/ride_view.c",
+      "sha256": "2e19a23525bf8eb9c0ec5fa71812007d9bc2d162dc43832b588d6ee16856d97d"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/didi-v1/ride_view.h",
+      "sha256": "ea10fe7b3d48cf13a6e12f4493fed3382813278969c7231ef2fca863eab7a741"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/didi-v1/test_core.c",
+      "sha256": "312522bddbe0353c5aa340a1fb6e1839de4786a13caee280ffba3a375da376ba"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/DisplayPhoneSession.h",
+      "sha256": "bce085798206d6864745ffa13ecaa34b4b4e1020b8b5c14035f055047f174a97"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/DisplayPhoneTransport.h",
+      "sha256": "1ad02430c4b74be1641271d2936cbdf90eca04c84ee8e5145d60e16d2de366ef"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/DisplayPhoneUI.h",
+      "sha256": "87a6899fcca093a40efcebaa3011532060f9851b53f08aa5b0c445091985b04e"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/DisplayReplyObserver.h",
+      "sha256": "db8b6846bf0ed49aa4f367f1caa53a279e52fbff04a0c0dec95cc0cd72b3ee3e"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/display_carrier.c",
+      "sha256": "bc2ee8205c4b34f2265cb952a0307548bbe4a8073ba91fbc1f11c2ede19ae308"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/display_carrier.h",
+      "sha256": "8a39d5b0a3fc7a11b50e9b9b75a5f69fcfb037810b13a0ef6561f3465401d189"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/display_client.c",
+      "sha256": "f6ad7a38d84e99e51eceb29cdd7bad52ea0b0241eafb3497c2edf6420dcd30ef"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/display_client.h",
+      "sha256": "a7d8a12e2ff645bc72c0dfabe1061a345b45262eadd47278fca5141e192ed8e4"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/display_memory.h",
+      "sha256": "3d3d97686f2c8aeffc27277c5706c8d2e5f63adec2ecb08f6e6777efaada74b3"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/display_runtime.c",
+      "sha256": "a03a15b93eef3a30fad5555749ddc9b8171f31d75a7aa768b098eb6012ea549b"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/display_runtime.h",
+      "sha256": "59885f38981bfaacad9ea0f88d32f1414d9a09823b98304eb0d0afb5687cebb7"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/display_runtime_test.c",
+      "sha256": "8438fb7586505ec83af8f60268f06cba3d89e5f5b61a812d3a260f61db2dacd9"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/native_display_file.c",
+      "sha256": "ecc8dbb5b265abb4ff065929dd58e2a820575a6c64696d016776e9a8d023d018"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/native_display_file.h",
+      "sha256": "cf0a8d6af824d6dca29a7117866c784aeeaa2bc6a9f915c1de2a653a15e45b13"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/native_display_page.c",
+      "sha256": "08f926bba7ad54aab1ab25ef7c10a43727597ed862188d47e6ecb2d953bb85ca"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/native_display_page.h",
+      "sha256": "82d89c3cd94132a1dc3446695b8ce8eb66659b90da35696f44594e2e1035da37"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/display-runtime-v1/native_display_test.c",
+      "sha256": "72b592ce30fdcf163b8cc1fd001472e92244b0e4fe17f9794b80d9fc261ad6a1"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/DotsClient.h",
+      "sha256": "261b5dd8b55ea49d07649d9153a15c74e7297b49a0d4125ce17f7b1534ddbfeb"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/DotsFileGate.h",
+      "sha256": "38d38593b90e573ac9b5e4a5a03f32ee312097d22072fa5053be9c037b4b81af"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/DotsGlassesTransfer.h",
+      "sha256": "9793f3fc6a098b509652972882026ab1aef0bb27cbc7392b2f74faf897c05554"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/DotsPhoneBridge.h",
+      "sha256": "a1e7ac459322c4ea91a893ad4b9bd98e526c4216607ebcbbfc87cce1e2c5d491"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/DotsSnapshot.h",
+      "sha256": "f98964cc7c136d24112d039c4b15ed8e6027b2347e1f915b41748db8d7cb0cf6"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/DotsUI.h",
+      "sha256": "cf8bebac44f1e9e5a374c9005e70f0c9293cbe937830aa1da4b6aa458c27f2bf"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_carrier.c",
+      "sha256": "4c46af94d1d837b0a5198e92e1002ab4f2a87a4aee8bf6a8f617e67dcb8bf506"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_carrier.h",
+      "sha256": "742c07abd9e548148567e2dbbbfb066b364b98891779b973207bfd0ac9e64450"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_menu_test.c",
+      "sha256": "8d28282deb14c9835036607db17f8fc36e2f6835e2ffca581dcd71fec8af7153"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_native.c",
+      "sha256": "e2be5e805de4a80aa023161e57c8a415922591176c2247ec0f6104c9f945c595"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_native.h",
+      "sha256": "c53ad41fca92b0d6fa8892ccfb83e0c2722da2a3564f5f2b6df18607157b1c4e"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_sender.c",
+      "sha256": "de89d9d0ff044f963cab22c46c7b63d88fef5bc110a25386f59b9fceda5f9c22"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_sender.h",
+      "sha256": "7bdbfb5135581f9b57ee6308b2d16840990c89122915e0829ba41cc6ae974a75"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_sender_test.c",
+      "sha256": "b0b3b4a423840acaa359ac9a2f0c82430ed9ac7a2e1f3dfb2ac8f8b03f6d5bbe"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_service.c",
+      "sha256": "18637f7d2c0e96bd85bfe0fc71d7c5035f9f993e5f4e315b12171d605eb9788f"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_service.h",
+      "sha256": "b6de55786b8918f686c52b477cbbac51ad4833cd2ea25e021d8f2aa5b1eb0991"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_service_test.c",
+      "sha256": "5fdbb6d43aebcb9a4aae80a183ea1a77fe4acbeb386f998581c638f458493376"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_view.c",
+      "sha256": "7e54de954dd0dd16cfd4771e017b063e8591efafb7b7418fe7bc7e02e7d90ed3"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_view.h",
+      "sha256": "69c08f58622333f73f8bff99df959438573c52b8dd30d3ebda5e0bbda37cd647"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_view_test.c",
+      "sha256": "3bb02e4e3e0a04068887b9d857402b9265221b6f9f4c2906f43efc011cbddde7"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_wire.c",
+      "sha256": "c42d4011bb67cb2d556ffd56a3e1be3599494347466294eb9dee37e241dfd1ea"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_wire.h",
+      "sha256": "48b216a6bb45e7f071f09ffc9e5e87ed95fadb0cdc50b3e86ef9f00f3006b801"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/dots-v1/dots_wire_test.c",
+      "sha256": "25fee57b16cd25332482f1db25949234a4f7500fd026ee4c999720b00200658c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/firmware_profile.h",
+      "sha256": "ddcb5dce25c2508b9590956f4af67955c45b557d895f28eb47d2456e2fa3bbbc"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/focus-v1/focus.c",
+      "sha256": "d589bb5ff1f0b5be349561150d4219eaf1fdbaeb953f3d2cc539f47b18b98fed"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/focus-v1/focus.h",
+      "sha256": "129ae6f3509455704c7b768ecd23f0e34b60f2cc2f55dcd1f5fffad00442e930"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/focus-v1/focus_menu.c",
+      "sha256": "7ee69afb134de8a320cefdfc055b75aca0d32b3f7c0f3068985840b4331003b5"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/focus-v1/focus_menu.h",
+      "sha256": "d79122e7d6e7c265e0f34f9ba345b126ee88c5c995e10e67f0503064f85cedc4"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/focus-v1/focus_menu_icons.h",
+      "sha256": "766f78dcafa52c0b74a40e68639aefa3105decf934052eadb2e6bb4db7e2a9dc"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/focus-v1/focus_menu_native.c",
+      "sha256": "b90f5b71c8f8abd516320b021a7a809ab88ce6faaeaf2ad4a0bd6765833b4ab2"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/focus-v1/focus_service.c",
+      "sha256": "249d24ee99e9d38d451b47203f7b30b2520e21612bcee5f4e52eb1646d9b366e"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/focus-v1/focus_service.h",
+      "sha256": "2d5f634e25f81df8831dc948556b8580655ce984f6f8cf3ae10bb6605b0a702e"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/focus-v1/focus_view.c",
+      "sha256": "b5a0ac5440d2aa4058bceaf9ebf6efa3fbebd70f8bb1604437bbf8782cf49179"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/focus-v1/focus_view.h",
+      "sha256": "986b7f62d9e5415e61f4d6f257de667f437d700808e8d847b2bb3567d5cab388"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/global-remote-v1/remote.c",
+      "sha256": "30c10c8a91c21522e9c3bb9a2fa8ddb361e219e4d2bd97bba2de2c5e01797dd6"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/global-remote-v1/remote.h",
+      "sha256": "49bf94f22ab2d2293898b22a5bdcfbc01dfc972ee56a09f830aba45ee5b7617e"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/global-remote-v1/remote_native.c",
+      "sha256": "14d003a0682e26459eabb9cace28d63bb3b5e4ad8f18eba2758f33ff1634d6d0"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/image_mailbox.c",
+      "sha256": "569a75639b98ace65fae16157f27f445b3c0274ddd47636d37b915adf3804117"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/image_mailbox.h",
+      "sha256": "6386acd207919aac0632f39f0c62a7a9e916a6a9cdaebc293715c2e0ef02f8eb"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/image_mailbox_test.c",
+      "sha256": "7399c1ecbdac98f0c8603ad98f41817f5680ee4210837c90ec271ca0d2b71681"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/image_receiver.c",
+      "sha256": "1dfa6f3c7359fe037a810d716c5aa2fd481fb4169e75f53b281a0bbf1fb4d62e"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/image_receiver.h",
+      "sha256": "3ccaa2879bc6910b8bce365e815aa87ba9435e32e46a79e3af8b37b84b85d2bd"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/image_receiver_test.c",
+      "sha256": "325f79da7c8f57a29bd3c554413f535f2d93225079e3f991371538b89936eeb7"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/image_test.c",
+      "sha256": "fbcf3a31c71bf916236b2fec4e5bfd1ee8c7dfccc3db74955c4468402ce5c0ef"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/image_test.h",
+      "sha256": "65e4b7b17ea05c093e90df5e5de79bda7ed1e7a0c7e9b136c227d46b751eb373"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/image_test_test.c",
+      "sha256": "d3cb4a901806e35d234377f9dc62ed808b47ecfaf6a4c30edaccc800ee684c70"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/lvgl_binding_draft.c",
+      "sha256": "49307e34e96ec675993e7c00517714b8233f1017d14d5ea976eff02eff3f4228"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/native_file_bridge.c",
+      "sha256": "b2f88aa15ca2f5a3e5abeb0944cda758bc2e197609774c58ca09538733121d17"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/native_file_bridge.h",
+      "sha256": "7d7b1c5da8a9bf5d4670d742c721e4c5c27859d9ebb9604d1d7c7baf8e8a7b4e"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/native_file_bridge_test.c",
+      "sha256": "058a85d09e9a9fd94e9e8096496997fcb1612923e21b30c5296716890f2b2096"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/native_page.c",
+      "sha256": "133c8d4df3d8cac7ef543058ca2b2b71186da26c733c024d8ddaa4ab796cb1ab"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/native_page.h",
+      "sha256": "1dab5acbbaaca47f1648d5385a9a667c3bdf97e0dd747b96f67ab2a20be456d0"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/render_idle.c",
+      "sha256": "9cf5a90ba554d9371bb74e8eebac89b6a40ff262ebb72a22a086e7bdc2d36177"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/render_idle.h",
+      "sha256": "4e2b5d8c377e8e811fab95035577813538eab9c330e5b747e727ae2be8d17fdf"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/render_idle_test.c",
+      "sha256": "279fd308de24362b3228d581d14bfa092e95d082461d54a5768138c08ebd6139"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/ui_scene.c",
+      "sha256": "29bb5bd47f7d572c8f55b7443f641b8d654651ab22420aef12044eb063dd0595"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/ui_scene.h",
+      "sha256": "0ae30383515fb5f8f9fae14205dd914fd50c41c0c18ff1d710d4c3977d0ce635"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/image-upload-test/ui_scene_test.c",
+      "sha256": "ac355d09b75f8b172434e6b64f71de9e80b7515cbf902e494b3f395bd51000eb"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu-grid-v2/menu_config.c",
+      "sha256": "13abb897af7b6bc1153aa8c3b367e039fd7489aa0b23d5a59cb88638dcbbddc5"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu-grid-v2/menu_config.h",
+      "sha256": "6e762db51d97c05151bebf27cce50138e70968e57c4a47fae7314302d4b3b621"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu-grid-v2/menu_files.inc",
+      "sha256": "0393e6ef5589abf60c15a61dd7631c8d1f5a03a5600edd8ed1cb66b9034f704b"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu8-hooks.c",
+      "sha256": "d7a45c77c64a7d330b48585b84580c12549f9b9aad098ef399623f51a0dbfca6"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu8-native-carousel.c",
+      "sha256": "7198537b3279b2ed7359340e2062e18483725dcea4de4e71c01c879588885256"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu8-native-carousel.h",
+      "sha256": "c801e12e82f5b1ad042c05312b33ef7d545d3805fbaaeb62df9111ee2e1b2d7c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu8-native-lvgl.c",
+      "sha256": "b96a7e827ed4e94a439fbabb0c1167d13f7321fb1f919ce1ecf0a9bb3a52b086"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu8-owner-layout.c",
+      "sha256": "aca4b38cfed96707a449b4e965fccf8773c0f3955fdccdba5c0b59094c4e4a2b"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu8-renderer.c",
+      "sha256": "24ddf69b65cf75e0eb4ca63e429a865ae289396bf8a7d3a0f61aebdc135ffe48"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu8-renderer.h",
+      "sha256": "23c1486efbd933977645b08c0d32ccbf22b3a781000c9a00f86b1045b4b7bad4"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu8-renderer.test.c",
+      "sha256": "50175131a686d2dc564dc3f33e0b51ea3c549007e1e3ad6ed99c5b6c18355890"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu8-sidecar.c",
+      "sha256": "7bc2d9602461a8a9357d6e01f2186b6acabe3b9c40d64c940575aa6bf6a2c83f"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu8-sidecar.h",
+      "sha256": "406868200f39d8c40e9c64a18f076cc80ee942f5dc422c69e11e1503f6ffec72"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu8-sidecar.test.c",
+      "sha256": "00f9194112989d547d5a24c60c9e94d2f386f4a4f6042c76f793cf53e9c7aa7d"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/menu8-stream-hooks.c",
+      "sha256": "49dba41fcd797b0231d502a13decaefc3ea914109f61ad059ef2462736c51215"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/music-runtime-v1/menu10.c",
+      "sha256": "b63c8a56bd00392daecbc2f6389075b5a241a357b19aadd105b216ac25aa81ce"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/music-runtime-v1/music.c",
+      "sha256": "b0189a6fba3dbeac11722c8ce6f4f8332a7d5a1f4f883fb88e25dcff33d15b2d"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/music-runtime-v1/music.h",
+      "sha256": "2f854d99734c598363004db86d373c80188452f2e128d3c2803a5d62c0151a59"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/music-runtime-v1/music_input.h",
+      "sha256": "0964165184288a15e14c891a1a4d7818a81140290b8c1af572f2b50977a6b29d"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/music-runtime-v1/music_input_test.c",
+      "sha256": "22320c07fc815cf062bb1888d51d8c594cadd23c9cf204d105f9d7eeae3d159b"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/music-runtime-v1/music_service.c",
+      "sha256": "ffd1d9b9632350b2faf59d48da704829ecc245d74fb60cf753f0940cc11247e6"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/music-runtime-v1/music_service.h",
+      "sha256": "52d7d25fcdbbdf2a2f0200babb4170a23924a6a9110356808a37fc23e9d90402"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/music-runtime-v1/music_test.c",
+      "sha256": "c99c6c83823dbed599286a2d66fb24a16e08b2905492483db3c32b16cf73c64d"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/NativeNavigation.h",
+      "sha256": "2cf18f01544d7f530b9ff1665a65d5826a97e79d87f476ee33f4a142a451ab91"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/menu9.c",
+      "sha256": "611e5aaa317621a7714d4b2beae5a6e25e91c34f36b72aac1b00f448bc5fd567"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/menu9.h",
+      "sha256": "bbf7f03a36f8b633eb0321e0c209b45f003256afa3294f196243475c03b538cf"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/nav_lvgl.c",
+      "sha256": "3a6c98bc83f6eeca222b17b4da2dff261e32f59496b4cd83b33e8d204378fe2c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/nav_lvgl.h",
+      "sha256": "fd387f196f1dda97fc8f6008356aa2160ef2c6cb3781ddb074c6084cbde40105"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/nav_map.c",
+      "sha256": "ec2a21a70b592e92af306802e7f659bce9b878270dd6001ec84c8aea34fad06a"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/nav_map.h",
+      "sha256": "2dbd6782864c3ef9b87dcd5ec9edca30f73d051e889c5325d7646034ab38fe54"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/nav_runtime.c",
+      "sha256": "cc449f6f8c4491874bb836c0dfd9d111e8d503a75b894692d403c68a369e08a9"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/nav_runtime.h",
+      "sha256": "b774eee0ea68cbb660f4b34a98c249f59e279e3096713372062426e0fd6a383f"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/nav_service.c",
+      "sha256": "f4965f593035e90c94b25b174848bb5fac051e6dc02adbfc9f0673e3a0924895"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/nav_service.h",
+      "sha256": "d70b7f17d23250028835f8d591a3e028674e52024e5bc1d9783038eca7aac887"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/nav_test.c",
+      "sha256": "c4beebe202f0f2a748b620fe2fc3ce033787c16319de464211effcbe626553ae"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/nav_view.c",
+      "sha256": "b8f9bd4cf668e63e41f3b88bda4e064dd5d51e4ade929e83f453710bd1b49913"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/nav_view.h",
+      "sha256": "09c74cd289a9f090c8988a6b1df04c5745987eb9be5c845cd73fc7260ff71c55"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/nav_view_test.c",
+      "sha256": "f6a4d4a84d6b9dcbeecc85a21a89e0cedb405f995bfa4c1a9a5f908c25921411"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/nav_visual.c",
+      "sha256": "ac5ecd7bd52f0c4dd3107065996f31db8ff1945cce7cc892e1ec79cc0f4ecd27"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/navigation-runtime-v1/nav_visual.h",
+      "sha256": "1b622a19efb8034825d720635f9016693459a4958b01b0c0261e0b37e5bda826"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/picture-view-memory-adapter.c",
+      "sha256": "c16f8982b22de5b7257c6d385b55817f2b4573ca16863f3cac8845ce9e4902a0"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/picture-view-memory-adapter.test.c",
+      "sha256": "fdf5e310cb9f5bf02699e6524ea10821ec9e0eb5aea7114ee431e9b40f7f0000"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/port_allocate.c",
+      "sha256": "e4389cfcaf644b45581fe97f706315035bb902287fdd996a7fe49489a163d67b"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/weread-v1/reader.c",
+      "sha256": "ea4fee5aa24eb26675f5c34523f10de70a0752ffc2334a774b0aa2626a384edf"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/weread-v1/reader.h",
+      "sha256": "f5fe9d0e0a1177642a1f930fe9868afe384d18c9870f0d71f6782d96d4dbd06c"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/weread-v1/reader_input.h",
+      "sha256": "9ec5e178dfd1bf451a3733e0e0957d27f8da6e67189acae3ae8c1c335d209475"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/weread-v1/reader_input_test.c",
+      "sha256": "326145ba47643e3b65f67bc0c433cc2b613edfe7a6dc3d84ba706864aed0e578"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/weread-v1/reader_service.c",
+      "sha256": "605c3e8aec21cf8845fd457777f2f0cf8d62e799fc8d79bbf290f0d5da4c8373"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/weread-v1/reader_service.h",
+      "sha256": "dea3507b0a7da36dcab31e5a80a6ed725025c4899da9e26c99328a4f9f7f75c6"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/weread-v1/reader_test.c",
+      "sha256": "16800e3d759a6cfbd23a1217c53e4d01298b720447224098c8e5e7c8e25fb8ad"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/weread-v1/reader_view.c",
+      "sha256": "196708a8d84a51dd792901e78e5606338a0324b47177516e0be3da2cacd38cb5"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/weread-v1/reader_view.h",
+      "sha256": "586da019a567fe46b21d804b6b07e95e1e100e33d1b17eae083893426b4af5d8"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/src/weread-v1/reader_view_test.c",
+      "sha256": "95dd7cbf19ab3e28b2148844eb9191a89ad8d5c1e0a45df74df635a7dd1bae67"
+    },
+    {
+      "path": "firmware-research/strix-1.0.5.5-tmg2/trampolines.S",
+      "sha256": "81cef0444d490eb02b44b086298e3f404023677d2d8d2493aea2aace8ac7cbae"
+    },
+    {
+      "path": "official-addon/navs3-edition/A2UIProbe.h",
+      "sha256": "107af11ce2c93138a587534204f8709c22676807f5cfdfc687520c51576491f3"
+    },
+    {
+      "path": "official-addon/navs3-edition/A2UIProbe.m",
+      "sha256": "f8452a733950f9811a3888e180bbf51cc6637ee58e7691ad9887280939e1fda6"
+    },
+    {
+      "path": "official-addon/navs3-edition/A2UIProtocol.m",
+      "sha256": "952f4838996fba381fd847989d609b7ecc42d58b6cb6340bee1277cf32a35ba3"
+    },
+    {
+      "path": "official-addon/navs3-edition/A2UIProtocolTests.m",
+      "sha256": "4108705cb60d597a74c3d8b5b5194ae081a812a92b2530d6dda6839f26b1d374"
+    },
+    {
+      "path": "official-addon/navs3-edition/Addon.m",
+      "sha256": "3527162d4a974c75e10fc47b89e524cae2bf453afa137eefbf2b111125d56855"
+    },
+    {
+      "path": "official-addon/navs3-edition/AlwaysOnAudio.h",
+      "sha256": "fce2a4edf6a29902c6b01e43defa8b45b83c9e0a03cedd3378662342add42c62"
+    },
+    {
+      "path": "official-addon/navs3-edition/AlwaysOnAudioFiles.m",
+      "sha256": "37619d302890a7f97c6d9a9337578f4238c44bdafdd7ed49e12c69599eed03a6"
+    },
+    {
+      "path": "official-addon/navs3-edition/AlwaysOnAudioNative.m",
+      "sha256": "6982b45b7268fe223c6329ea03e60eeda0631c1a74529dd683cb0e08169eb456"
+    },
+    {
+      "path": "official-addon/navs3-edition/AlwaysOnAudioTests.m",
+      "sha256": "e070b286f63a5c7c214ac9f308f01dc21e90fe00e6244598c861f4f97195a69d"
+    },
+    {
+      "path": "official-addon/navs3-edition/AlwaysOnAudioUI.m",
+      "sha256": "eecc13470eb6627104250a9220402f7991a850f373be91f300fdb660e978bbdc"
+    },
+    {
+      "path": "official-addon/navs3-edition/AlwaysOnOgg.h",
+      "sha256": "c7686733c13d7d6639747ce8a9dd498f2c5c97279740bda8affde7dc0d0225de"
+    },
+    {
+      "path": "official-addon/navs3-edition/AlwaysOnOgg.m",
+      "sha256": "5448e2c10f63441cc68fcfe887e93df0e441c51bfe3e39d4306bc78d07859c2e"
+    },
+    {
+      "path": "official-addon/navs3-edition/AlwaysOnOggTests.m",
+      "sha256": "4099030e3bebe1d514e8fba911fe2da70da2ceabfb95ec35a2c041e9b5860ce6"
+    },
+    {
+      "path": "official-addon/navs3-edition/AppBridge.h",
+      "sha256": "a07417fde9c9ffda56b1f446649d82193549fd13ba48ffb5bb9463a9527f7edb"
+    },
+    {
+      "path": "official-addon/navs3-edition/AppBridge.m",
+      "sha256": "d405b2c69d8ecb2c1cdfb5a2e9157aeae28be6a2d13a361d820f207724b039ec"
+    },
+    {
+      "path": "official-addon/navs3-edition/AppGallery.inc",
+      "sha256": "21321af5da4dbd47c94cf8936589cc99bea8832d611ed4890c525d3b228cfb73"
+    },
+    {
+      "path": "official-addon/navs3-edition/AppPackage.h",
+      "sha256": "40e06cc6baf7da456f00b0da00cfc323194f70640e9bc4721b7f421daf850837"
+    },
+    {
+      "path": "official-addon/navs3-edition/AppPackage.m",
+      "sha256": "31f5050554d96ca2cfcee2162467c40d9504230032c21032eb5d10c087cbed85"
+    },
+    {
+      "path": "official-addon/navs3-edition/AppTransport.h",
+      "sha256": "225c193ec02cf2b06b5f9c73eb9dece5dc53865bd7aba3e5572321cd43fdb4c2"
+    },
+    {
+      "path": "official-addon/navs3-edition/AppTransport.m",
+      "sha256": "fbbb8728f1f39eb87186f6e423d15b5fc2d83ebc6370a0023d2157ab3ffef345"
+    },
+    {
+      "path": "official-addon/navs3-edition/AppUI.h",
+      "sha256": "6994298f8130e579267159948b034c4da4ddb85df26b3d528ce1cf46e88e059c"
+    },
+    {
+      "path": "official-addon/navs3-edition/AppUI.m",
+      "sha256": "e587d3e8b51a3a246e2116827271b20e0e8d0f6fc8482262b24b5d7d90c86e8b"
+    },
+    {
+      "path": "official-addon/navs3-edition/Brightness.h",
+      "sha256": "1999bec1762c7ab55539537bb8c80cd13da87c9c43fb7d83316731e8cb0f84a8"
+    },
+    {
+      "path": "official-addon/navs3-edition/Brightness.m",
+      "sha256": "1ce0718b6919dd28ea831f2d88444e1c175a9546b75492f574cf0214f4ef9944"
+    },
+    {
+      "path": "official-addon/navs3-edition/BrightnessCodec.h",
+      "sha256": "6cdae02d717b60bf8a7f67aec6d960ea1a284e1545b832dad96d0394050d4b17"
+    },
+    {
+      "path": "official-addon/navs3-edition/BrightnessCodec.m",
+      "sha256": "d0a789016aba6f2747d5791304ddd2b77f6c2eea4a7dc338d8d6b1b8fa2c0162"
+    },
+    {
+      "path": "official-addon/navs3-edition/Core.h",
+      "sha256": "343a630e6b731122d01a2e104efcbb6bbd0baaf3d400ee951fa5db8c47f8fd5f"
+    },
+    {
+      "path": "official-addon/navs3-edition/Core.m",
+      "sha256": "cc7f5c6c6b7d35f31470b60a24a762cfb95f5c07f63e979708c9a804f6dcab9c"
+    },
+    {
+      "path": "official-addon/navs3-edition/DashboardCard.h",
+      "sha256": "b8bb249f1993ff5fbe38608925edb3723a6661091e24f582047c7cee72cd2d65"
+    },
+    {
+      "path": "official-addon/navs3-edition/DashboardCard.m",
+      "sha256": "3d09476408b7afa6b3ad127a82b0d7bdd16e56c299a7e39968ab32e70b9651e3"
+    },
+    {
+      "path": "official-addon/navs3-edition/DashboardCardTests.m",
+      "sha256": "d7b111bb4d996cb65d6957bc0712586b20b1f6d6358bc4ae972580c12d869d2c"
+    },
+    {
+      "path": "official-addon/navs3-edition/DashboardPhone.m",
+      "sha256": "70e2b793b5afa649a901d9da231f53f4216a249b7a3903aaf9610f45a7e332b8"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayDelta.c",
+      "sha256": "e35e7f3614258da5dd2ce7dea70aab371cf8934237e7f4857f65a3930c3e0b9e"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayDelta.h",
+      "sha256": "424287d16376e74aa7582731653a3da62a5ccaed2cf7154ffc07f5161d4a2d33"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayDeltaSessionTests.m",
+      "sha256": "8a317a3ec6d6e0808197111c7041f6a2209c2bce40485495e01a6c4fa4bdf733"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayDeltaTests.m",
+      "sha256": "c9c002cd6ea66fd33b3d3c04e2f9ad98ae3cddfc1edca2c4b97158b89502da72"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayDiagnostics.h",
+      "sha256": "16171e4b1e5066c1caaffc1a2fab7818a3b9818dc488476b44fcdbb00e2c3ead"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayDiagnostics.m",
+      "sha256": "b02fc6f8e41357b54c79201684a2d95d8d4f2b5e1833d49f1a81a82ddd6f992f"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayDiagnosticsTests.m",
+      "sha256": "bcf4dab962c3610f483c78cf1c3eafb2e3597bba38191fb07709f3ffb087d938"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayFramePacingTests.m",
+      "sha256": "b26cc6bec614364f26e4dcc1108a49d0260210d408310364239c2a48a5bfafea"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayHUDRenderer.h",
+      "sha256": "32aa2b786aef6792dde3a58dee7e299158c54647672498001debeb855a84c496"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayHUDRenderer.m",
+      "sha256": "9126ebfdd95697719e0395f170616ad65695f337d04ff2a8bb790d7995837fe2"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayNavigation.h",
+      "sha256": "e4d46f68d0e44bc832060ad86d18754571d217781503b7133e279b95fbd5fa1a"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayNavigation.m",
+      "sha256": "3694e5a33e8619af6956b388e050eb8a55171d54d3678cdf0ac312ffa8bfa80d"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayNavigationTests.m",
+      "sha256": "67321ffaa2fbd8a3d5157681428196132b1a26166ae1c543cd0fa14854b56c8c"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayPhoneSession.h",
+      "sha256": "6bb6fe964367155f3c84b153ae9b0ccaf4084d3187c31c82458f12d6834c5db1"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayPhoneSession.m",
+      "sha256": "3f4cd698b27e63d303afdb11b62a92e02e2c047052912c6ac96670a25a938bc3"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayPhoneTests.m",
+      "sha256": "3fcf41658d0a4f8a359a55c11a12dd7e46899ad7f5176511d26ba4d3eb71fcbd"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayPhoneTransport.h",
+      "sha256": "8dfdbb4c2198a2cc09fffcc9df74cb336107110fe9fdb857117b46a610d973f1"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayPhoneTransport.m",
+      "sha256": "bbc7c99cf028f74175387c2edd3ecfa1498df1616a93b63c09b4ee7b5324319a"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayPhoneUI.h",
+      "sha256": "f52bd53d94ac890369a9bd906435124306b6259e1af2a64d419a94119d8d29c0"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayPhoneUI.m",
+      "sha256": "cbd7e870161ba3e3a83efe9a2669295c7e4ab0ac27aeeaf7fef46f322add538d"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayReplyObserver.h",
+      "sha256": "db8b6846bf0ed49aa4f367f1caa53a279e52fbff04a0c0dec95cc0cd72b3ee3e"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayReplyObserver.m",
+      "sha256": "7156a5ca01f6dd822df79aa86e19a2685d648f6d53ace0d5752400fba21241ab"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayReplyObserverTests.m",
+      "sha256": "639f3b8b323b338575e0f3f51e06cf701f0a531b378ccf33ff7521cd2051f689"
+    },
+    {
+      "path": "official-addon/navs3-edition/DisplayTaskBindingTests.m",
+      "sha256": "11893196ba0922aed4bcac19c4f3a5aa1d3f47b50a4143d04334c7f080362751"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorAI.h",
+      "sha256": "788fbb849f758dc0633fac980cdaf0e795da1916d4b2e27a0b572739e8440964"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorAI.m",
+      "sha256": "9855589812bb0b522586756ed192d9985206ba784572816986372aa876423c39"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorBackend.h",
+      "sha256": "ea1d979543fabbb87f7da6f55d91b338e7421a8e76068bcf98b7ad3a671565e0"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorBackend.m",
+      "sha256": "894ab49a26a6cc2c882091355e660da790190f09b2cff3d0f1e0e646e12a0da8"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorBackendUI.h",
+      "sha256": "8ab4260e1e05a8a05ef567ba046a1c702b7593290b067df0250e339909f0bb70"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorBackendUI.m",
+      "sha256": "4619c6394986cd2502c2e07582281245fdb028e642e8a8559593ecab521f5bbd"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorCanvas.h",
+      "sha256": "fd65d8e8598420793d8534f0d47a579adb192a2d61c832cf31e7bba466f61ea2"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorCanvas.m",
+      "sha256": "04d414f0471502973137084171308d47c736df765a006dd92cb6786e5f2c1dca"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorCodec.h",
+      "sha256": "2045c746721687b1966c57d1897be31025f8b0bf9ed365e06e1001bfca126d5d"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorCodec.m",
+      "sha256": "26a8a773395e7754e525bec58df1964dd72fbc05e3225d2ed4da57b93b8c1497"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorCrop.h",
+      "sha256": "5d08ded440d127f23e12392da49f3b44c3d4829fdad919d8d3be7987406e2dc3"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorCrop.m",
+      "sha256": "f80e866614503bc3ab1574787ba3fcb6b6b6ecf8d460c5546a4ed8210e04be98"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorModel.h",
+      "sha256": "7c7566828bbb7f0eda2189aa090fe1e61e99712def9c82deaeaa5e79dc30035d"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorModel.m",
+      "sha256": "7f5e5d40ac6cf5fd92cf9df892dc0b6bd4d0d0359094d9f5a70fb748525eb6b9"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorTransport.h",
+      "sha256": "da326e0df3bb3eb7ebc9f3d874736d5ab489bddaf859ea18ddaf1870219e4518"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorTransport.m",
+      "sha256": "ab27387793f66efb7ecfd12d7b2ad5e4820c1e1a54f2d1fa66a13320d9e6f463"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorUI.h",
+      "sha256": "77b597d2f5235b4813c67959ab303bce988733a9a915044e9afd8c0b510e5580"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorUI.m",
+      "sha256": "9f409ba1ef8e236f7cca6f3316a9a9e6b32cd25260f4b791d7c79832cd8f753d"
+    },
+    {
+      "path": "official-addon/navs3-edition/EditorialShell.inc",
+      "sha256": "2b8749df0e8c4e3d3355fa73bbd287534a46b1c2acafb5b06acf14dcca98be2f"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTA.h",
+      "sha256": "4d784592c221b471d014cd5a9e5e102e936bb859764ee4e3ce0ca64919de6f83"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTA.m",
+      "sha256": "934a473b08c9b3f1eb46f92cd3427dce43f28352a27a17711fbfe6be7302b720"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTADirectoryTests.m",
+      "sha256": "ce01ff1826e9b67b203bdaf5abb2a34f6698a699eb5d3387873f564c5c63a70c"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTAFeed.h",
+      "sha256": "505d2d8c0e399de6ab0332444ff27fbce80dd84576ec93eef6ae045a7bc2487e"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTAFeed.m",
+      "sha256": "7cb6b8c41cfd1e0a0874b528744298f61a0397f90143a8ccb495ece3892f8da5"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTAFeedTests.m",
+      "sha256": "3ac547fa2a3055584a8120d4af2721f17800232883c7b501ef92ca29799f40c5"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTAFlash.h",
+      "sha256": "120ae9d82845b9a84ccbc71a4007a148999e2fbeb2f0c462097cf1b90e38be53"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTAFlash.m",
+      "sha256": "e9da7d918e71f09a59b79cf5d26c5ac2c9afddebb631be2c7097d3e0909c5f5f"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTAFlashTests.m",
+      "sha256": "3d5e643cfe335546a3c43ced804bddd7c99af0a416d3a7f7c0827a694314b16e"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTAGuard.h",
+      "sha256": "b1c468175d49e257fac3d2ba75476811d52f210791150a796c7b5bf1f3b148e5"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTAGuard.m",
+      "sha256": "04cc68b9eddcf9fd518a3f8814894c4a2261230e26d7ef61bba31f7883a143b3"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTAGuardTests.m",
+      "sha256": "4d4b1b0599fc313fe7648d121eabfe82d1b4b47cf630ede9208be37ad9b51b0b"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTATests.m",
+      "sha256": "593d7c95e972475b1c2c98f787dd106156b75dec04672dcbf834e42b391ff85d"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTAUI.h",
+      "sha256": "6d27cd3d55a02287907c6e26f9845a43256d44b9a0ac779bb18861122e24fcbb"
+    },
+    {
+      "path": "official-addon/navs3-edition/ExperimentalOTAUI.m",
+      "sha256": "6868c6290e30296ef29c33010ed8a738b3d46553d68ba0b7c66983d9259cbbc1"
+    },
+    {
+      "path": "official-addon/navs3-edition/FeatureComponents.inc",
+      "sha256": "52c0766506b73ab8bd5446556b1232ec9f2e532dd70a001262e3e5bbaeb4df87"
+    },
+    {
+      "path": "official-addon/navs3-edition/FocusBridge.h",
+      "sha256": "a0d3a01a7118c5383449edd35f268e9b8eb8f06cd5e7072e785415f69c21001b"
+    },
+    {
+      "path": "official-addon/navs3-edition/FocusBridge.m",
+      "sha256": "7c624e0620b236189173d7f46d1511d69040a31f56c0d2c2746f5337514fb4f0"
+    },
+    {
+      "path": "official-addon/navs3-edition/FocusTransport.h",
+      "sha256": "91d791a3546cdf6b526251d5af55ef224239812e5b3fa7633fd42ed55580053d"
+    },
+    {
+      "path": "official-addon/navs3-edition/FocusTransport.m",
+      "sha256": "5218228ae427642408acf9002a8856149078c702e6bff757d47291cbbd96e724"
+    },
+    {
+      "path": "official-addon/navs3-edition/FocusUI.inc",
+      "sha256": "73a8d853ca0c606fb2680c000b826916bbf4858d2ad9eb9e6c4bc61c4322c5f8"
+    },
+    {
+      "path": "official-addon/navs3-edition/GlassesLogContract.h",
+      "sha256": "b6d40940e81d7487b3cc362829a57214436f2426d6b37d388a3fde5f8b76814f"
+    },
+    {
+      "path": "official-addon/navs3-edition/GlassesLogContract.m",
+      "sha256": "8e5986963a60736eb28258741ba4a4ff1f35d07d9c200dc87f246719635629b7"
+    },
+    {
+      "path": "official-addon/navs3-edition/GlassesLogContractTests.m",
+      "sha256": "3724df38d8a927a940a65dfe2c0f7448c205f8cc5178ad3fea623a3b508926d3"
+    },
+    {
+      "path": "official-addon/navs3-edition/GlassesLogGate.h",
+      "sha256": "39d0fc1d2aae3f701f5340d70cfaac09d5c4726f9b6c2fe2c338b922f7a67fd1"
+    },
+    {
+      "path": "official-addon/navs3-edition/GlassesLogGate.m",
+      "sha256": "dab36b1b87824542c7d8188d2e6e7e0a8d9c591379c2b89b41d973bac86b78ba"
+    },
+    {
+      "path": "official-addon/navs3-edition/GlassesLogGateTests.m",
+      "sha256": "6b14ea2f97bc1f0b8202da31ebbc5fc66bbf1330a5efc8a7330a02b143f9a30f"
+    },
+    {
+      "path": "official-addon/navs3-edition/GlassesLogProbe.h",
+      "sha256": "01d9288130f559fbb25f8b19b1d134449ca1a0e9abd2707886544ddd0e43ab9d"
+    },
+    {
+      "path": "official-addon/navs3-edition/GlassesLogProbe.m",
+      "sha256": "becef0ef75d5383e1b718c93d89687cb3087a5c22567045928c52d063508798e"
+    },
+    {
+      "path": "official-addon/navs3-edition/HUDPreviewTests.m",
+      "sha256": "75a14f4889535d0ea92d26b466b7d5ef28207974bffca2bfd091c4c785761892"
+    },
+    {
+      "path": "official-addon/navs3-edition/HeroSequence.inc",
+      "sha256": "e506c22904bee02a5df36613645fc54d68034fec77605cdbb55cbfb3489d173c"
+    },
+    {
+      "path": "official-addon/navs3-edition/HomeTabBridge.h",
+      "sha256": "011cd7c04faa9496639cdfcf456ed0789770d7399c3ebb874a8c9883a0368abf"
+    },
+    {
+      "path": "official-addon/navs3-edition/HomeTabBridge.m",
+      "sha256": "e11e7e1b2f2e9fcb7eb108b85733a9f1f8f6a441cf77a72e29f547391fa86b59"
+    },
+    {
+      "path": "official-addon/navs3-edition/HomeTabLayout.h",
+      "sha256": "b8016b808bfaa42e4f7fed27468cffe63b4b2932ed37919b6013eb60bbc33b2c"
+    },
+    {
+      "path": "official-addon/navs3-edition/HomeTabLayout.m",
+      "sha256": "a5e85f5082148ee938758e86ca41bd94738c0eee3cc4e14500f2d4534e00a90d"
+    },
+    {
+      "path": "official-addon/navs3-edition/HomeTabLayoutTests.m",
+      "sha256": "33e414c660d31bb966fa3d4d92331e970674a225f813246d2d93ed5adcacd978"
+    },
+    {
+      "path": "official-addon/navs3-edition/HostCompatibility.h",
+      "sha256": "f3c65d3e87d128176371a74193631fcda29f26bd98725c3e3276a2ed0ae6fffe"
+    },
+    {
+      "path": "official-addon/navs3-edition/HostCompatibilityTests.m",
+      "sha256": "f9409d4040c1b1f96670471e847df361e7f9368cca0d0d407a4625cebedcab3f"
+    },
+    {
+      "path": "official-addon/navs3-edition/ImageUpload.h",
+      "sha256": "6fb5c2b85016e188b4b0c56fd59f61726041918b984c8b758eb58672cdc1ae72"
+    },
+    {
+      "path": "official-addon/navs3-edition/ImageUpload.m",
+      "sha256": "46877b9a76b716df419fb88fd965e19d3fc3c791989e73d48bf101feb7832e1f"
+    },
+    {
+      "path": "official-addon/navs3-edition/ImageUploadNative.m",
+      "sha256": "13177b3c2848b33dea746edf704db0be11289b54c898fccebd2751fe9a27de4d"
+    },
+    {
+      "path": "official-addon/navs3-edition/ImageUploadTests.m",
+      "sha256": "f8dc7971a524bd28ad94881d9218c2b3d093970fdf846c1c8454e8368d3782fe"
+    },
+    {
+      "path": "official-addon/navs3-edition/ImageUploadTransport.h",
+      "sha256": "e79297828f78bcef9ec24cc242a48b3c15427aca702ef869df60a904d27c6883"
+    },
+    {
+      "path": "official-addon/navs3-edition/ImageUploadTransport.m",
+      "sha256": "c68999fe625e9ec5162e3afc62205d5816cb73e58c3d9320a2d40d8e4f2fb44e"
+    },
+    {
+      "path": "official-addon/navs3-edition/ImageUploadTransportTests.m",
+      "sha256": "4b37e20a61833d5bbaf207e347cc9688980b710324b6187e5e27ebed40748d80"
+    },
+    {
+      "path": "official-addon/navs3-edition/ImageUploadUI.h",
+      "sha256": "09e175fddac76f51a33d030bf8e58412cfc2d44c843a3a147222aa9967337d55"
+    },
+    {
+      "path": "official-addon/navs3-edition/ImageUploadUI.m",
+      "sha256": "8902fa4d76b30256caa902bc745c2748cfe79e35d9218b0f721ee771f79464ff"
+    },
+    {
+      "path": "official-addon/navs3-edition/ImageWireFormat.h",
+      "sha256": "0969b9b439d022a0f5af61fba19e3a637a632a4618e75943fcfe8cef790bea8a"
+    },
+    {
+      "path": "official-addon/navs3-edition/KnowledgeClient.h",
+      "sha256": "8dbb9939c61cefb45205be4f6a619826593bdeae95a0290d266017e50a2df031"
+    },
+    {
+      "path": "official-addon/navs3-edition/KnowledgeClient.m",
+      "sha256": "430d8e80225a4561dc1a2f4f71173821aa8948ca8560daeb784fc972fbb88fce"
+    },
+    {
+      "path": "official-addon/navs3-edition/KnowledgeToolFlowTests.m",
+      "sha256": "2c64f09067e3d97c4af8dd629c6031552667adc8d8799f2dd506a2f01387e58d"
+    },
+    {
+      "path": "official-addon/navs3-edition/KnowledgeUI.h",
+      "sha256": "a2d923ae5d952a0d88d389f347aa4394dd369075e0140974988138e085accf4e"
+    },
+    {
+      "path": "official-addon/navs3-edition/KnowledgeUI.m",
+      "sha256": "2b20bd22056816c514d86b3041d0bc75042cfa642fc972241bedff25038a4c8c"
+    },
+    {
+      "path": "official-addon/navs3-edition/LocalTranslationEntry.h",
+      "sha256": "e3d096de232e8cd839cd7f6290006fb43fb442ae148d2e96eadf66addeaf61ae"
+    },
+    {
+      "path": "official-addon/navs3-edition/LocalTranslationEntry.m",
+      "sha256": "1a5abdafa58a25b651e7c52b22112d27766996219489de04e41cef20e5dd0255"
+    },
+    {
+      "path": "official-addon/navs3-edition/ManualHUD.h",
+      "sha256": "83975b87c1d86300be6b015cc2faf48d6e5b8205d90416a8896f0e3db8286ef9"
+    },
+    {
+      "path": "official-addon/navs3-edition/ManualHUD.m",
+      "sha256": "73a9cd7c73fc4d7228546b2fc4650184f1eea5c95de6b83f6baee33e11279ec1"
+    },
+    {
+      "path": "official-addon/navs3-edition/MenuLayout.h",
+      "sha256": "79eebe406ebc17037c8bb7da4a5e53e02eff902180da84e4fa514fdf9b002401"
+    },
+    {
+      "path": "official-addon/navs3-edition/MenuLayout.m",
+      "sha256": "3cf765826532c4337797b9821536daeebbb926258a0f60e43b4e78ae08a52b7d"
+    },
+    {
+      "path": "official-addon/navs3-edition/MenuLayoutTests.m",
+      "sha256": "76df3ca828973a59d02b6b74b9e7251647446c47b7f6313859a9980806f1c666"
+    },
+    {
+      "path": "official-addon/navs3-edition/MenuLayoutUI.h",
+      "sha256": "04b810a672e8f292ee22ff82288b9fb4644936a196aaae1c55a738ee2f8dc5cf"
+    },
+    {
+      "path": "official-addon/navs3-edition/MenuLayoutUI.m",
+      "sha256": "56a24b98b4730d08800a31c4bb5cfc887bb43fc5dbc5ac12ca3cbea1607c67b0"
+    },
+    {
+      "path": "official-addon/navs3-edition/MusicAPI.h",
+      "sha256": "5023b8e578b31d30e4c64ff2ce766b52cf8811ccd2d86853fc03837547957230"
+    },
+    {
+      "path": "official-addon/navs3-edition/MusicAPI.m",
+      "sha256": "9d9db31aa12fe8f9e12e8230d2d87370812e1fdd4cc07ac03f12edf716c316dd"
+    },
+    {
+      "path": "official-addon/navs3-edition/MusicBridge.h",
+      "sha256": "3ab42d4120ba69833c74c5e976cefc8d89a05115ab0415bd7d8fd7933d768df3"
+    },
+    {
+      "path": "official-addon/navs3-edition/MusicBridge.m",
+      "sha256": "8962061a4b54641e2c13b008ce5b5061d3f0b6767e3246e3f8245ff89a155f9e"
+    },
+    {
+      "path": "official-addon/navs3-edition/MusicLibrary.h",
+      "sha256": "4690d337b4d3ca1a9883f28840616135c5fd2e4f6b4722e5d24883e0a90ebd69"
+    },
+    {
+      "path": "official-addon/navs3-edition/MusicLibrary.m",
+      "sha256": "a83879052c26d64fc424ee57d4756053cbbf4c717c0c726a8f8291d702ca335d"
+    },
+    {
+      "path": "official-addon/navs3-edition/MusicPlayer.h",
+      "sha256": "bd97627802c928dd6566ff971983d7fd19de89b442d39df76ece53deebeda824"
+    },
+    {
+      "path": "official-addon/navs3-edition/MusicPlayer.m",
+      "sha256": "2bd17e1000e6befb1af31d7b8ac816d8d38289d53f4c80fc5ff2a932640c1bd6"
+    },
+    {
+      "path": "official-addon/navs3-edition/MusicTransport.h",
+      "sha256": "cc92a4c1a8050ffc3ac6ea25f77fb12c35acc17b03415b1e8675eaa4ff82cac7"
+    },
+    {
+      "path": "official-addon/navs3-edition/MusicTransport.m",
+      "sha256": "5641e6c1c8e693d750768f495f70d56059f0a5282949f9627d3710c3bf881656"
+    },
+    {
+      "path": "official-addon/navs3-edition/MusicUI.m",
+      "sha256": "2e5584f57e54f90dfe635c1982939f0fd8439c8d740507ef461d2bfd75f94c4c"
+    },
+    {
+      "path": "official-addon/navs3-edition/NativeNavigation.h",
+      "sha256": "50a513c9f629fbc8f61b64df7fdba707674c087b5b8379278f2da9fcdae48e83"
+    },
+    {
+      "path": "official-addon/navs3-edition/NativeNavigation.m",
+      "sha256": "122a11cc86c2b66fa4cba268f57ac6195ef3cdf36c54d81f31224fb2e78e2e8d"
+    },
+    {
+      "path": "official-addon/navs3-edition/NativeNavigationTests.m",
+      "sha256": "2b7d662e5bf00342274ca4c909b3afc4c5ba386ccc33b06984c16be9bddfe2a4"
+    },
+    {
+      "path": "official-addon/navs3-edition/NativeNavigationUI.h",
+      "sha256": "04015695306c7f012c2e80b9a272db17bca294707631ae5b9e85ed1493f794bd"
+    },
+    {
+      "path": "official-addon/navs3-edition/NativeNavigationUI.m",
+      "sha256": "75a95d356f817f472158bec414e2260b5512ef07b0c3e7f41bb85dbd79eaa097"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationBackground.h",
+      "sha256": "873da07d66a8a103f679e3bc42f6fc10c9a99032932b7868b4c87f70476ad81e"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationBackground.inc",
+      "sha256": "0f9ac2dd51415b342a55fe3971b3e7f7a0072153835b8abf06c9d13c445776c5"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationCore.h",
+      "sha256": "b03d5865226add80d8acd020d4c707adeae78e398a4e7e76fddfc1f95cf1a07b"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationCore.m",
+      "sha256": "b6788dac3b1c7eeb9c8848e08f4439ed73837de9ce6ac685840f14fe327e08bb"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationCoreTests.m",
+      "sha256": "1a701fea660f51f70adaf8c4a5325c02d74fc3e26b18ae72f95de60939f0ac5e"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationDisplayHUD.inc",
+      "sha256": "063647418525ad77982093f92e095fba79437942a4effc0aaf173d691bd6de8e"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationModes.h",
+      "sha256": "4f4098d590cf9367a87700de9a27328cb8339c23816415d33bb9124d37bde39b"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationModes.m",
+      "sha256": "918c23de697a25ea5f379019ae813a8f0ec98f27f5476483cfc7028c1ae12e76"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationModesTests.m",
+      "sha256": "3dbc6f2ed40578b8bcfeab2b651aa08006e1733872334a89bd4346b189dd3d6d"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationPlacePicker.m",
+      "sha256": "ba6a74ac868f986ec7c925b41c5be01ce123b0905b86b9a74eadc5bce881327e"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationPlaces.h",
+      "sha256": "abdd92ecdcdc1a832f64eea1dd93eed0b6d9d1be96a2f19e23b768d4562fe95c"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationPlaces.m",
+      "sha256": "e4a2b9e354c5e0a890fa0e17fd7e9051972106a6c9c8b5a2d485ea8f371e2049"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationPlacesTests.m",
+      "sha256": "f09c81fcb1fea9f2e1a84abc2ebd37fbd9473313bcbee084d70fa7094d46df09"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationRoadMap.inc",
+      "sha256": "82c32983eb93db887a9d921d513d02a4269fd78add30059ae7c21d1d98425461"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationSubtitleHUD.h",
+      "sha256": "9bd57c26bd277f39503b649c2287d9b17b9c372883ca998786a873defb964ee6"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationSubtitleHUD.m",
+      "sha256": "d1542a4187b4965b5f0ace22768d2941430086da9f72eb77ba30ad46a8f32b12"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationSubtitleHUDTests.m",
+      "sha256": "2525d14a8243c4114e13acb2ddc388ee2292062841d059a913d154c721cdad72"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationTeleHUD.h",
+      "sha256": "1a386282eb54706350dfec09a405956922f25580fbaa8bc9f181e51615ac0c27"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationTeleHUD.m",
+      "sha256": "c18cb8a98c3f7944325c3ad6b8772e1bc2034f40e45649c76e27543aed406e49"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationTeleHUDTests.m",
+      "sha256": "75de62b35cac59e94c9a5265aa5535d656503e9691a4f69772e3699f0d1331b1"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationTransport.h",
+      "sha256": "b7dddc0417e97efbdc740783f2d9b2975bfdb13ee186ce9dcd6d1ed4a7190bdf"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationTransport.m",
+      "sha256": "2a1909774591fd5b49196f8925d6a50685ab6fcf8cd105f2eec214f04c8dd20f"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationUI.h",
+      "sha256": "ab833f9a6aba832923643b205b0e49ec5fa01fe053f1ec46da045dbed0ac0242"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationUI.m",
+      "sha256": "00e104ab46604addfa1bb7fd6ed0742a206c16d788d61b511f3338d936451389"
+    },
+    {
+      "path": "official-addon/navs3-edition/NavigationWorkspace.inc",
+      "sha256": "c48c044c0af557a65e69858bfc9f91113ba812014d899ebc48d9e6ade7a96f8c"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsArchive.h",
+      "sha256": "fda07b9bb46f214d91ff980ab425fe49dccd54e91bc3043896f07243c868ac06"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsArchive.m",
+      "sha256": "e19b234aa5e89efbf87afe125265a87659bf7f6a8c5ad488679ad7239837d978"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsCaption.m",
+      "sha256": "71a7c4da8cd4fafcc92e30430c3385947d1e23f14c47dc33c281b4b22efc3f44"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsCaptionTests.m",
+      "sha256": "2c1ae20a882457a12353e6a9415d6a3c57775e324f6de84a3638004bc0c7458f"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsCore.m",
+      "sha256": "b1647ab6c9a6acff995b61a691b345b8bfdc38e6073efc2713407d104d515aec"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsCoreTests.m",
+      "sha256": "c1807fe6702117d73b17cd4a6475dff7575303f95b4b01fb6092d8f3e2b1a9b3"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsPreferencesTests.m",
+      "sha256": "bcc6abed2bcccc57c6fa960b770fa155b2224b6a2b0ee4500c25e64b7e03985d"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsPresentation.h",
+      "sha256": "9beff5fb10e8d487831f4c40b3ec8b66dcb80ae9b5fc6f2596ca4d979920074f"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsPresentation.m",
+      "sha256": "cc5f8ebd6f7597b20d9a9c109aa815cc76c47be9c2a158b40acd227f67f2722d"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsPresentationTests.m",
+      "sha256": "f68e3e67e187ac80725fdebe385e754bc65ac0d602d82841cb772a067961fc11"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsReader.h",
+      "sha256": "e45d609897a81b77481a5a9563c45dbfcf47d53cdf2b220c83dadc6e13542fab"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsReader.m",
+      "sha256": "18874b38e9aac827658d45e7e8661ce9f0b15b652cd3fe7d1cef9483644cb918"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsSpeed.h",
+      "sha256": "6685410c9d35e0afecb9af7891217917a4440bc1b0febb0a57a0a4e227925794"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsTeleprompter.h",
+      "sha256": "47611cfd71a854a5bf4a99ce5ce8d67001c4911acc96ad2eee721334e22a731b"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsTeleprompter.m",
+      "sha256": "4116944af9b024a2b7a623e5154d01ef50c185cca46863152c06297d9218b019"
+    },
+    {
+      "path": "official-addon/navs3-edition/NewsTeleprompterTests.m",
+      "sha256": "93186998ddc65b4dd20fb68891bd5fefe868e018cb6b0e320f87c07bb61c6321"
+    },
+    {
+      "path": "official-addon/navs3-edition/PhoneOTAGateTests.m",
+      "sha256": "4d9a6312cfdc547c6c883799f47327e565da265498c9e823c3914a62e0c1c460"
+    },
+    {
+      "path": "official-addon/navs3-edition/PrivateBootstrap.h",
+      "sha256": "78adb83b40dd81ba75ac69ecb96e2e7b0e0c23f65f661d43166fd1238b527f3f"
+    },
+    {
+      "path": "official-addon/navs3-edition/PrivateBootstrap.m",
+      "sha256": "7d3adee1397028f11dadf9ea3d1e0ed509fe3fac141f1d17e3fb9799313c3701"
+    },
+    {
+      "path": "official-addon/navs3-edition/PrivateBootstrapTests.m",
+      "sha256": "65144ca45f593b8bb90a67fa07807fb9979acbc4d47a6cc4d7634df804975784"
+    },
+    {
+      "path": "official-addon/navs3-edition/ProtocolContext.h",
+      "sha256": "5b1b98ef0bb5d6bb1c016bd1f293c46992be68b7280ff1affed0529149796284"
+    },
+    {
+      "path": "official-addon/navs3-edition/ProtocolContext.m",
+      "sha256": "8367ab485bedaa557449a28e092d96ca8b719bb6d70f7748ea4e8593dde0bf5e"
+    },
+    {
+      "path": "official-addon/navs3-edition/ProtocolRestartTests.m",
+      "sha256": "2faac52b209967eb7043953c508bc85f87ca23e7e7b22931204809b8550e436e"
+    },
+    {
+      "path": "official-addon/navs3-edition/README.md",
+      "sha256": "5f1acc75bd7a8c24f255c5764d6adefd89ad0c9b6e58944a37359924b1f87084"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReaderBridge.h",
+      "sha256": "1c730087d537c6bc1f8729be58f173073dbdeb4d496509d07770a7815da9a35e"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReaderBridge.m",
+      "sha256": "2f4d2fd11b496240136215dcdbadaac02ee7c75c596f39a9ef5f2fdfdd64cb53"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReaderBridgeTest.m",
+      "sha256": "d474c2af5381de5e51a57ac79ff5d8ea3ccb9ec028685691b2dbba6da118307a"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReaderEditorial.inc",
+      "sha256": "e316ca0e2dd08c867b6a9ee43256e9aba9fcc06840c2e1d2247ced1b81558cad"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReaderProgress.inc",
+      "sha256": "e3863e312aed0af74e2f72feb4e32c2e74adbcd90f970f3b140bf2e7c234109d"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReaderTransport.h",
+      "sha256": "4245e79442dd72b999b0a84509ffe846b712bf4df91b336ac220422936043c39"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReaderTransport.m",
+      "sha256": "5e5f373396c2cc69028a1c18814f8df286da4372543d5cda78c15fd9f110a9ab"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReaderUI.h",
+      "sha256": "87ac0faa6e28b18a0a746ce9ca8e5c07ae786479f20e27041ce0eba62fe3635e"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReaderUI.m",
+      "sha256": "794e6df14d995f8f6e64c2689ddac09fe2e0af0d2e20cc5c0497a272b1e1e33f"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReadingContent.h",
+      "sha256": "1a7b898f56f333f40cbe9ca527a3a34a1d4973ae2c8e693c80b077f3cec0b5c2"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReadingContent.m",
+      "sha256": "1965c44903cab8d9f0c305cfe207a7e4372e03f57e7c5eb6cac5a8cbd6f7016d"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReadingContentTest.m",
+      "sha256": "8c823f95044a8cff75215340a5816d16d9bbf0f5967f2cf6e9a992fc53621be7"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReadingOverview.h",
+      "sha256": "6941995d2623305cc820fdb6a14b1e828d6fbeaec42b6819554cee7542e4e8fd"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReadingOverview.m",
+      "sha256": "bb8476f100bb8f0c63e2276d1326906a94ac3d54b8daeb6e7db39cf3dfbce636"
+    },
+    {
+      "path": "official-addon/navs3-edition/ReadingOverviewTest.m",
+      "sha256": "615060aace03736ed20f09c2e5ad3bad06fb1e4d906983d65874fcce59f7c930"
+    },
+    {
+      "path": "official-addon/navs3-edition/RecordingExports.h",
+      "sha256": "c9ecb0a89d08193425efb953c9e871dbdf2d6424bcc3699e75d2165227681f9a"
+    },
+    {
+      "path": "official-addon/navs3-edition/RecordingExports.m",
+      "sha256": "05cb2d85e547435b1f83336e554cf71f5a4996999f3b5d97c9a7519516dae603"
+    },
+    {
+      "path": "official-addon/navs3-edition/RecordingExportsMenu.m",
+      "sha256": "891ce8fbdea587a9dcdf9d4f88dcd4e0a604559f98699b5925f4ec0ce2c393fa"
+    },
+    {
+      "path": "official-addon/navs3-edition/RecordingExportsTests.m",
+      "sha256": "6a5598e6d7bc7c96a98f68ae8abeea58ff79f815f392c6405f91764758595c66"
+    },
+    {
+      "path": "official-addon/navs3-edition/RecordingExportsUI.m",
+      "sha256": "16505ee59b347daad2d4efa51361cd05012788d9c9330e4f43ed54b27fdafb1d"
+    },
+    {
+      "path": "official-addon/navs3-edition/RecordingText.h",
+      "sha256": "e44d9fb0de92775126cb416013886b3d75a9fd961e8903abfd800ad3f6891ee0"
+    },
+    {
+      "path": "official-addon/navs3-edition/RecordingText.m",
+      "sha256": "5363b6318abc00f6a07ae175d73c67ae0a6d3ec310d57cf0b3cbf905177dad2e"
+    },
+    {
+      "path": "official-addon/navs3-edition/RecordingTextMenu.m",
+      "sha256": "6dfced7054cb6e302c87fb295265621487d07dd8fd1a292260633795ca54b836"
+    },
+    {
+      "path": "official-addon/navs3-edition/RecordingTextTests.m",
+      "sha256": "130cf5a51c62bb6cc4c8d1b9e46e6487682be5600ffdca99c55307aeaba4de4b"
+    },
+    {
+      "path": "official-addon/navs3-edition/RecordingTextUI.m",
+      "sha256": "52bb9e974f49792c9da2dfb380b5e6b7678746f6b6dc3c633bfe342089882b81"
+    },
+    {
+      "path": "official-addon/navs3-edition/ResearchCatalog.h",
+      "sha256": "0ba65422c50960f88fedfd39ea24aebbc6822059d3c698ede5a4063cbdd6853a"
+    },
+    {
+      "path": "official-addon/navs3-edition/ResearchCatalog.m",
+      "sha256": "ca27c8073c6c780ad33d591eea742ae4356d4f65b56d834c7e882547560bff21"
+    },
+    {
+      "path": "official-addon/navs3-edition/ResearchCatalogTests.m",
+      "sha256": "8885bc82cad4cf6a55c4ed256bf2117e5fc22183c5a04aaf2282955115195153"
+    },
+    {
+      "path": "official-addon/navs3-edition/ResearchUI.h",
+      "sha256": "3985c72ddbf9fc1a92af7f38dc06872563059275732f54f2c440e488c57cd6ff"
+    },
+    {
+      "path": "official-addon/navs3-edition/ResearchUI.m",
+      "sha256": "3f436677273259921bf5214b6659239da9a432d3a16faf3ed713c1a67bc71151"
+    },
+    {
+      "path": "official-addon/navs3-edition/RideBridge.h",
+      "sha256": "c8edfc3a826ef6a5b0d00a14f5f8bdc2b48106fb669ec6ffe91647b1c2d7bb30"
+    },
+    {
+      "path": "official-addon/navs3-edition/RideBridge.m",
+      "sha256": "c31781a795325327be23554acc8a7016f39cd4325426e8c21df1a324c1217dc7"
+    },
+    {
+      "path": "official-addon/navs3-edition/RideRPC.h",
+      "sha256": "ad1e7758696067f960b822333c92685babfbc975f872b8176790a295ffa7cd23"
+    },
+    {
+      "path": "official-addon/navs3-edition/RideRPC.m",
+      "sha256": "c953995b96c0414b588ba7b95b1bac6af6c0d6d46520bae42efa37c3d3684001"
+    },
+    {
+      "path": "official-addon/navs3-edition/RideService.h",
+      "sha256": "b2ac7ca221370c7b5438bcce82e46363dbc92003e2f787cf35e1b56b77f8488f"
+    },
+    {
+      "path": "official-addon/navs3-edition/RideService.m",
+      "sha256": "e04392e658fbbabbba3e537170bf27ac4de7d2da5b4117ef3c74f2a7c799c054"
+    },
+    {
+      "path": "official-addon/navs3-edition/RideStatus.h",
+      "sha256": "39ae0dcf8d4bf94ad98cfc33bddce6f84ceceeb8536a43fcca28fb1e60686840"
+    },
+    {
+      "path": "official-addon/navs3-edition/RideStatus.m",
+      "sha256": "b1e4a30ae9d7be0295965d13ee26e2cc5d9e9033ffa1bf1a63357945060419b7"
+    },
+    {
+      "path": "official-addon/navs3-edition/RideTool.h",
+      "sha256": "1dc9fde337c67333be0fed102cc60224c8e7415dbc055840a7154888806914c9"
+    },
+    {
+      "path": "official-addon/navs3-edition/RideTool.m",
+      "sha256": "62ecb827dc54bb63de28a7145515e8aa814f3776ad234f1b79d428ed6dbeb43c"
+    },
+    {
+      "path": "official-addon/navs3-edition/RideTransport.h",
+      "sha256": "da62de52213a76abefadb6d8deef5c2f92e894b9138f3a3e15d0c93a97db1e39"
+    },
+    {
+      "path": "official-addon/navs3-edition/RideTransport.m",
+      "sha256": "84a0333855034d3737e842d4672401772bef79aaae17bde4ea60f2b51d826f2d"
+    },
+    {
+      "path": "official-addon/navs3-edition/RideUI.h",
+      "sha256": "f877fe4fd8fee20c663f15719b7ae867bef513808944babc8d9d64952323edf9"
+    },
+    {
+      "path": "official-addon/navs3-edition/RideUI.m",
+      "sha256": "794b605063db0f4f6fbb1956a0ac9e70978e2a51de5793fa968eab4986261fcb"
+    },
+    {
+      "path": "official-addon/navs3-edition/RoadMap.h",
+      "sha256": "4419b39df94462e2ef9c49aa8329397093115600ab7eb897324fa33cb0dfa583"
+    },
+    {
+      "path": "official-addon/navs3-edition/RoadMap.m",
+      "sha256": "1887273dd32fef260898a8abe20ff7bbe965631f21b49e06ff4ee5c043536cd4"
+    },
+    {
+      "path": "official-addon/navs3-edition/SimpleNavigation.inc",
+      "sha256": "8b249928290b1646b83f0b80f380553b31e7abd346a632de28d86c9659c71bb7"
+    },
+    {
+      "path": "official-addon/navs3-edition/SimpleNavigationFlow.h",
+      "sha256": "f024fb982410b59b53084f8ebe55a718db49e234eb3a99efcaa2f2f67f111260"
+    },
+    {
+      "path": "official-addon/navs3-edition/SubtitleHUD.h",
+      "sha256": "93c698b62d0cb9a01c35f61f516737d9b0d081a61bd210fc49084f3bf49ab5c8"
+    },
+    {
+      "path": "official-addon/navs3-edition/SubtitleHUD.m",
+      "sha256": "e7d44fbaef4102a86ee0d26a9183a8d526058248e37590be0ed51ed59c1a1900"
+    },
+    {
+      "path": "official-addon/navs3-edition/SubtitleHUDCore.h",
+      "sha256": "e29c8a0b3b5e5d0612b801138b691085598e3eb63c21b278cf2da696eb6a9f8f"
+    },
+    {
+      "path": "official-addon/navs3-edition/SubtitleHUDCore.m",
+      "sha256": "227fcfe3cb760d29fcf69599c8a2dd44c32ba9788af448664c16e17fff0d1432"
+    },
+    {
+      "path": "official-addon/navs3-edition/SubtitleHUDTests.m",
+      "sha256": "183f5eb089ede8b6aa30b7639a943bc1e14af05a7618ba723ab08c637c6a06f6"
+    },
+    {
+      "path": "official-addon/navs3-edition/TDPhoneBridge.h",
+      "sha256": "73f8c87a85d07afe9342feeacda2cebb4047632c6742aa9e03dceda5f9155dfc"
+    },
+    {
+      "path": "official-addon/navs3-edition/TDPhoneBridge.m",
+      "sha256": "545473a07fb1f292aba481a690f1c787903c9b70faa9efd69181241024882bd7"
+    },
+    {
+      "path": "official-addon/navs3-edition/TDPhoneReply.h",
+      "sha256": "478b15a033bfaac84e9d097a31bcc89c5f28bee9c8dd770aa6fed8c988cbb2b2"
+    },
+    {
+      "path": "official-addon/navs3-edition/TDPhoneReply.m",
+      "sha256": "ab7fe3012a73e8f46a4085c2401360cbff41d0a92027133f9ca3d7f8c1bad6c5"
+    },
+    {
+      "path": "official-addon/navs3-edition/TDPhoneRun.h",
+      "sha256": "ace4a459816daf605a9eca996fe441f0debf0cfde6a2f8176befbad6fc9e3922"
+    },
+    {
+      "path": "official-addon/navs3-edition/TDPhoneRun.m",
+      "sha256": "6ed65e38a04578aeb159ecb7da241a915a4c22beedd6a5e2f7697830d1058ebe"
+    },
+    {
+      "path": "official-addon/navs3-edition/TDPhoneStore.h",
+      "sha256": "8e966e060cbd6ad683db71da01494e1ad7480c9dab7b50a9176e601b36a18feb"
+    },
+    {
+      "path": "official-addon/navs3-edition/TDPhoneStore.m",
+      "sha256": "7f6119909dcfa353f03dceedaed7604893b1b3f24b58f73d1b66d9f7cf5238e0"
+    },
+    {
+      "path": "official-addon/navs3-edition/TDPhoneUI.h",
+      "sha256": "c83048f800b1594586ed1720f71f96c51a0c8dd21b55d5ca45b8bb5403eb8aad"
+    },
+    {
+      "path": "official-addon/navs3-edition/TDPhoneUI.m",
+      "sha256": "948dcb3ff711ededa03e827583d18b830d0930385aacd0f8b3b1edb1be34c75c"
+    },
+    {
+      "path": "official-addon/navs3-edition/TDTransport.h",
+      "sha256": "17596fede3f88132e0c7663869ffd676915d9c46b48ef8d02dc6c8389b3b8852"
+    },
+    {
+      "path": "official-addon/navs3-edition/TDTransport.m",
+      "sha256": "75c88c14c9c7c25329c02c717f267d523f51bc218bfd5e67fbacab7bdfa2e028"
+    },
+    {
+      "path": "official-addon/navs3-edition/TNVTransport.h",
+      "sha256": "1084a4136fc030ca0e82418caf065343f62228abc908f0145c6a7c5d446c53c1"
+    },
+    {
+      "path": "official-addon/navs3-edition/TNVTransport.m",
+      "sha256": "331bd7aebedfcdbbfb611a127c499fedd0883a5e8e1599cc6a0227a4ac35a030"
+    },
+    {
+      "path": "official-addon/navs3-edition/Tests.m",
+      "sha256": "721ca13f4b9815a5fd25160779401043905673734a87492fbf2ee5d9546d45d4"
+    },
+    {
+      "path": "official-addon/navs3-edition/TodoBridgeClient.h",
+      "sha256": "dd9672731fec0a6544a769527561a2491472252912049e87bcaa773710c91e68"
+    },
+    {
+      "path": "official-addon/navs3-edition/TodoBridgeClient.m",
+      "sha256": "88689fa76bb918348787d318cf23e46770035e81be9abb2d3f702cb18fc95e57"
+    },
+    {
+      "path": "official-addon/navs3-edition/TodoBridgeClientTests.m",
+      "sha256": "c9c14b31fe14ccc5c11977b6ea02f2d7b2212e2b7645ba462a598e647bb9c58b"
+    },
+    {
+      "path": "official-addon/navs3-edition/TodoProtocol.h",
+      "sha256": "d8d3231a1a132211ce2aea8027e125a9bbbbfcd192a45ed9720ec594f23584d8"
+    },
+    {
+      "path": "official-addon/navs3-edition/TodoProtocol.m",
+      "sha256": "7b5eca0b0125e34b72675453753a61af34ca315b9436bc5e2a6488655fc038dd"
+    },
+    {
+      "path": "official-addon/navs3-edition/TodoProtocolTests.m",
+      "sha256": "c08b804fc7274bc165255002147c5a10bf08410e50dd69cafe54649039d5b6a6"
+    },
+    {
+      "path": "official-addon/navs3-edition/TodoRuntime.h",
+      "sha256": "c970d122d97f6ab0d4c075e31f635d04fcda45d709c7675faa0ee2365257f304"
+    },
+    {
+      "path": "official-addon/navs3-edition/TodoRuntime.m",
+      "sha256": "47d9f69af892e36c9592fb7e95a17d007346156da1fee373d3f1d86ac38a6ce2"
+    },
+    {
+      "path": "official-addon/navs3-edition/TodoToolFlowTests.m",
+      "sha256": "3d59f900e2d5de4e03d67067ae211e6edbd51813d182e0d7a7ee0b8afed92f7d"
+    },
+    {
+      "path": "official-addon/navs3-edition/TurboIOArt/app-gallery.png",
+      "sha256": "39a47976f6496c3bff5f94f7d22cf490db7fe46d4815ccf2d18867b0e8d99097"
+    },
+    {
+      "path": "official-addon/navs3-edition/TurboIOArt/dashboard-editor.png",
+      "sha256": "fff2d8f0dead14a989866462e2fa4b928266336a055acb626ab83b0babb5ca3a"
+    },
+    {
+      "path": "official-addon/navs3-edition/TurboIOArt/focus-tomato-v2.png",
+      "sha256": "e8b3fceb63f1d19138c256a1d108ca8a2e33c132cf79f6313cd0c88d40bb553a"
+    },
+    {
+      "path": "official-addon/navs3-edition/TurboIOArt/focus.png",
+      "sha256": "10c1efcf90b5c053b77dac15acae7303f66b1e809a75efe86ea380ccef76c056"
+    },
+    {
+      "path": "official-addon/navs3-edition/TurboIOArt/hero-glass-v5.png",
+      "sha256": "f2f7de2f59eb97ac3910d10ac3220d8fbb14ac6013d7cde5611205f84501d623"
+    },
+    {
+      "path": "official-addon/navs3-edition/TurboIOArt/hero-sequence-v5.png",
+      "sha256": "ddd8e15f4c56ead5df8b54838b2a99a47f801a29eb8387b1bba028b295f0b269"
+    },
+    {
+      "path": "official-addon/navs3-edition/TurboIOArt/music.png",
+      "sha256": "fd839eb8b849fe56a90ed5d8c6e3ade38ea6216cd8a6f666559fbf2c0ea3fc28"
+    },
+    {
+      "path": "official-addon/navs3-edition/TurboIOArt/navigation.png",
+      "sha256": "ab925edd3ff6918b7c6a3c9813687bba60487d591deaade3e66dc078725afcb1"
+    },
+    {
+      "path": "official-addon/navs3-edition/TurboIOArt/news.png",
+      "sha256": "e9a8e2401edbd0d86c3aee7c9af8c6789acdc177245e3feefeda55bb74ae7b68"
+    },
+    {
+      "path": "official-addon/navs3-edition/TurboIOArt/reading.png",
+      "sha256": "1badf2985bb7b903e5e579e1b32a31ce1a537a2991c0e23aa88a6498358ba7ff"
+    },
+    {
+      "path": "official-addon/navs3-edition/TurboIOArt/settings.png",
+      "sha256": "14a91644e1b6b042c4b7dba1e9326d90f5eacd2066b7e55d2435a208c57f2ccf"
+    },
+    {
+      "path": "official-addon/navs3-edition/TurboIOPrivateAddon.plist",
+      "sha256": "70c7454329cc6adb9d0e383528db82f3a2756d2e2fd0f93a9bc6fa232ed10345"
+    },
+    {
+      "path": "official-addon/navs3-edition/VoiceTTS.h",
+      "sha256": "27b0b4424f9b66fea93df0ce22314b100688df6064e2dafde5eca6b87fa82282"
+    },
+    {
+      "path": "official-addon/navs3-edition/VoiceTTS.m",
+      "sha256": "5174a2babe7e75de2cf906c6110ef2c2929a95cecd0142eac1b5a32bd9b52aa7"
+    },
+    {
+      "path": "official-addon/navs3-edition/WatchGlobalBridge.h",
+      "sha256": "4474dc7538f4cd7c2c104fe93d195cea6cf28204d9649d0e5fa4590f227d7fbb"
+    },
+    {
+      "path": "official-addon/navs3-edition/WatchGlobalBridge.m",
+      "sha256": "a9d34fdb983e5a8b353a8fba31049cfad9d85d258bad61d373ed384224b434be"
+    },
+    {
+      "path": "official-addon/navs3-edition/WatchRemoteAddon.h",
+      "sha256": "a17104e67daafd9fe70fd0695ff70691600e30359c254fcc45c347622de46fe3"
+    },
+    {
+      "path": "official-addon/navs3-edition/WatchRemoteAddon.m",
+      "sha256": "6c934a841cfa82eb5b1e80fefc0af13f89f78f5a66b7fe312082d518096efeda"
+    },
+    {
+      "path": "official-addon/navs3-edition/WatchRemoteGate.h",
+      "sha256": "333e3b869030141828b1e0cd9cb2dddb64b059e6a9a41012c928b42e6a06c6a4"
+    },
+    {
+      "path": "official-addon/navs3-edition/WatchRemoteGate.m",
+      "sha256": "766e938f5496719d2f8cdabbb90ad6ed89f63988a1809b9125359b13c05b4b04"
+    },
+    {
+      "path": "official-addon/navs3-edition/WeReadAPI.h",
+      "sha256": "2318e73a73b807e70a8f2c4add68799cbb7ca56c5e35b7684f3daa78e3add338"
+    },
+    {
+      "path": "official-addon/navs3-edition/WeReadAPI.m",
+      "sha256": "d0bc7cc8d3e87b4d7f6f82bc58a4e1d77d1022043065057b1816346e5217f929"
+    },
+    {
+      "path": "official-addon/navs3-edition/WeReadCoverPolicy.h",
+      "sha256": "983ed6d984c9a10894340484af5a47d25a5107d3952a69efbf6010d2f4cc7aff"
+    },
+    {
+      "path": "official-addon/navs3-edition/WebSearch.h",
+      "sha256": "58bddd659422a0b2f1d3e94abee05c432d9604033cd48a45bc4e1178cb57d2c5"
+    },
+    {
+      "path": "official-addon/navs3-edition/WebSearch.m",
+      "sha256": "34d40b3dc100ed2bc099f06a141139ceff16c79ff40810b2657d5ca7e422920a"
+    },
+    {
+      "path": "official-addon/navs3-edition/WebSearchFlowTests.m",
+      "sha256": "73187a5a793bdc62c45d38467ab4166f7e28ff14691ef901674b467491c6e017"
+    },
+    {
+      "path": "official-addon/navs3-edition/WebSearchTests.m",
+      "sha256": "1ef6b8c3e053eb1ddb807d5760ecb59dd9599b618ee47b6569ac5b2ea4be6ecf"
+    },
+    {
+      "path": "official-addon/navs3-edition/app.c",
+      "sha256": "d3829bcaf7f0391340458454727d21a3162453518fd28e96bc1f0deb93188f7e"
+    },
+    {
+      "path": "official-addon/navs3-edition/app.h",
+      "sha256": "d3ffaaf2803ca8112db3fc0388f658c896f15b0407e2e6ff102dbd610948781c"
+    },
+    {
+      "path": "official-addon/navs3-edition/app_command.c",
+      "sha256": "ade69f730424a7bb89945ee3139b5cd97f07353eaf3b92e2991b9c1722afa599"
+    },
+    {
+      "path": "official-addon/navs3-edition/app_command.h",
+      "sha256": "7317330658059d982c4fc1637fb1d84224cd2641cdb9b1408fa45b0e3a2b2cc3"
+    },
+    {
+      "path": "official-addon/navs3-edition/app_runner.c",
+      "sha256": "e96b7ad1d86fc4287d21adb59aedbf2830b0f5baf3dcde956538e3d8565943b8"
+    },
+    {
+      "path": "official-addon/navs3-edition/app_runner.h",
+      "sha256": "00a1667c1a24b4940cc7ee27dd60c0fb0ab1a024add0de18cb371f94fe4c650e"
+    },
+    {
+      "path": "official-addon/navs3-edition/app_store.c",
+      "sha256": "89cf0a40ef3ca157fa3c952deaffe3c4539515f034d8f3b25d30e621d9c65ea5"
+    },
+    {
+      "path": "official-addon/navs3-edition/app_store.h",
+      "sha256": "a019c61d3fede9fe13cc2fc4e0fe80aca1d4e88686b0e2fd694b2137ebf1355b"
+    },
+    {
+      "path": "official-addon/navs3-edition/app_view.c",
+      "sha256": "23efdf443697eceb7fa435957017224db9f5faba7dc1871e55846fb723670b72"
+    },
+    {
+      "path": "official-addon/navs3-edition/app_view.h",
+      "sha256": "8390d2640e660da003d7c6f9d1ba93f1fc2a1e69b212cfbc761a8d1b740a4d53"
+    },
+    {
+      "path": "official-addon/navs3-edition/build.sh",
+      "sha256": "8b1c0e4137d8721dcd64125e19bd0df2bb275254993468b00f4345385e5ee08f"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/CameraCapture.h",
+      "sha256": "152840fe7f815548bc8596f4319acd41ef2838bab7cc49a45f1262133a91527f"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/CameraCapture.m",
+      "sha256": "450689b7e8f2ea61c0cf93843496015a93945a7e609a17949bea214350ecd0cf"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/CameraCaptureTests.m",
+      "sha256": "5a50a49d784ad3e068342aef76561de9109956d6af30388ee717ea65fa6c3544"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/CameraImage.h",
+      "sha256": "c97f65a61834128b72a36e4dbdfee5ad2e80d07560f20776230e6b1ca79973da"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/CameraImage.m",
+      "sha256": "cd5766ce220fa35fdc51e106e3b0f23c6eed4d46ad3d4c7ca768fdb3bf44aa14"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/CameraImageTests.m",
+      "sha256": "a15aaef099da1288b0d2a842592218fefd70e558af516391bea48fdbb55cc496"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/CameraLink.h",
+      "sha256": "6b86a3dd952113b93d442f6480f279d4fd5c2854e0825e0068135ce5728ffe30"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/CameraLink.m",
+      "sha256": "0e9479d44fde82a10e4195b5cc8ec16ac5e0f1cba7d47bdb79220c814f3cb8b6"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/CameraLinkTests.m",
+      "sha256": "63e30bb77dfbfe33f06d221ab5b0c508672f8905890ee7abe22a7b267158b836"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/CameraProfiles.c",
+      "sha256": "5b85bbb8e0b9fb75dbd5629d66d694b59e032feb704ec1d9dc91b141e4eac60f"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/CameraProfiles.h",
+      "sha256": "70218be6e0487f2ab93781d43b89d71f6b7c2e88b8184e9dc562aed6d7e35a38"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/CameraUI.h",
+      "sha256": "b76a0aad7cbb9469f573af74aadadfee474605b3890d2ebdee140d11e07d83b6"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/CameraUI.m",
+      "sha256": "7d8a505569bfab8f9ca286bfe1a4ae1c91e4c8af2eb86adf8083038e7b9abf0d"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/camera.c",
+      "sha256": "561d788d5f094c5dfca5cd949c4306b9ee3e508499aedf51553b2750c8fc5cb0"
+    },
+    {
+      "path": "official-addon/navs3-edition/camera-v1/camera.h",
+      "sha256": "ef45885db7d4635af2a7fd3b3008635c27c69399c86e2a3cbf3ef4ea64445b80"
+    },
+    {
+      "path": "official-addon/navs3-edition/card.c",
+      "sha256": "f628bfcd3301e9b1bcc3fba66c1d6d61fb6cc5105c7c1821ae293e835c444e59"
+    },
+    {
+      "path": "official-addon/navs3-edition/card.h",
+      "sha256": "b0ca8b018fc7ced4d041fc0dc38530153dc0af7f8021942055495d40c0eac1e7"
+    },
+    {
+      "path": "official-addon/navs3-edition/command.c",
+      "sha256": "f518084202f2f0d95ea74c8fc26ab2c840a73fe4d9908fddfad3c96a9c2e95e8"
+    },
+    {
+      "path": "official-addon/navs3-edition/command.h",
+      "sha256": "315f6e11e686afbeb9fe6b9c2184f1503b0923a71d6d54eac2a892d3cf1439d6"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/CEAutoPlan.h",
+      "sha256": "9927d07487e5b6beda84295e8bc9e370ab1dcaaaeeb91aad7d60f1e6d5d83080"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/CEAutoPlan.m",
+      "sha256": "c575be8f63468a48b90764a302e6b29787a0e327d06af1efbc2908e0737d7a41"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/CEAutoPlanTests.m",
+      "sha256": "b30924a86dc64c69cbfb5139ee7d5dbcc6df4f065fa68bf1ff2c353447246300"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/CEAutoRuntime.h",
+      "sha256": "9c2b510d80a3b03e028f8f87846558aaed1255c13197a88d5aa39d5dfb201fad"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/CEAutoRuntime.m",
+      "sha256": "a3f4d49e5366626564fc31e7f26eae662b4354681f436103b28a88483ac3e4b7"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/CEHiveSnapshot.h",
+      "sha256": "7754360f55ff5fdd0794709e334acfeee36b1e54611d9994842b4b48f44c5e88"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/CEHiveSnapshot.m",
+      "sha256": "f1b1a8140805e0380ac1e1aa78fcd5b5a74e2f38bcedb0a7edca11201978f116"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/CEOfficialLifelog.h",
+      "sha256": "e866829c8012290f3ab4e6da24b19f97dba69a03d6a84ad8fc18ba139bc10593"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/CEOfficialLifelog.m",
+      "sha256": "ea75a9b52413ee8d3e692f1477d69cf19f50587d019d2fdd6176f848b2059c6f"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglish.h",
+      "sha256": "fc42e87c42eee991969aed877ea68f12d6af1a8294508f64cfa0d062a80a7419"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglish.m",
+      "sha256": "5e0901ef9f2bccd2e2a560a84e20a24250f46140eea6b76fb382994569f37623"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishBridge.h",
+      "sha256": "9408415338a4af4c138191dcd5698f5fd069c626e8264e6bff71bfe731299003"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishBridge.m",
+      "sha256": "0e06a7cc51fcdee89ab89372e6c621ff1bbfacacef44dc12d1f3e7ce501a5040"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishBridgeTests.m",
+      "sha256": "5be52acff726be9dcf5732ed01398eec26c7956607350597231e3d24d188a120"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishClient.h",
+      "sha256": "b5bc00428560223496439f42c289e4338a7b805c500225d301b157c7a3faaf3d"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishClient.m",
+      "sha256": "de5adb7955b399be4df45639eb40c758400a33b3d8d6f55fa8182556ce914799"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishClientTests.m",
+      "sha256": "1ded9421cce872bc7260d40465e3066bf19499ec475b533f93fed602479f62fb"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishHistory.h",
+      "sha256": "f2e0be5ea3d05b789e3990bb52685eb57d9de281b443355f5355112a48b14870"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishHistory.m",
+      "sha256": "dee687263a6837904a38480e3deb96da78837b43a3cc9d11110f81c3f7e572a7"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishHistoryTests.m",
+      "sha256": "bfe03fc5fca0c5f90a843feaabb5e2ae5bd94fc12767010514c8c4b29dfc6c59"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishNative.h",
+      "sha256": "593cc37010900b3ea05088f8a3f833c3cceb51a1d498d34ccbd0bdc3e5baedd8"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishNative.m",
+      "sha256": "db175f40cb2a9fd4e9453c81b8eee032d7962c4c3e1f12e0074120a90e4fa172"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishPanel.h",
+      "sha256": "eca5cc40011702297d0be05901ed4a5c71c41bbe140b0241882e6ad9dfe3c076"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishPanel.m",
+      "sha256": "bfa5115133d05727cff9b47bc894aa6687d44bdf0159b902518fca5d069c127d"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishTests.m",
+      "sha256": "c49cd12a5ba0b0b38f318db75ab1a05ecc03b79affa849c6ba0f5a6f09d8e6a7"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishTransport.h",
+      "sha256": "e50d4d13a06ef1257fbfdac8ba33b9e3c3592b433022f44c1fff42a71ae6600b"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishTransport.m",
+      "sha256": "fdbccd4ad27972129a16b0a78f635c4486f1d9fe628844a050a260985780c2a4"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishUI.h",
+      "sha256": "719332e855d49d21d2ac8507126da7440c930f7e2d40f7b553c8917e7019095e"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/ContextEnglishUI.m",
+      "sha256": "306345393fe32519ee955db09fee0231835d6ae4667537fbf406363a3dd207c7"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/README.md",
+      "sha256": "f009dbcc80a55d9c747a4ec902650546f3366f08ea2dc2285d83bc13f422ea9d"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_carrier.c",
+      "sha256": "b967ddd8a536db403fa29f30651b752dac563c9eddf0a3c86f5d7d2184e09436"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_carrier.h",
+      "sha256": "a082dd49b7b203a8541e0e87578d3abe9895eae39ac1cdfceb88238a95f38d38"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_files.c",
+      "sha256": "443f3b2fd3eb5818018123f844d7d4616c254b145f97f0565132a7e621cfdfb8"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_files.h",
+      "sha256": "8f816c3cd344bac42897313b8891b01a09f533a1f59232015896943692266c6c"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_files_native.c",
+      "sha256": "0f1f962fd6df0b0496e88eb159b71eb31bfde333aa0ace235feb276a87c2ad8f"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_files_test.c",
+      "sha256": "956cfcaefe2c84dfa8e8f33a8dd91e3e9b071d2a302d592fbf5470971a2cce78"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_flow.c",
+      "sha256": "2f0d1d7748c689b84bdbc54d364ae65b99c143deffa5f83e42a3e6ca02b23c45"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_flow.h",
+      "sha256": "e727239e0b9721543d4a9de5c941da51934cb5eba0ed57bbea3614c3432fa39d"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_flow_test.c",
+      "sha256": "44e15be03abb050cd69a62ec76cb7a1cdb6cdda11c4303ece56de7ce5a924547"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_lvgl.c",
+      "sha256": "acc5bd14a1ba53cfaa9c4c0a7bcae75005ddbca8c4e96eaf8d3d8d5ce40df57f"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_lvgl.h",
+      "sha256": "5865d4a1cb4a06878878ab1ce008bd7897a34d9941f0797f2664185b791f27cd"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_native.c",
+      "sha256": "cffcbcbc635c49d9b5ad440e3cf6493e66afd728104ac97672c9408436351cb3"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_native.h",
+      "sha256": "ed031b37bc38e9a576885e3af7bd32efcbd98f7f1c0a7d5b97286cce9e29c2a3"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_progress.c",
+      "sha256": "17ac669ce0dd9701e6a96c51a27ab8f585a727c3d33513f92106f7d1596d0ee7"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_progress.h",
+      "sha256": "7f5dfcc53e8158786644290b48266672815e4c5250f9c6a0721f8dcfe4f192f6"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_progress_test.c",
+      "sha256": "427843cb07c5c2dcdeb665287532e4dc1bb7d9d262e2b1a0930471b62068f035"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_schedule.c",
+      "sha256": "ba7e24b7af73e1e7dec98f990ddca596088a7af06e7f0660797e84252dc5151c"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_schedule.h",
+      "sha256": "a885a6e9d0f62420e3d516723497cdb171f2b3674c7e5eed4898a16c3e0472c2"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_service.c",
+      "sha256": "a808295502776b6abdf20abf66dd2c014cdc383353b5bf547233c35d32cb51d0"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_service.h",
+      "sha256": "1b13092ea016b7e6fe11055c988a46516d76a72a5709ca2bbbfbc1655da07d67"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_service_test.c",
+      "sha256": "65f135ff9a6d20a4faee75545a67b2192cd75a9af98b1712edff76ced1c5fe0f"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_session.c",
+      "sha256": "01bc99bb44445f2ff5d9fe3b63d7761ed8903e88981f35eb7ee3e6d365204b2e"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_session.h",
+      "sha256": "dda678d6a2c627eafda2e912a370c055874f3d008afa5193cf7391f110f86183"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_session_test.c",
+      "sha256": "67744b924e3c6634d28db21727fbdeffeffda952c841594550542409f4247343"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_store.c",
+      "sha256": "a2f0b56d6bdb44851ba30b32a8620551982ee1c05ca951b7ed1da88856ce1b0c"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_store.h",
+      "sha256": "289dbb54eecfb569deca21e6a926db30ef4c3cdfd7f0d0999478aa1b3fdcd588"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_store_test.c",
+      "sha256": "373bb34d91a1d73e7638f51d364efcc5774c57008f53390e38d25ef1e6b48ef8"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_transfer.c",
+      "sha256": "28df416946c976ebcbd8006897748a013cc19d0ffef9d846cfcc2fb2a20871e9"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_transfer.h",
+      "sha256": "f144338fb65d52896c011a88d13462ab59d2b3a92c095cc2c2be0498ccfc6049"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_view.c",
+      "sha256": "b64784567bd89ae615c8a0c608c974f475cfe2cd69e5c95984c42c493fb90d1c"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_view.h",
+      "sha256": "d8fd6a55c0fa4dd7c9170b98562195715b33eee324a0740e698c9cd81b9e2d7c"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_wire.c",
+      "sha256": "2ae22aaa91a23c715227635e982215f916b4343342b7117ce01af3c60368600b"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_wire.h",
+      "sha256": "b5cde8910d64b48b3f58a5bdbcd0859bf1c768d53e642a4007f314ebee412465"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/english_wire_test.c",
+      "sha256": "bcfe7b33c4bb0df2c9683520a368625cbddc0808e059300b3d18b6b0027dbfdf"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/head_gate.c",
+      "sha256": "f844c2268f8509b1782d8c36617223bf23b5db4001fb5f651f384586d3e605d6"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/head_gate.h",
+      "sha256": "5ef824b6855d497d0b52db2d1fda2a6f39afbe08f45ae82024003afc65580a7c"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/head_lifetime.c",
+      "sha256": "f77c1e508fc4fea8f08ead70473352305af3a3f82db8849999bae337059a8f6b"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/head_lifetime.h",
+      "sha256": "19c11732569b4e0ebc2f57221a45428b88304e9f98dbc61e2ff16e3f09523c2f"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/head_lifetime_native.c",
+      "sha256": "eaf56513a220fe26b93965a312ff9070b8a618c628a8e211ec6203400315f191"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/head_lifetime_test.c",
+      "sha256": "6fd2ddc6a25eb8686bdd5952f01ad0b3a71f6c9158f814dfb2564c45d4a372b4"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/head_serial_native.c",
+      "sha256": "2c123f7524c7f04431413fedd4bf69ac3140bd96e733ffeedef0a35cdce31c1f"
+    },
+    {
+      "path": "official-addon/navs3-edition/context-english-v1/head_serial_native.h",
+      "sha256": "a55a2b3db48acf916b2433386c0a71081aee5af2be1d51564f4e71384c1a3fa3"
+    },
+    {
+      "path": "official-addon/navs3-edition/diagnostics.c",
+      "sha256": "6c5db8ea337099dc3e14f624e6fa09c5081a40689124a9e57ac5b3cee567f70d"
+    },
+    {
+      "path": "official-addon/navs3-edition/diagnostics.h",
+      "sha256": "d4064f0d19c2a08155d971a75bc4ea2dba27c59de7bea40f09b703e83898cc3a"
+    },
+    {
+      "path": "official-addon/navs3-edition/display_carrier.c",
+      "sha256": "bc2ee8205c4b34f2265cb952a0307548bbe4a8073ba91fbc1f11c2ede19ae308"
+    },
+    {
+      "path": "official-addon/navs3-edition/display_carrier.h",
+      "sha256": "8a39d5b0a3fc7a11b50e9b9b75a5f69fcfb037810b13a0ef6561f3465401d189"
+    },
+    {
+      "path": "official-addon/navs3-edition/display_client.c",
+      "sha256": "f6ad7a38d84e99e51eceb29cdd7bad52ea0b0241eafb3497c2edf6420dcd30ef"
+    },
+    {
+      "path": "official-addon/navs3-edition/display_client.h",
+      "sha256": "a7d8a12e2ff645bc72c0dfabe1061a345b45262eadd47278fca5141e192ed8e4"
+    },
+    {
+      "path": "official-addon/navs3-edition/display_memory.h",
+      "sha256": "3d3d97686f2c8aeffc27277c5706c8d2e5f63adec2ecb08f6e6777efaada74b3"
+    },
+    {
+      "path": "official-addon/navs3-edition/display_runtime.c",
+      "sha256": "a03a15b93eef3a30fad5555749ddc9b8171f31d75a7aa768b098eb6012ea549b"
+    },
+    {
+      "path": "official-addon/navs3-edition/display_runtime.h",
+      "sha256": "59885f38981bfaacad9ea0f88d32f1414d9a09823b98304eb0d0afb5687cebb7"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsCatalogTests.m",
+      "sha256": "8a63c9b15fc517b730e2474b44173052b15b1c516fefa6a24ca96c58e944b70f"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsClient.h",
+      "sha256": "261b5dd8b55ea49d07649d9153a15c74e7297b49a0d4125ce17f7b1534ddbfeb"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsClient.m",
+      "sha256": "93c749d433f483d64fb1245b5126cb91de6091c55bdba0f9b33cf3327c2ab1a3"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsClientTests.m",
+      "sha256": "93d417ca670d9bad68b4ae3f0c47ea4816f83f4fb8622f6020f08b7124073f64"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsFileGate.h",
+      "sha256": "38d38593b90e573ac9b5e4a5a03f32ee312097d22072fa5053be9c037b4b81af"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsFileGate.m",
+      "sha256": "04903fe3c8328592357d88d96fab5f791f3d4c8f6374666d44ec4fc0b0268d3b"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsFileGateTests.m",
+      "sha256": "6785a584d0929489f4d4f3ed7f019fc7e856505cf3dd0b543ecff9e97d88b1a9"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsGlassesTransfer.h",
+      "sha256": "9793f3fc6a098b509652972882026ab1aef0bb27cbc7392b2f74faf897c05554"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsGlassesTransfer.m",
+      "sha256": "2a20a742d4bc76221b61ecca559b1555e5edb5db47ba94ff0a58c843d93937c2"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsGlassesTransferTests.m",
+      "sha256": "c74018a8b94a0d77e699eae427a2b0a419006de1d2e9720aaddb01dd92eb896a"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsPhoneBridge.h",
+      "sha256": "a1e7ac459322c4ea91a893ad4b9bd98e526c4216607ebcbbfc87cce1e2c5d491"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsPhoneBridge.m",
+      "sha256": "919fc691a0b82fb25304420d1be9a0bc8cd3e1a9ea408be2525587fad5447cae"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsPhoneBridgeTests.m",
+      "sha256": "9f9ce4aae72e96fcb73534cedcfdf5cc4892a7b50af105e24e78a950604e965b"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsSnapshot.h",
+      "sha256": "f98964cc7c136d24112d039c4b15ed8e6027b2347e1f915b41748db8d7cb0cf6"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsSnapshot.m",
+      "sha256": "af0e90d0ad05041f910ad4268dc2e9ed72804b8353fc80969da458d8cbe6e251"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsUI.h",
+      "sha256": "cf8bebac44f1e9e5a374c9005e70f0c9293cbe937830aa1da4b6aa458c27f2bf"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsUI.m",
+      "sha256": "048403947cf7c87970aea9f99e9f5cd34fb2e735d93ad912ae655e70a059efa6"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsVoice.h",
+      "sha256": "768edba4ec5c795fdec9bb14287df723899a95f58920410168aa0f6f46430d8f"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsVoice.m",
+      "sha256": "546bae762698579ed791e0394c09a98b1d82990676ae5f4702e6f3a6320b4a5e"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsVoiceRuntime.h",
+      "sha256": "eb76180570df5d456009f93d4cb632875318edd050cb591004654f8de4ea6b95"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsVoiceRuntime.m",
+      "sha256": "4e1a6742fe314da52e59f94688e279de5bb8f4c16d703dfdf9cb5ad0c4a61056"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/DotsVoiceTests.m",
+      "sha256": "9417e3391d4996b7a19d2465fc9f5d5e8a8d5bc76c4e7b078aa561025a3729bf"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_carrier.c",
+      "sha256": "4c46af94d1d837b0a5198e92e1002ab4f2a87a4aee8bf6a8f617e67dcb8bf506"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_carrier.h",
+      "sha256": "742c07abd9e548148567e2dbbbfb066b364b98891779b973207bfd0ac9e64450"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_menu_test.c",
+      "sha256": "8d28282deb14c9835036607db17f8fc36e2f6835e2ffca581dcd71fec8af7153"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_native.c",
+      "sha256": "94639f1e432c922e04bd5f28dc53dc850d1c4f06d6dd78526d4c048c2952eaff"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_native.h",
+      "sha256": "c53ad41fca92b0d6fa8892ccfb83e0c2722da2a3564f5f2b6df18607157b1c4e"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_sender.c",
+      "sha256": "de89d9d0ff044f963cab22c46c7b63d88fef5bc110a25386f59b9fceda5f9c22"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_sender.h",
+      "sha256": "7bdbfb5135581f9b57ee6308b2d16840990c89122915e0829ba41cc6ae974a75"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_sender_test.c",
+      "sha256": "b0b3b4a423840acaa359ac9a2f0c82430ed9ac7a2e1f3dfb2ac8f8b03f6d5bbe"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_service.c",
+      "sha256": "18637f7d2c0e96bd85bfe0fc71d7c5035f9f993e5f4e315b12171d605eb9788f"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_service.h",
+      "sha256": "b6de55786b8918f686c52b477cbbac51ad4833cd2ea25e021d8f2aa5b1eb0991"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_service_test.c",
+      "sha256": "5fdbb6d43aebcb9a4aae80a183ea1a77fe4acbeb386f998581c638f458493376"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_view.c",
+      "sha256": "7e54de954dd0dd16cfd4771e017b063e8591efafb7b7418fe7bc7e02e7d90ed3"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_view.h",
+      "sha256": "69c08f58622333f73f8bff99df959438573c52b8dd30d3ebda5e0bbda37cd647"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_view_test.c",
+      "sha256": "3bb02e4e3e0a04068887b9d857402b9265221b6f9f4c2906f43efc011cbddde7"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_wire.c",
+      "sha256": "c42d4011bb67cb2d556ffd56a3e1be3599494347466294eb9dee37e241dfd1ea"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_wire.h",
+      "sha256": "48b216a6bb45e7f071f09ffc9e5e87ed95fadb0cdc50b3e86ef9f00f3006b801"
+    },
+    {
+      "path": "official-addon/navs3-edition/dots-v1/dots_wire_test.c",
+      "sha256": "25fee57b16cd25332482f1db25949234a4f7500fd026ee4c999720b00200658c"
+    },
+    {
+      "path": "official-addon/navs3-edition/editor.c",
+      "sha256": "e28f033276ecc3ac9a10461bd7e35d07558e42a3fcfe44c599ac482171be4b91"
+    },
+    {
+      "path": "official-addon/navs3-edition/editor.h",
+      "sha256": "6ede2091193a48dd51059c04bb7069cb396ec9bf7c8055e8f63e18a71f62d95c"
+    },
+    {
+      "path": "official-addon/navs3-edition/enhanced-lifelog-v1/TNLClient.h",
+      "sha256": "901108452fdde7c9d529dd2e5c0dc5c6efa3f65f1a8bc6b76b85bc5bbeb729d2"
+    },
+    {
+      "path": "official-addon/navs3-edition/enhanced-lifelog-v1/TNLClient.m",
+      "sha256": "e1c21794ac9b437836a3af829dae06d848ffd82a505c78078340e467c88c4240"
+    },
+    {
+      "path": "official-addon/navs3-edition/enhanced-lifelog-v1/TNLContext.h",
+      "sha256": "cc423062849ce73a6007c64dc08329f9f65361220da165a5e5cb0e2bcf83b0d0"
+    },
+    {
+      "path": "official-addon/navs3-edition/enhanced-lifelog-v1/TNLContext.m",
+      "sha256": "c7e268c27e569668de71dcd005fb4cdbf5da4fe7a37880c36c9c97dfee52a858"
+    },
+    {
+      "path": "official-addon/navs3-edition/enhanced-lifelog-v1/TNLStore.h",
+      "sha256": "cc0fb4221b2ad31c076c92e0534437abc47c83211a2034c2214aadff0f09a816"
+    },
+    {
+      "path": "official-addon/navs3-edition/enhanced-lifelog-v1/TNLStore.m",
+      "sha256": "e0fb509e52f8d6334bc2c1ecc773d8537e258e5a7949fd0931983d1adb2989e2"
+    },
+    {
+      "path": "official-addon/navs3-edition/enhanced-lifelog-v1/TNLTests.m",
+      "sha256": "4d0f12211412251f0c40ff5fea639c7de008781b7dd08b39970874a3ab4f3d24"
+    },
+    {
+      "path": "official-addon/navs3-edition/enhanced-lifelog-v1/TNLUI.h",
+      "sha256": "7ed8e9323a6aab0d30bd48bbcc2122a8a8958d752cb657451eb5dcbfebae2c15"
+    },
+    {
+      "path": "official-addon/navs3-edition/enhanced-lifelog-v1/TNLUI.m",
+      "sha256": "5b3249f1403d9d230425b83c8359b1620b7fe6ad22596d447c0a4092729db0f1"
+    },
+    {
+      "path": "official-addon/navs3-edition/enhanced-lifelog-v1/TNLUIFixture.m",
+      "sha256": "634976f8b679a7808842e8ed5ded76e40a8e9f8bb8dadc72a2cc937041e664a9"
+    },
+    {
+      "path": "official-addon/navs3-edition/focus.c",
+      "sha256": "d589bb5ff1f0b5be349561150d4219eaf1fdbaeb953f3d2cc539f47b18b98fed"
+    },
+    {
+      "path": "official-addon/navs3-edition/focus.h",
+      "sha256": "129ae6f3509455704c7b768ecd23f0e34b60f2cc2f55dcd1f5fffad00442e930"
+    },
+    {
+      "path": "official-addon/navs3-edition/host-compatibility.mjs",
+      "sha256": "11a9c950cab12b260b5ff167eb80d301e32698776b80770976fb3c848cacbed3"
+    },
+    {
+      "path": "official-addon/navs3-edition/macho-embed.mjs",
+      "sha256": "2eadd6c97c5f4bad5c66baca52a791ad08473d9b7701281db473d91fc94b4684"
+    },
+    {
+      "path": "official-addon/navs3-edition/menu_config.c",
+      "sha256": "13abb897af7b6bc1153aa8c3b367e039fd7489aa0b23d5a59cb88638dcbbddc5"
+    },
+    {
+      "path": "official-addon/navs3-edition/menu_config.h",
+      "sha256": "6e762db51d97c05151bebf27cce50138e70968e57c4a47fae7314302d4b3b621"
+    },
+    {
+      "path": "official-addon/navs3-edition/music.c",
+      "sha256": "b0189a6fba3dbeac11722c8ce6f4f8332a7d5a1f4f883fb88e25dcff33d15b2d"
+    },
+    {
+      "path": "official-addon/navs3-edition/music.h",
+      "sha256": "2f854d99734c598363004db86d373c80188452f2e128d3c2803a5d62c0151a59"
+    },
+    {
+      "path": "official-addon/navs3-edition/nav_map.c",
+      "sha256": "ec2a21a70b592e92af306802e7f659bce9b878270dd6001ec84c8aea34fad06a"
+    },
+    {
+      "path": "official-addon/navs3-edition/nav_map.h",
+      "sha256": "2dbd6782864c3ef9b87dcd5ec9edca30f73d051e889c5325d7646034ab38fe54"
+    },
+    {
+      "path": "official-addon/navs3-edition/nav_runtime.c",
+      "sha256": "cc449f6f8c4491874bb836c0dfd9d111e8d503a75b894692d403c68a369e08a9"
+    },
+    {
+      "path": "official-addon/navs3-edition/nav_runtime.h",
+      "sha256": "b774eee0ea68cbb660f4b34a98c249f59e279e3096713372062426e0fd6a383f"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/NativeNavigation.h",
+      "sha256": "2cf18f01544d7f530b9ff1665a65d5826a97e79d87f476ee33f4a142a451ab91"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/NativeNavigation.m",
+      "sha256": "6ab7c96b97feab1c5ca2d11e43b944777ea85f133db5ccc4777086c5b11f5241"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/menu9.c",
+      "sha256": "59a6604bae003912f9a1037556d7b56f3fce8e03a74a06a430cac4fc839cf1c4"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/menu9.h",
+      "sha256": "bbf7f03a36f8b633eb0321e0c209b45f003256afa3294f196243475c03b538cf"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/nav_lvgl.c",
+      "sha256": "3a6c98bc83f6eeca222b17b4da2dff261e32f59496b4cd83b33e8d204378fe2c"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/nav_lvgl.h",
+      "sha256": "fd387f196f1dda97fc8f6008356aa2160ef2c6cb3781ddb074c6084cbde40105"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/nav_runtime.c",
+      "sha256": "93d5ce41837a450a828f0ec3b544ce761205c25aac3ecb45a820b4babe0b162f"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/nav_runtime.h",
+      "sha256": "a54649c0cd5eb30dab55a1813cda01c61e116fcd83fc3017507e4895f40c38e4"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/nav_service.c",
+      "sha256": "85624f3486acfeb73c9434ddaeefeef23f89375e45eca6b98e223deb8c127e08"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/nav_service.h",
+      "sha256": "8335a2fad3579d11acd897e5d4fd3cc7cb0132d6ef0a909332a94eb877270ed6"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/nav_test.c",
+      "sha256": "83afa69582f50dbaead4ddd31db9853529d92d349804d820c12adc94d289f94c"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/nav_view.c",
+      "sha256": "765683d4b24cfd0758be3e4cf8e5da4ddeecf0098774b8cc47a83fd34243194b"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/nav_view.h",
+      "sha256": "4b013ceb767aecc84789275de82ae8858d1b7bcf1d292faa40ee48f60082d9fc"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/nav_view_test.c",
+      "sha256": "45f32f6205057ce8ccd08a3e16001a51770d512a960b63c66d9c912b118755f5"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/nav_visual.c",
+      "sha256": "65c6a5a1eb99ac7d8e26ce48075a8b9271d773797a930fff47f1349c8850f019"
+    },
+    {
+      "path": "official-addon/navs3-edition/navigation-runtime-v1/nav_visual.h",
+      "sha256": "1dd0b5cdab62baa522a252af01687a8c0ddd9d76433b3d5c0300dcebfd09693d"
+    },
+    {
+      "path": "official-addon/navs3-edition/notification-archive-v1/NotificationArchive.h",
+      "sha256": "1133e2502945aba9a6f73a03519abbc184856603d25d528a4d0918d3053fc0d1"
+    },
+    {
+      "path": "official-addon/navs3-edition/notification-archive-v1/NotificationArchive.m",
+      "sha256": "d87c419796b8b2e427ec4f80428c72bc5951be69b4f93061ef1bad9f1e6de1b2"
+    },
+    {
+      "path": "official-addon/navs3-edition/notification-archive-v1/NotificationRuntime.h",
+      "sha256": "9a6381a2c9e77f9e6400c9318ac799839dca22cae19e4c89bdae992eb6059f9e"
+    },
+    {
+      "path": "official-addon/navs3-edition/notification-archive-v1/NotificationRuntime.m",
+      "sha256": "ade75688a07c9346910cc5a1e95195d3b6c195de5621d7e9479656fc17fa62e9"
+    },
+    {
+      "path": "official-addon/navs3-edition/notification-archive-v1/NotificationTests.m",
+      "sha256": "d4a1d729724f6687b459d88b7e734c19868e81ad29c2beae67a0690edc7c019e"
+    },
+    {
+      "path": "official-addon/navs3-edition/notification-archive-v1/NotificationUI.h",
+      "sha256": "a1bb5a8ef00cf4fe5df6de1c2d0dd58dc2be5fb9c0a4407db371ee93fe192836"
+    },
+    {
+      "path": "official-addon/navs3-edition/notification-archive-v1/NotificationUI.m",
+      "sha256": "e32e7557a64a97b792e05d16452dfad92049287c7f19d87eff868a10c8b3aa63"
+    },
+    {
+      "path": "official-addon/navs3-edition/package.mjs",
+      "sha256": "3138ffc661c6c22ff265f93a62d0f2cc365a3d84a895fee1836d4bbcde2cd7e3"
+    },
+    {
+      "path": "official-addon/navs3-edition/package.test.mjs",
+      "sha256": "b8034cdab9f2f890262b14a67575cd55e31d38a1f28c51d0fd3f8593bdf139a1"
+    },
+    {
+      "path": "official-addon/navs3-edition/patch-ios106-route.mjs",
+      "sha256": "e42e773c6f70ab83372e60ed6ea6f15015d8265fe99be4b51a9c807cde289c44"
+    },
+    {
+      "path": "official-addon/navs3-edition/reader.c",
+      "sha256": "ea4fee5aa24eb26675f5c34523f10de70a0752ffc2334a774b0aa2626a384edf"
+    },
+    {
+      "path": "official-addon/navs3-edition/reader.h",
+      "sha256": "f5fe9d0e0a1177642a1f930fe9868afe384d18c9870f0d71f6782d96d4dbd06c"
+    },
+    {
+      "path": "official-addon/navs3-edition/remote.c",
+      "sha256": "30c10c8a91c21522e9c3bb9a2fa8ddb361e219e4d2bd97bba2de2c5e01797dd6"
+    },
+    {
+      "path": "official-addon/navs3-edition/remote.h",
+      "sha256": "49bf94f22ab2d2293898b22a5bdcfbc01dfc972ee56a09f830aba45ee5b7617e"
+    },
+    {
+      "path": "official-addon/navs3-edition/ride.c",
+      "sha256": "7d1076945ce5a8ae6b02847b6e73a15889bfa87deef6230e7528030ddbff4333"
+    },
+    {
+      "path": "official-addon/navs3-edition/ride.h",
+      "sha256": "48c3d6eb2b846f3c1ea7b6b5d1119dc6442a490e132c28018d1519fba6437961"
+    },
+    {
+      "path": "official-addon/navs3-edition/route-hash.mjs",
+      "sha256": "6a60840d547782e042e1ca7d0d6c1dbb319d5f854f79357e29954356037e9806"
+    },
+    {
+      "path": "official-addon/navs3-edition/test.py",
+      "sha256": "c363f8e83a0f899fc2e919bd813a9f3914697bf8d8e6a7b3b5ccc9d6e10eec20"
+    },
+    {
+      "path": "official-addon/navs3-edition/test_phone.py",
+      "sha256": "9e358a216e56012c8686a4cc3c350261559b81d85ee521a790155be35840f2cd"
+    },
+    {
+      "path": "official-addon/navs3-edition/tests/CoordinateTests.m",
+      "sha256": "fd1a7492cb52eeee7a97f821321b474111872c98a8f9548a7300ae8361685091"
+    },
+    {
+      "path": "official-addon/navs3-edition/tests/OTAFeedRestartTests.m",
+      "sha256": "7f2fb64c857ce647282555cb52e717e748ac9ee4efa5b55b917b9127097c8a7e"
+    },
+    {
+      "path": "official-addon/navs3-edition/tests/RoadMapTests.m",
+      "sha256": "bbb160d84ffb02713d9a5d5e934473f85cedc105fcdf179da9a601035dc937d2"
+    },
+    {
+      "path": "official-addon/navs3-edition/tests/StabilityTests.m",
+      "sha256": "c0499b9be47c00ba90f83a0477c7aa0469055a0e2121b1aba655868dd4f559a4"
+    },
+    {
+      "path": "official-addon/navs3-edition/tests/diagnostic_stub.m",
+      "sha256": "313dfb0c9c9d4c7d716d2b0cf48279bc3454d1d3faf4e44243223c1f33980c7b"
+    },
+    {
+      "path": "official-addon/navs3-edition/tests/maps/README.md",
+      "sha256": "bfb9cebee9e5fddd1956b83f6d69d135daeec5243e5f9b84494c6752c154878a"
+    },
+    {
+      "path": "official-addon/navs3-edition/tests/maps/hongkong.json",
+      "sha256": "4b6abbf5784ee36f0f4923777087647d5b4a93bbe864d22d5599507832227fe2"
+    },
+    {
+      "path": "official-addon/navs3-edition/tests/maps/replay.json",
+      "sha256": "89b5545dc99a195d0339fcb699b13c3e56e3f2a1d2ac485b47a882235749f620"
+    },
+    {
+      "path": "official-addon/navs3-edition/tests/maps/shenzhen.json",
+      "sha256": "ec70589ff3a868be20fb4762f07c4e668b7a68f4c8c074092ae16f29189ea4ac"
+    }
+  ]
+}

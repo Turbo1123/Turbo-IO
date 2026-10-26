@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "APBytes": 7435336,
+  "APGrowthBytes": 1024,
+  "unchangedStockPayloads": 14,
+  "patchSites": 40,
+  "changedSources": [
+    "video-player-v1/native.inc",
+    "video-player-v1/player.h",
+    "video-player-v1/player.c"
+  ],
+  "maxPlayerAllocation": 239424,
+  "sourcePixels": [
+    540,
+    220
+  ],
+  "archiveSHA256": "154f0f8e68a69b8fb93f869e423081ee43969bf09c5174e8dbeac192c1047c11",
+  "hardwareTested": false,
+  "flashAuthorized": false,
+  "userReportedFlashAndProjectionPassed": true,
+  "userAcceptanceDate": "2026-10-23",
+  "fullHardwareMatrixVerified": false,
+  "privateMergedIPAPublished": false
+}

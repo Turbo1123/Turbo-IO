@@ -1,5 +1,21 @@
 # Third-party components
 
+## TVP2 / TAR2 AirPlay receiver (2026-10-23)
+
+`official-addon/tar2-airplay/` is an explicitly authorized GPL-3.0-or-later subtree, including its required first-party display/transport copies. The root noncommercial restriction does not apply to that subtree. Other directories retain their existing licenses. No upstream third-party file is relicensed by this exception.
+
+The build pins UxPlay commit `517cbb1240d9b9f69330c55b957cdd52b4175b2a` (GPLv3 receiver core and retained per-file notices), libplist commit `2117b8fdb6b4096455bd2041a63e59a028120136` (LGPL), and OpenSSL 3.5.4 (Apache-2.0). These sources are fetched from upstream with pinned identities; their original notices remain with them. iOS uses system Bonjour and VideoToolbox, not the desktop GStreamer renderer. No private paired key, account, video fixture, compiled dependency or merged/signed vendor app is shipped in this source subtree. GPL compliance and vendor rights must be reviewed before distributing any combined binary; this release is not such a binary distribution.
+
+TVP2's eye-side first-party display code is separate from the phone-side GPL receiver and does not embed UxPlay. The experimental OTA's original RayNeo/other vendor code and resources retain their rights and the same non-endorsement/risk boundaries as prior firmware releases. Only the listed first-party extension source may be licensed by this project.
+
+## APP107 / iOS 1.0.7 compatibility (2026-10-19)
+
+`official-addon/ios107-edition` reuses reviewed NAVS3 components with their existing attribution and licenses. Its OSM test extracts remain © OpenStreetMap contributors under ODbL 1.0. No original 1.0.7 app binary, merged IPA, private web reading adapter, personal configuration or signing material is included in this source release. Vendor app and SDK rights are unchanged.
+
+## NAVS3 / TMG2 navigation research (2026-10-19)
+
+The small-area map extracts under `official-addon/navs3-edition/tests/maps` are © OpenStreetMap contributors, licensed under ODbL 1.0; provenance and attribution are retained in each fixture and its README. They are not personal navigation logs and are not relicensed under PolyForm. AMap SDK/services retain their separate terms and require the user's own configuration. TMG2 original vendor firmware components retain the same copyright boundaries as the prior Strix releases; only the listed original extension sources are licensed by this project. No signed/merged iOS app, developer credentials, account session or private reading adapter is included.
+
 HarmonyOS (`harmony-sdk/`) is an original ArkTS/ArkUI client and protocol implementation, not a modified official app. It depends on AMap Harmony packages pinned to 11.2.0 (navigation with bundled map APIs, location, search and common) from the official ohpm registry. Those SDKs/services remain subject to their own licensing, API-key and privacy requirements; they are not relicensed under PolyForm. They are downloaded during build, not distributed here as pre-signed apps. Users supply their own provider keys and signing material.
 
 The Opus 1.5.2 source tree under `core-probe/Vendor/opus-1.5.2` is now included in full for the Harmony native audio CMake build, in addition to the earlier iOS build dependencies. Its upstream `COPYING` and source notices remain unchanged.

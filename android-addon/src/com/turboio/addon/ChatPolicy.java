@@ -10,6 +10,8 @@ public final class ChatPolicy {
     public static boolean eligible(String domain, String intent, String sub, boolean offline, boolean command) {
         return "chat".equals(domain) && "chat".equals(intent) && "workflow".equals(sub) && !offline && !command;
     }
+    /** DeepSeek "thinking":{"type":"disabled"} extension; a missing pref keeps the previous always-on behaviour. */
+    public static boolean thinkingDisabled(Boolean stored){return stored==null||stored;}
     public static boolean endpoint(String value) {
         try {
             URI uri = new URI(value);

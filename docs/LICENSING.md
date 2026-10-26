@@ -20,6 +20,12 @@ Turbo IO 面向个人学习、互操作研究、实验与非商业爱好项目�
 
 ## 第三方依赖
 
+### TAR2 AirPlay接收模块的局部例外（2026-10-23）
+
+维护者明确授权 `official-addon/tar2-airplay/` 单独采用 **GPL-3.0-or-later**，包括该接收模块需要的原创高清编码/传输副本，许可证原文位于该目录LICENSE。根目录的非商业条款不叠加到该GPL目录，不限制GPL原本授予的权利；不改变其他目录许可，也不替第三方组件重新许可。`official-addon/tar2-display/` 和固件中的原创副本仍按其现有根许可提供。不要将不同目录的许可混为一谈。
+
+UxPlay、libplist、OpenSSL依赖分别保留GPL、LGPL和Apache许可及来源。发布独立源码不等于取得任意闭源宿主/厂商SDK组合后二进制的再分发授权；需要自行审查组合关系并满足所有许可证。本次没有公开个人合并IPA或预签名接收App。
+
 根 LICENSE 只适用于本项目有权授权的原创部分，不覆盖厂商 framework、恢复接口、第三方源码、商标及服务。它们保留各自原许可与权利限制，详见 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。其 MIT、BSD 等许可文件必须保留，不能全局替换成非商业许可。附带二进制依赖不等于取得额外商用或再分发权。
 
 参考：[PolyForm 官方许可](https://polyformproject.org/licenses/noncommercial/1.0.0)、[MIT 原文](https://opensource.org/license/mit)、[OSI 开源定义](https://opensource.org/osd)。

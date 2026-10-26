@@ -7,8 +7,13 @@ export function wrapExact(text,header,original,body){
  }else{if(text.split(header).length!==2)throw new Error('OTA ABI mismatch');text=text.replace(header,header.replace(/ ([A-Za-z_][A-Za-z_0-9]*)\(/,' '+original+'('));}
  return text+'\n'+header+'\n'+body+'\n.end method\n';
 }
-export function queueHook(text){return wrapExact(text,'.method public static o(LE3/Q;)V','turboioOriginal_o',`    .locals 1
+export const OTA_106=Object.freeze({queueClass:'LX3/U;',senderClass:'LX3/u;',message:'LX3/Q;',core:'Lj4/q;',fileMethod:'u'});
+export const OTA_107=Object.freeze({queueClass:'LY3/V;',senderClass:'LY3/u;',message:'LY3/S;',core:'Lk4/q;',fileMethod:'u'});
+export function queueHook(text,abi){return wrapExact(text,'.method public static o('+abi.message+')V','turboioOriginal_o',`    .locals 1
     :ota_try
+    invoke-static {p0}, Lcom/turboio/addon/QueueTap;->allow(Ljava/lang/Object;)Z
+    move-result v0
+    if-eqz v0, :ota_blocked
     invoke-static {p0}, Lcom/turboio/addon/OfficialOtaBridge;->allowQueue(Ljava/lang/Object;)Ljava/lang/Boolean;
     move-result-object v0
     if-eqz v0, :ota_preparation_policy
@@ -29,7 +34,7 @@ export function queueHook(text){return wrapExact(text,'.method public static o(L
     move-result v0
     if-eqz v0, :ota_blocked
     :ota_end
-    invoke-static {p0}, LE3/V;->turboioOriginal_o(LE3/Q;)V
+    invoke-static {p0}, ${abi.queueClass}->turboioOriginal_o(${abi.message})V
     return-void
     :ota_error
     move-exception v0
@@ -37,7 +42,7 @@ export function queueHook(text){return wrapExact(text,'.method public static o(L
     invoke-static {p0}, Lcom/turboio/addon/OtaController;->blocked(Ljava/lang/Object;)V
     return-void
     .catch Ljava/lang/Throwable; {:ota_try .. :ota_end} :ota_error`);}
-export function fileHook(text){return wrapExact(text,'.method public final v(Ljava/io/File;Ljava/lang/String;LQ3/q;Ljava/lang/String;)Ljava/lang/String;','turboioOriginal_v',`    .locals 1
+export function fileHook(text,abi){const sig='(Ljava/io/File;Ljava/lang/String;'+abi.core+'Ljava/lang/String;)Ljava/lang/String;';return wrapExact(text,'.method public final '+abi.fileMethod+sig,'turboioOriginal_'+abi.fileMethod,`    .locals 1
     invoke-static {}, Lcom/turboio/addon/OfficialOtaBridge;->allowFile()Z
     move-result v0
     if-eqz v0, :ota_blocked
@@ -47,13 +52,25 @@ export function fileHook(text){return wrapExact(text,'.method public final v(Lja
     invoke-static {}, Lcom/turboio/addon/OtaController;->allowFile()Z
     move-result v0
     if-eqz v0, :ota_blocked
-    invoke-virtual/range {p0 .. p4}, LE3/u;->turboioOriginal_v(Ljava/io/File;Ljava/lang/String;LQ3/q;Ljava/lang/String;)Ljava/lang/String;
+    invoke-virtual/range {p0 .. p4}, ${abi.senderClass}->turboioOriginal_${abi.fileMethod}${sig}
     move-result-object v0
     return-object v0
     :ota_blocked
     new-instance v0, Ljava/lang/IllegalStateException;
     invoke-direct {v0}, Ljava/lang/IllegalStateException;-><init>()V
     throw v0`);}
+// Phase 3b glasses log: consume our owned LOG_REPORT ACK / receiver file events before Flutter; fail open.
+export const LOG_CONSUME=`    :turboio_log_try
+    invoke-static {p1, p2}, Lcom/turboio/addon/GlassesLog;->consume(Ljava/lang/String;Ljava/util/Map;)Z
+    move-result v0
+    if-eqz v0, :turboio_log_pass
+    :turboio_log_end
+    return-void
+    :turboio_log_error
+    move-exception v0
+    :turboio_log_pass
+    .catch Ljava/lang/Throwable; {:turboio_log_try .. :turboio_log_end} :turboio_log_error
+`;
 export const EVENT_GUARD=`    :ota_event_try
     invoke-static {}, Lcom/turboio/addon/OfficialOtaBridge;->enabled()Z
     move-result v0

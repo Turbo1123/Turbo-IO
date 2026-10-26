@@ -1,0 +1,34 @@
+{
+  "version": "1.0.7",
+  "build": "230",
+  "bundleID": "com.rayneo.venus.pub",
+  "architectures": [
+    "arm64"
+  ],
+  "alreadyDecryptedInput": true,
+  "encryptedMachOImages": 0,
+  "machOImages": 95,
+  "codeSignaturesRemaining": 0,
+  "machOCodeAndDependenciesPreserved": true,
+  "sourcePreserved": true,
+  "signaturesRemoved": 95,
+  "signatureAndStoreMetadataFilesRemoved": 102,
+  "signingMetadataPlistsCleaned": 0,
+  "otherResourcesPreserved": 2610,
+  "privateSigningReferenceChecked": true,
+  "personalSigningReferenceMatches": 0,
+  "containsTurboIO": false,
+  "developerSigned": false,
+  "directlyInstallable": false,
+  "appFrameworkSHA256": "041dc97ad3a864ac322e92a49d3b1ebbd466d371dc427591b0b82c8c56b5090d",
+  "runnerSHA256": "765715adebb3b6132a1870d9b500e861e028cdaecc2f6485296a428c1812e0b3",
+  "runnerUUID": "410defdbf93739eaacf2f616abff9d0b",
+  "archive": {
+    "name": "RayNeo_AI_1.0.7_230_decrypted_unsigned_original.ipa",
+    "bytes": 353804631,
+    "sha256": "50df3954845e3bc2e34f9ba6def8c3837e9d1a6c232f36f3a975dd08152a3ff7"
+  },
+  "zipCRCVerified": true,
+  "archiveMembersVerified": 2705,
+  "scope": "Original stock app functionality; already decrypted, code signing/store metadata removed. Not App Store byte-identical; not an app data backup. Vendor rights unchanged."
+}

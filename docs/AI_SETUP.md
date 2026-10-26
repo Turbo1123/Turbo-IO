@@ -1,5 +1,7 @@
 # 用 Claude Code / Codex 接入 Turbo IO
 
+**2026-10-19 路由更新：** iOS 1.0.7（230）使用 [APP107 专用目录](../official-addon/ios107-edition/README.md)，继承 NAVS3、沿用现有 TMG2，**OTA 已在 iPhone 17 Pro Max 实刷通过并开放**；需要自行准备合法的 1.0.7 未加密输入，按[专用刷机教程](../official-addon/ios107-edition/OTA.md)完成校验、单次授权与刷后收尾。1.0.6（218）使用 [NAVS3](../official-addon/navs3-edition/README.md)，其固定门禁不能移用。下方旧版说明仅作历史参考，不得通过改版本白名单假装兼容。
+
 目标是把重复的环境检查、构建、合并和排错交给编程助手，让开发者主要完成账号、签名、设备确认和实测。**不是承诺一条提示词就能跨过所有安装限制，也不是成品 App 安装服务。** 仅限非商业学习研究。
 
 ## 先给助手三样东西

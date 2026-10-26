@@ -21,7 +21,10 @@ def assets():
         result[f'assets/turboio/art/{name}.png'] = HOME / f'{name}.png'
     result['assets/turboio/gallery/catalog.json'] = GALLERY / 'catalog.json'
     result['assets/turboio/card.schema.json'] = ROOT / 'android-addon/assets/card.schema.json'
-    result['assets/turboio/otacandidate.json'] = ROOT / 'android-addon/assets/otacandidate.json'
+    # Public-area OSM road fixtures and replay (ODbL, © OpenStreetMap contributors), shared with iOS TurboHUDMaps.
+    maps = ROOT / 'official-addon/ios107-edition/tests/maps'
+    for name in ('shenzhen.json','hongkong.json','replay.json','README.md'):
+        result[f'assets/turboio/maps/{name}'] = maps / name
     catalog = json.loads((GALLERY / 'catalog.json').read_text())
     import hashlib
     if len(catalog['entries']) != 20:

@@ -4,6 +4,7 @@
 
 | 版本 | 状态与用途 | 下载 |
 | --- | --- | --- |
+| **1.0.7（230）** | 原厂砸壳、**全部代码签名已移除**；作为 [APP107 / TMG2](../../official-addon/ios107-edition/README.md) 精确匹配输入 | [版本说明与校验](1.0.7/README.md) · [Release](https://github.com/Turbo1123/Turbo-IO/releases/tag/rayneo-ios-1.0.7-230) |
 | **1.0.6（218）** | 原厂砸壳、**所有代码签名已移除**；适合作为 [TMIG1 / Strix 1.0.5.5](../../official-addon/tmig1-edition/README.md) 输入 | [版本说明与校验](1.0.6/README.md) · [Release](https://github.com/Turbo1123/Turbo-IO/releases/tag/rayneo-ios-1.0.6-218) |
 | 1.0.5（201） | 历史原厂解密输入，保留当时的 App Store 签名信息，不是维护者个人开发者签名；没有按新版方式重新制作 | [版本说明与校验](1.0.5/README.md) · [历史 Release](https://github.com/Turbo1123/Turbo-IO/releases/tag/rayneo-ios-1.0.5-201) |
 
