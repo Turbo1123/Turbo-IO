@@ -73,3 +73,7 @@ python3 android-addon/package-official-ota-preparation.py --guarded \
 可运行 `python3 android-addon/tests/PrivateArtifactAudit.py /path/to/signed.apk` 检查扩展DEX与允许资源、凭据模式及测试替身；不代替人工审查。私有数据存在手机沙盒，不应从手机导出沙盒重新打包。
 
 [TVP2 固件与刷写说明](../docs/TVP2_TAR2.md) · [TVP2 固件源码](../firmware-research/strix-1.0.5.5-tvp2/README.md) · [开发者SDK](../docs/DEVELOPER_ECOSYSTEM.md) · [1.0.5 / TAP1 历史安装教程（不是本版流程）](docs/INSTALL_AND_FLASH.md) · [1.0.4历史记录](docs/ANDROID_104_HISTORY.md)
+
+## Ambient 上下文候选（PR #21）
+
+队列、独立查询开关及外部只读示例见 [Ambient context bridge](docs/AMBIENT_CONTEXT.md)。本轮沿用精确 1.0.6（216）/1.0.7（230）和 TVP2 构建链。新版终稿监听器尚无已核对的 ABI，故 **ambient 采集入口不注入、上传不可开启**；旧队列原样保留，不自动重放。远程查询仍须单独显式启用。源码及离线测试不代表新候选安装或设备闭环验收。

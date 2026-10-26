@@ -7,15 +7,18 @@ import java.util.*;
 final class ToolTurn {
     static final int MAX_ROUNDS=3;
     static final String WRITE_REFUSED="待办写入未执行：本轮只允许一次独立创建，搜索后不执行写入。",SEARCH_REFUSED="未启用搜索或达到本轮工具上限。";
-    private final boolean search,todo,ride,knowledge;
-    private int searches;private boolean todoAttempted,rideAttempted,knowledgeAttempted;
-    ToolTurn(boolean searchEnabled,boolean todoHandler,boolean rideEnabled,boolean knowledgeEnabled){search=searchEnabled;todo=todoHandler;ride=rideEnabled;knowledge=knowledgeEnabled;}
-    String toolChoice(){return rideAttempted||todoAttempted||knowledgeAttempted||searches>=2?"none":"auto";}
+    private final boolean search,todo,ride,knowledge,rayneo;
+    private int searches;private boolean todoAttempted,rideAttempted,knowledgeAttempted,rayneoAttempted;
+    ToolTurn(boolean searchEnabled,boolean todoHandler,boolean rideEnabled,boolean knowledgeEnabled){this(searchEnabled,todoHandler,rideEnabled,knowledgeEnabled,false);}
+    ToolTurn(boolean searchEnabled,boolean todoHandler,boolean rideEnabled,boolean knowledgeEnabled,boolean rayneoEnabled){search=searchEnabled;todo=todoHandler;ride=rideEnabled;knowledge=knowledgeEnabled;rayneo=rayneoEnabled;}
+    String toolChoice(){return rideAttempted||todoAttempted||knowledgeAttempted||rayneoAttempted||searches>=2?"none":"auto";}
     boolean todoAttempted(){return todoAttempted;}
     /** null when the batch may run; otherwise the iOS finish text (nothing in the batch runs). */
     String validate(List<String> names){
-        int rides=0,writes=0,searchCalls=0,knowledgeCalls=0,calls=names.size();
-        for(String n:names){if("didi_ride".equals(n))rides++;else if("create_todo".equals(n))writes++;else if(n!=null&&n.startsWith("knowledge_query"))knowledgeCalls++;else searchCalls++;}
+        int rides=0,writes=0,searchCalls=0,knowledgeCalls=0,rayneoCalls=0,calls=names.size();
+        for(String n:names){if("didi_ride".equals(n))rides++;else if("create_todo".equals(n))writes++;else if(n!=null&&n.startsWith("knowledge_query"))knowledgeCalls++;else if("rayneo_context_query".equals(n))rayneoCalls++;else searchCalls++;}
+        if(rayneoCalls>0&&(calls!=1||rayneoCalls!=1||rayneoAttempted||rideAttempted||todoAttempted||knowledgeAttempted||searches>0||!rayneo))return "Rayneo 查询未执行：只允许一次独立查询，不混合私人/公开工具或写入。";
+        if(rayneoAttempted&&calls>0)return "本轮 Rayneo 查询已结束，不再调用其他工具。";
         if(rides>0&&(calls!=1||rideAttempted||todoAttempted||knowledgeAttempted||searches>0||!ride))return "滴滴沙箱未执行：只允许本轮独立调用一次，不混用私人/公开工具。";
         if(rideAttempted&&calls>0)return "本轮滴滴工具已完成，请按真实状态继续操作。";
         if(knowledgeCalls>0&&(knowledgeCalls!=1||calls!=1||knowledgeAttempted||searches>0||todoAttempted||!knowledge))return "知识库查询未执行：不能混合公开搜索或写入。";
@@ -23,7 +26,7 @@ final class ToolTurn {
         if(searchCalls>0&&(!search||searchCalls+searches>2||todoAttempted||knowledgeAttempted))return SEARCH_REFUSED;
         return null;
     }
-    void attempt(String name){if("didi_ride".equals(name))rideAttempted=true;else if("create_todo".equals(name))todoAttempted=true;else if(name!=null&&name.startsWith("knowledge_query"))knowledgeAttempted=true;else searches++;}
+    void attempt(String name){if("didi_ride".equals(name))rideAttempted=true;else if("create_todo".equals(name))todoAttempted=true;else if(name!=null&&name.startsWith("knowledge_query"))knowledgeAttempted=true;else if("rayneo_context_query".equals(name))rayneoAttempted=true;else searches++;}
     /** TIOTodoToolTitle: exactly {"title": String}, ≤240 chars, no control characters, non-blank after trimming. */
     static String title(String arguments){
         try{

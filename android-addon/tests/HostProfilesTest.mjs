@@ -57,6 +57,8 @@ const h107=fakeHost(n107);
 try {
   const r=verifyHost(h107,profileFor(SHA_107));
   assert.equal(r.ota.message,'LY3/S;');
+  assert.equal(r.ambientFinalListener,null);
+  assert.equal(r.abi.alwaysOn,'Lm8/k;');
   assert.equal(r.ota.queueHeader,'.method public static o(LY3/S;)V');
   assert.equal(r.ota.queueClass,'LY3/V;');
   assert.equal(PROFILES[SHA_107].directory,'host-107');
@@ -64,7 +66,7 @@ try {
   assert.throws(()=>verifyHost(h107,profileFor(SHA_106)));
 } finally { fs.rmSync(h107,{recursive:true}); }
 const h106=fakeHost({transport:'X3',sdk:'i4',core:'j4',listener:'Lp8/c$c;',queue:'LX3/U;',send:'t',file:'u',message:'Q',alwaysOn:'Ll8/l;'});
-try { assert.equal(verifyHost(h106,profileFor(SHA_106)).ota.message,'LX3/Q;'); } finally { fs.rmSync(h106,{recursive:true}); }
+try { assert.equal(verifyHost(h106,profileFor(SHA_106)).ota.message,'LX3/Q;'); assert.equal(verifyHost(h106,profileFor(SHA_106)).ambientFinalListener,null); } finally { fs.rmSync(h106,{recursive:true}); }
 // Voice exit needs the official stop entry; a host without it is refused before any mutation.
 const hNoStop=fakeHost({...n107,noStop:true});
 try { assert.throws(()=>verifyHost(hNoStop,profileFor(SHA_107)),/stop/); } finally { fs.rmSync(hNoStop,{recursive:true}); }
@@ -76,4 +78,4 @@ const hNoDump=fakeHost({...n107,noDump:true});
 try { assert.throws(()=>verifyHost(hNoDump,profileFor(SHA_107)),/m8\/k/); } finally { fs.rmSync(hNoDump,{recursive:true}); }
 const h107b=fakeHost(n107);
 try { const v=verifyHost(h107b,profileFor(SHA_107));assert.equal(v.voiceStop,'Lq8/c;');assert.ok(v.notifications.endsWith('NotificationsHandlerService.smali'));assert.ok(v.sdkPlugin.endsWith('/f.smali')); } finally { fs.rmSync(h107b,{recursive:true}); }
-console.log('Host profile tests passed (23 assertions).');
+console.log('Host profile tests passed (26 assertions).');
