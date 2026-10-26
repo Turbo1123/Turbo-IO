@@ -26,7 +26,9 @@ try {
 function fakeHost(n){
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'turbo-host-abi-'));
   const T='L'+n.transport+'/',S='L'+n.sdk+'/',C='L'+n.core+'/',M=T+n.message+';';
-  const put=(d,lines)=>{const rel=d.slice(1,-1)+'.smali',f=path.join(root,'smali_classes2',rel);fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f,['.class public '+d,...lines].join('\n')+'\n');};
+  // U/u are distinct Java classes but collide on the default macOS filesystem.
+  // apktool uses numbered filenames for those collisions; exercise that layout too.
+  const put=(d,lines)=>{const rel=d.slice(1,-1),base=path.join(root,'smali_classes2',rel);let f=base+'.smali',i=1;while(fs.existsSync(f))f=base+'.'+(i++)+'.smali';fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f,['.class public '+d,...lines].join('\n')+'\n');};
   const outer=n.listener.replace('$c;',';');
   put(n.listener,['.field public final synthetic a:'+outer,'.method public final onAsrResult(Ljava/lang/String;ZLjava/lang/String;)V','.method public final onNlpResult(Lcom/rayneo/airuntime/controller/NlpResult;)V','.method public final onResponseComplete()V']);
   if(!n.noStop)put(outer,['.method public final s(Ljava/lang/String;ZZ)V','    const-string v1, "stop_assistant"','.end method']);
