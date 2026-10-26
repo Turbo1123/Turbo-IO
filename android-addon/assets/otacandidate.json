@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "codeName": "TAP1-TEST-01",
+  "displayName": "TAP1-TEST-01 · 菜单显示TEST",
+  "confirmToken": "TAP1-TEST-01",
+  "baseVersion": "Strix OS 1.0.4.12",
+  "zip": {
+    "size": 9320672,
+    "sha256": "5ef21d8c18501d03fad6edee4fe039649cb567352e30dbd234081ecf97140afa"
+  },
+  "otaSize": 9320672,
+  "ap": {
+    "name": "nuttx_ap.bin",
+    "size": 9590856,
+    "sha256": "65e0a5312361ec785eb9ab1659badf182765f4054d4d95fef4c61ceb49dfa4b4"
+  },
+  "apBudgetBytes": 9600000,
+  "manifest": {
+    "name": "OtaFileInfo.json",
+    "size": 2515,
+    "sha256": "6bad48f6b3ce289bbd104c8cdc9ee219d872ba6e0d331ea3f6843bf2aeaf53b5"
+  },
+  "manifestRestore": {
+    "apSize": 9466560,
+    "apMd5": "9156b9419c3557e9bd72dc61692d0b4b",
+    "canonicalSHA256": "1619382c8f0b69f68ba9b8d346017a2e42dcf7518b5d29fc348659e5eaebed2c"
+  },
+  "stockAPSHA256": "53afdf5298815849eafca6f315a70606d2a605aff2e563f79050f797d615a988",
+  "payloadPins": [
+    { "name": "OtaFileInfo.json", "size": 2515, "sha256": "6bad48f6b3ce289bbd104c8cdc9ee219d872ba6e0d331ea3f6843bf2aeaf53b5" },
+    { "name": "cb_fw_venus.bin", "size": 114592, "sha256": "8799f12071bdac082218e3601c24ab0989275fc2f7db74e37b8314a225c2cf7d" },
+    { "name": "fac_test_img.bin", "size": 1821552, "sha256": "18eb0901c3e0daeae48dd5f015252b6931ea7368f0160c2c985c4e74296d17eb" },
+    { "name": "images.bin", "size": 324283, "sha256": "192fefaa70545856884c89a9186e3f86d8f99a0738b201e116a11bc63011c158" },
+    { "name": "lotties.bin", "size": 651481, "sha256": "ad66d83a3394034f825a12769aad292fc03e59fa865fe06bc43536b918a0b32b" },
+    { "name": "nuttx_ap.bin", "size": 9590856, "sha256": "65e0a5312361ec785eb9ab1659badf182765f4054d4d95fef4c61ceb49dfa4b4" },
+    { "name": "nuttx_apc1.bin", "size": 1420248, "sha256": "97d56ffc6dd575ad3d8bf7739d49e491ad7e4a959db8770b653f5302e171fb5c" },
+    { "name": "nuttx_audio.bin", "size": 1461920, "sha256": "549a72c032595e3829da7d63b7e1fd13cceda1a55dfefa7a7cad02db5a9b42ab" },
+    { "name": "nuttx_bth.bin", "size": 1160160, "sha256": "a8f4594868bffbd3bc08a38d1f3899571608e2d57869d147de3d06f3e4f7a12a" },
+    { "name": "ota_installer_progress.bin", "size": 5616, "sha256": "6fd65d296a667e1a7d94ec129adfd26458a4008ef403b331f855192c36eb3e3f" },
+    { "name": "pil_algo_up_demo_nand.dll", "size": 504388, "sha256": "e266726fe055ac6ec6f785a9440e8da7421402f2b4d3d7889039ad9b94e119c2" },
+    { "name": "pil_algo_vad_demo.dll", "size": 433432, "sha256": "7ac5b5191202adea20c62642987fa0049024dde9c386ba6cd08a1f29ddd5c92c" },
+    { "name": "pil_algo_wakeup_dll_nand.dll", "size": 287560, "sha256": "d1594cb8658b228e52c2606d02f1eab696d35a11ed42ddcb725e76a745f5550f" },
+    { "name": "rives.bin", "size": 689431, "sha256": "836bc019f7152890b94cafafe2edaa024f317526318349f7833319e41158b104" },
+    { "name": "smf.json", "size": 23510, "sha256": "2713dc3a302a65c101fa981500cd8b217766c526b6045bf02db5e9e6763d076d" }
+  ]
+}

@@ -1,5 +1,3 @@
-#include "../app-runtime-v1/app_service.h"
-#include "../didi-v1/ride_service.h"
 #include "nav_service.h"
 #include "../weread-v1/reader_service.h"
 #include "nav_runtime.h"
@@ -28,6 +26,8 @@ extern void *nav_monitors(void),*nav_link(void *),*nav_input(void *);
 extern bool nav_bonded(void *),nav_folded(void *),nav_business_idle(void);
 extern int nav_connection(unsigned);
 extern unsigned native_event_code(void *),native_event_key(void *);
+extern int32_t tio_lv_obj_get_width(void *),tio_lv_obj_get_height(void *);
+extern void native_log(unsigned,unsigned,unsigned,unsigned,const char *,...);
 extern void nav_stop_event(void *);
 extern int tdp_rnlink_send(unsigned,const uint8_t *,unsigned,void *);
 extern void *fm_system(void *);
@@ -47,12 +47,11 @@ static bool safe_home(void){
 static bool owns(Control *c){return !c->retired&&c->slot&&c->app&&ptr(manager(),0x10)==c->app&&word(manager(),0x1c)==1&&same(nav_top_app(),"com.rayneo.liteos.launcher");}
 static bool available(void *ctx){Control *c=ctx;
 #if TIO_MUSIC_RUNTIME
- if(tap_service_visible(c->app))return false;
- if(c->slot&&(dr_slot_visible(c->slot->ride)||tm_slot_visible(c->slot->music)||wr_slot_visible(c->slot->reader)||tf_slot_visible(c->slot->focus)))return false;
+ if(c->slot&&(tm_slot_visible(c->slot->music)||wr_slot_visible(c->slot->reader)||tf_slot_visible(c->slot->focus)))return false;
 #endif
  return !c->retired&&paired()&&safe_home()&&c->slot&&!((M8NativeTail *)((uint8_t *)c->app+0xdc))->page&&(!c->view||c->view->open);}
 static void deleted(void *e){Control *c=stream_event_user(e);if(!c||!c->view)return;
- c->view->root=c->view->icon=c->view->map=NULL;c->view->open=false;c->view->retiring=true;
+ c->view->root=c->view->icon=c->view->map=c->view->bar=NULL;c->view->open=false;c->view->retiring=true;
  (void)tn_native_power(&c->power,TN_POWER_RELEASE,false);c->waiting=false;c->runtime.active=false;c->runtime.last_sid=c->runtime.sid;
 }
 static bool enter(void *ctx,const TNScene *s){
@@ -61,6 +60,9 @@ static bool enter(void *ctx,const TNScene *s){
  /* Use native focus/visibility transition, never just unhide a hidden root. */
  nav_set_state(vm,1);if(!owns(c))return false;
  if(c->view){if(!c->view->open)return false;c->waiting=false;return tn_view_update(c->view,s,false);}
+ /* Container probe: log the launcher surface's real bounds at every session
+  * start so the 540x180 canvas assumption stays verifiable on hardware. */
+ void *surface=ptr(c->app,4);if(surface)native_log(1,0,0,0,"[TurboNav] container=%ldx%ld",(long)tio_lv_obj_get_width(surface),(long)tio_lv_obj_get_height(surface));
  TNWidgets a=tn_lvgl_widgets();if(!a.idle(a.ctx))return false;
  TNView *v=stream_memalign(64,sizeof *v);if(!v)return false;memset(v,0,sizeof *v);
  if(!tn_view_open(v,&a,ptr(c->app,4),s)){stream_free(v);return false;}
@@ -138,7 +140,7 @@ void tn_message_dispatch(const TIONativeMessage *m){
 }
 void m8_hook_vm_event(void *event){
 #if TIO_MUSIC_RUNTIME
- if(tap_service_event(event)||dr_handle_event(event)||tf_handle_event(event)||wr_handle_event(event)||tm_handle_event(event))return;
+ if(tf_handle_event(event)||wr_handle_event(event)||tm_handle_event(event))return;
 #endif
  void *vm=stream_event_user(event),*app=ptr(vm,0x10);TNNavSlot *s=slot_of(app);Control *c=s?s->control:NULL;
  if(c&&c->view&&owns(c)&&native_event_code(event)==0xe){

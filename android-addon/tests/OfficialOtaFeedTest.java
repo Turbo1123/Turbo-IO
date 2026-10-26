@@ -5,6 +5,7 @@ public final class OfficialOtaFeedTest {
  static String request(int port,String target,String extra){return "GET "+target+" HTTP/1.1\r\nHost: 127.0.0.1:"+port+"\r\n"+extra+"\r\n";}
  static Object data(OfficialOtaFeed.Reply r){ok(r.code==200);return BoundedJson.map(BoundedJson.read(r.body)).get("data");}
  public static void main(String[] args)throws Exception{
+  OtaTestSupport.holdCandidate();
   byte[] zip=Files.readAllBytes(Paths.get(args[0]));AtomicLong clock=new AtomicLong(1000);AtomicBoolean guard=new AtomicBoolean(true);
   try(OfficialOtaFeed f=new OfficialOtaFeed(clock::get,guard::get)){
    int port=f.start(0);String query=OfficialOtaFeed.PATHS[1]+"?packageType=firmware&packageName=strix+OS&glassesType=S3&deviceType=android&versionCode=01.00.04.0012";

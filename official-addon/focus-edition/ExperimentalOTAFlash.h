@@ -18,3 +18,6 @@ BOOL TIOOTAFlashAuthorize(NSError **error);
 BOOL TIOOTAFlashCancel(void);
 NSDictionary *TIOOTAFlashStatus(void);
 void TIOOTAFlashDisableAutoUpdateIfRequested(void);
+// Force the official firmware auto-update switch off while the update-check
+// silence is enabled (default). See ExperimentalOTAFlash.m.
+void TIOOTAAutoUpdateDisableForSilence(void);
