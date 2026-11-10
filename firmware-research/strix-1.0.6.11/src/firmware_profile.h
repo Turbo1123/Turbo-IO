@@ -1,0 +1,15 @@
+#ifndef TIO_FIRMWARE_10611_PROFILE_H
+#define TIO_FIRMWARE_10611_PROFILE_H
+/* Confirmed from stock allocation callsites and constructors. This header
+ * describes source layout only; it does not approve function bindings. */
+#define TIO_STOCK_MENU_BYTES 0x10cu
+#define TIO_STOCK_HEAD_BYTES 0x68u
+#define TIO_MENU_SCROLL_POSITION_OFFSET 0xc0u
+#define TIO_MENU_EXTERNAL_ACTION_OFFSET 0x100u
+#define TIO_SYS_TIMEZONE_OFFSET 0x10u
+#endif
+
+#if !defined(TIO10611_MENU_LAYOUT) && !defined(__ASSEMBLER__)
+#define TIO10611_MENU_LAYOUT
+enum { TIO_MENU_STOCK=8, TIO_SLOT_DISPLAY=TIO_MENU_STOCK, TIO_SLOT_NAV, TIO_SLOT_MUSIC, TIO_SLOT_READER, TIO_SLOT_FOCUS, TIO_SLOT_RIDE, TIO_SLOT_APPS, TIO_SLOT_ENGLISH, TIO_SLOT_DOTS, TIO_SLOT_CAMERA, TIO_SLOT_COUNT };
+#endif

@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "baseline": "1.0.6.11",
+  "customChangedPayloads": [
+    "nuttx_ap.bin"
+  ],
+  "unchangedNewStockPayloads": 15,
+  "manifestPayloads": 16,
+  "archiveEntries": 17,
+  "APBytes": 8196152,
+  "APSHA256": "066f43d76dee15ee9c267903982eaddd3f0835066e03ea43827f84d7e764cf5f",
+  "APMD5": "ab2c70e8862539329c06799a13698316",
+  "archiveSHA256": "c03321061605aba186b44e7b90d86d3b13a2f75e081687fc684680e2800a4e8a",
+  "archiveMD5": "5b772ca04eb3e0303f7968715364cb80",
+  "whitelistedPatches": 40,
+  "startupDescriptorsPreserved": 7,
+  "deviceIO": false
+}

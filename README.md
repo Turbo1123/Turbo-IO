@@ -8,11 +8,13 @@
 
 原创代码仅供学习、研究与非商业使用，沿用 [PolyForm Noncommercial 1.0.0](LICENSE)，未经授权不得商用或收费分发。除源码及明确列出的依赖，Release 提供原厂砸壳 IPA 作为 iOS 扩展输入，以及下述 **Android 1.0.5 非官方完整插件 APK / 高风险实验固件**。原厂部分版权仍归各自权利人，不因分发修改包而重新许可。**不提供个人密钥、Cookie、账号、签名私钥，亦不提供合并后的 IPA / HAP**；第三方服务由用户自行配置。
 
-**文档更新：2026-10-23** · 日期表示文档整理或所注明的实测记录，不代表当天全量回归。
+**文档更新：2026-11-10** · 日期表示文档整理或所注明的实测记录，不代表当天全量回归。
 
-**最新实验更新：[TVP2 / TAR2 · 540×220 原生清晰投屏](#tvp2-tar2-update)** · [固件与校验下载](https://github.com/Turbo1123/Turbo-IO/releases/tag/tvp2-tar2-20261023) · [安装与测试说明](docs/TVP2_TAR2.md)。另一台设备投到iPhone，再传到眼镜；完整画面/局部放大、灰阶可调，用户实测反馈通过。**AirPlay接收模块单独采用GPLv3，见[局部许可说明](official-addon/tar2-airplay/README.md)；其余目录许可不变。** 此功能本轮仅适配iOS，需要TVP2，不提供个人合并IPA，锁屏/后台接收不支持。
+**2026-11-10 · 雷鸟 AI iOS 1.0.21（构建 1）与 Strix OS 1.0.6.11** · [下载自定义固件、原厂固件、原厂解密 IPA 和 SHA-256](https://github.com/Turbo1123/Turbo-IO/releases/tag/strix-10611-tmig2-video-r1)。TMIG2-VIDEO-R1 修复眼镜全屏视频握手超时，新增抬头唤醒故障诊断。发布的源码可重建相同 ZIP。17 Pro Max 已核对 R1 的全部 17 个解压文件，视频修复已通过 ARM 离线回放，真机播放待验收。TBV3 独立蓝牙测速仍有已知问题。[刷写、验证和固件源码](firmware-research/strix-1.0.6.11/README.md) · [恢复原厂](firmware-research/strix-1.0.6.11/stock/README.md) · [原厂 IPA 说明](official-apps/ios/1.0.21/README.md)
 
-**最新手机适配：[iOS 1.0.7（230）· APP107](#ios107-update)** · [源码 / 构建](official-addon/ios107-edition/README.md)。iPhone 17 Pro Max 用户实测正常，**通过 1.0.7 官方升级流程刷入 TMG2 已成功，OTA 通道现已开放**。沿用原样 TMG2，无需因手机升级重复刷写；保留校验和单次授权。[刷机步骤与刷后收尾](official-addon/ios107-edition/OTA.md)。不提供合并或个人签名 IPA。
+**上一版实验更新：[TVP2 / TAR2 · 540×220 原生清晰投屏](#tvp2-tar2-update)** · [固件与校验下载](https://github.com/Turbo1123/Turbo-IO/releases/tag/tvp2-tar2-20261023) · [安装与测试说明](docs/TVP2_TAR2.md)。另一台设备投到iPhone，再传到眼镜；完整画面/局部放大、灰阶可调，用户实测反馈通过。**AirPlay接收模块单独采用GPLv3，见[局部许可说明](official-addon/tar2-airplay/README.md)；其余目录许可不变。** 此功能本轮仅适配iOS，需要TVP2，不提供个人合并IPA，锁屏/后台接收不支持。
+
+**1.0.7 手机适配：[iOS 1.0.7（230）· APP107](#ios107-update)** · [源码 / 构建](official-addon/ios107-edition/README.md)。iPhone 17 Pro Max 用户实测正常，**通过 1.0.7 官方升级流程刷入 TMG2 已成功，OTA 通道现已开放**。沿用原样 TMG2，无需因手机升级重复刷写；保留校验和单次授权。[刷机步骤与刷后收尾](official-addon/ios107-edition/OTA.md)。不提供合并或个人签名 IPA。
 
 **导航实验版：[NAVS3 矢量导航 + TMG2 可选排数菜单](#navs3-update)** · [iOS 1.0.6 配套源码](official-addon/navs3-edition/README.md) · [原样固件 / 校验下载](https://github.com/Turbo1123/Turbo-IO/releases/tag/navs3-tmg2-20261019)。选择起终点即可模拟新版小地图；修正路网缓存过早清空与路名锚点。**锁屏导航卡住仍未解决，非稳定版。** 已有 TMG2 只需更新手机插件，不用重刷；不提供合并 IPA。
 
@@ -47,6 +49,7 @@ MCP 在**用户自己的 Server** 上运行，眼镜不运行 MCP、浏览器或
 | 你的目标 | 现在提供什么 | 从这里开始 |
 | --- | --- | --- |
 | **在 Android 使用插件** | 官方 1.0.5（201）宿主已合并 Turbo IO 的完整实验 APK；不用自己合并，服务配置自行填写 | [下载 APK / 配套固件](https://github.com/Turbo1123/Turbo-IO/releases/tag/android-105-guard07-tap1-test01) → [安装与刷机教程](android-addon/docs/INSTALL_AND_FLASH.md) |
+| **研究最新 iOS 和固件** | iOS 1.0.21（1）原厂解密、未签名 IPA；1.0.6.11 原厂 ZIP、R1 自定义 ZIP 与可复现固件源码。刷 R1 需要已集成匹配插件的手机端 | [版本与操作说明](firmware-research/strix-1.0.6.11/README.md) |
 | **在 iPhone 使用插件（V2）** | 自行合并、签名、安装，**不提供合并 IPA**。1.0.7（230）APP107 继承 NAVS3，**TMG2 OTA 已实刷开放**；已有 TMG2 不必重刷，其他版本门禁不能移用 | [1.0.7 适配](official-addon/ios107-edition/README.md) · [刷机教程](official-addon/ios107-edition/OTA.md) · [1.0.6 NAVS3](official-addon/navs3-edition/README.md) |
 | **开发自己的仪表盘 / 小应用** | 自托管 API、Python / MCP、20 个模板、Agent Skill；先在电脑生成卡片或 ZIP 并预览，再接入匹配手机和运行时 | [开发 SDK 教程](docs/DEVELOPER_ECOSYSTEM.md) · [模板](app-gallery/README.md) · [Skill](skills/turboio-developer/SKILL.md) |
 | **只看效果 / 离线学习** | Web UI、模板、SVG 预览与本机测试；不要求设备、服务 Key 或刷机，不等于真机验收 | [Web 预览](#web-显示预览与观察台) · [模板离线入门](docs/DEVELOPER_ECOSYSTEM.md#1-十分钟离线入门) |
@@ -65,6 +68,7 @@ MCP 在**用户自己的 Server** 上运行，眼镜不运行 MCP、浏览器或
 
 | 日期 | 更新 | 公开范围 |
 | --- | --- | --- |
+| 2026-11-10 | [1.0.6.11 · TMIG2-VIDEO-R1](firmware-research/strix-1.0.6.11/README.md) · [iOS 1.0.21（1）](official-apps/ios/1.0.21/README.md) | 迁移新版原厂底座与 OTA，修复全屏视频握手，公开原厂与自定义固件、可复现源码、去签名原厂 IPA。已知 TBV3 测速仍会超时。 |
 | 2026-10-23 | [TVP2 / TAR2 原生清晰投屏](#tvp2-tar2-update) | 540×220点对点、完整画面/局部放大/灰阶；用户在iPhone 17 Pro Max实测反馈通过；公开原样固件、可复现构建、高清传输代码和独立GPLv3接收SDK，不含个人合并IPA/账号/视频 |
 | 2026-10-19 | [原厂 iOS 1.0.7（230）砸壳 · 去签名输入](official-apps/ios/1.0.7/README.md) | 未合并 Turbo IO；95 个代码签名及商店授权元数据移除；附 SHA-256 与审计，支持最新版 APP107 打包器，自行合并签名 |
 | 2026-10-19 | [iOS 1.0.7（230）APP107 兼容适配与 OTA 开放](#ios107-update) | iPhone 17 Pro Max 功能反馈正常，通过 1.0.7 官方升级流程实刷 TMG2 成功；公开脱敏源码、专用查询适配与打包工具，保留完整校验和单次授权；继承 NAVS3，固件原样沿用 |
