@@ -89,5 +89,7 @@ export function verifyHost(root,profile) {
     if(!fs.readFileSync(classFile(root,S+'h;'),'utf8').includes('"MARS_FOTA"'))throw new Error('Missing MARS_FOTA');
     ota={queue,sender,queueClass:abi.queue,senderClass:T+'u;',message:M,queueHeader,fileHeader,fileMethod:abi.file};
   }
-  return {listener,activity,event,ota,abi,voiceStop,notifications,sdkPlugin,version:profile.version,code:profile.code};
+  // No verified final-transcript listener on these hosts. abi.alwaysOn is the
+  // audio dump controller, not the old onAlwaysOnResponse listener.
+  return {listener,activity,event,ota,abi,voiceStop,notifications,sdkPlugin,ambientFinalListener:null,version:profile.version,code:profile.code};
 }

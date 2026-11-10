@@ -1,10 +1,18 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")"
-sdk="${ANDROID_SDK_ROOT:?Set ANDROID_SDK_ROOT}"
+sdk="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+: "${sdk:?Set ANDROID_SDK_ROOT}"
 build_tools="$sdk/build-tools/36.0.0"
 android_jar="$sdk/platforms/android-36/android.jar"
 mkdir -p build/classes build/test build/dex
+javac -encoding UTF-8 -source 8 -target 8 -d build/test \
+  src/com/turboio/addon/{AlwaysOnConsume,RayneoAuthDiagnostic,RayneoCaptureSupport,RayneoContextQueue,RayneoCurrentQuestion,RayneoContextProtocol,RayneoQueryBridge,RayneoSourceIdentity}.java \
+  tests/{AlwaysOnContextTest,AlwaysOnContractTest,AlwaysOnWindowTest,RayneoAuthDiagnosticTest}.java
+for test in AlwaysOnContextTest AlwaysOnContractTest AlwaysOnWindowTest com.turboio.addon.RayneoAuthDiagnosticTest; do
+  java -cp build/test "$test"
+done
+node --test tests/HostCallbacksTest.mjs tests/AlwaysOnEntryTest.mjs package-105.test.mjs examples/query-context.test.mjs
 javac -encoding UTF-8 -d build/test src/com/turboio/addon/HostBusiness.java tests/HostBusinessTest.java
 java -cp build/test com.turboio.addon.HostBusinessTest
 node tests/HostProfilesTest.mjs
@@ -175,8 +183,9 @@ javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/t
 java -cp build/test com.turboio.addon.GlassesLogTest
 javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/GlassesLogFiles.java tests/GlassesLogFilesTest.java
 java -cp build/test com.turboio.addon.GlassesLogFilesTest
-javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{BoundedJson,HostBusiness,TodoProtocol,ToolTurn}.java tests/TodoProtocolTest.java
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{BoundedJson,HostBusiness,TodoProtocol,ToolTurn,RayneoCaptureSupport}.java tests/TodoProtocolTest.java tests/RayneoToolTurnTest.java
 java -cp build/test com.turboio.addon.TodoProtocolTest
+java -cp build/test com.turboio.addon.RayneoToolTurnTest
 mkdir -p build/test/hd-golden
 VPF=../firmware-research/strix-1.0.5.5-tvp2/src/video-player-v1
 cc -Wall -Wextra -Werror -I$VPF tests/hd_golden.c $VPF/player.c -o build/test/hd-golden/generate
@@ -196,7 +205,7 @@ javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/Vo
 java -cp build/test com.turboio.addon.VoiceExitTest
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/{CloudTts,BoundedJson}.java tests/CloudTtsTest.java
 java -cp build/test com.turboio.addon.CloudTtsTest
-javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{BoundedWebSocket,ReaderCodec}.java tests/WebSocketFrameTest.java
+javac -encoding UTF-8 -source 8 -target 8 -cp build/test -d build/test src/com/turboio/addon/{BoundedWebSocket,ReaderCodec,MusicCodec}.java tests/WebSocketFrameTest.java
 java -cp build/test com.turboio.addon.WebSocketFrameTest
 java -cp build/test ChatPolicyTest
 javac -encoding UTF-8 -source 8 -target 8 -d build/test src/com/turboio/addon/SpeechBuffer.java tests/SpeechBufferTest.java
