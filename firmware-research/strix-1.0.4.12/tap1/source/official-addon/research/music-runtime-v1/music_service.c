@@ -1,5 +1,3 @@
-#include "../app-runtime-v1/app_service.h"
-#include "../didi-v1/ride_service.h"
 #include "music_service.h"
 #include "../weread-v1/reader_service.h"
 #include "music.h"
@@ -73,7 +71,7 @@ static bool render(Control *c,uint32_t now){if(!c->root||c->closing||!c->api.idl
  c->api.text_static(NULL,c->labels[5],f->title);c->api.text_static(NULL,c->labels[6],f->status);c->front=1-c->front;c->last_frame=now;return true;
 }
 static bool enter(Control *c){if(!owns(c)||!paired()||c->closing)return false;
- if(c->root)return wake(c);TNNavSlot *n=navslot(c->app);if(!n||tap_service_visible(c->app)||dr_slot_visible(n->ride)||tf_slot_visible(n->focus)||tn_slot_visible(n)||wr_slot_visible(n->reader)||((M8NativeTail *)((uint8_t *)c->app+0xdc))->page)return false;
+ if(c->root)return wake(c);TNNavSlot *n=navslot(c->app);if(!n||tf_slot_visible(n->focus)||tn_slot_visible(n)||wr_slot_visible(n->reader)||((M8NativeTail *)((uint8_t *)c->app+0xdc))->page)return false;
  /* setState synchronously hides the previous launcher/menu view. At this
   * point we own no music widgets yet: that hide is not a user music exit.
   * Keep the just-accepted OPEN state through this one focus transition;

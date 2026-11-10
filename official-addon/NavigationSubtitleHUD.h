@@ -3,9 +3,12 @@
 NSDictionary *TIOSubtitleNavigationStatus(void);
 BOOL TIOSubtitleConfirmIdle(void); // Call only after explicit lens-idle confirmation.
 NSString *TIOSubtitleNavigationStart(void);
+NSString *TIOSubtitleRealtimeNavigationStart(void);
 BOOL TIOSubtitleNavigationText(NSString *sid,NSString *text);
 void TIOSubtitleNavigationStop(NSString *sid,NSString *reason);
 NSString *TIONavSubtitleText(NSDictionary *frame);
+BOOL TIONavSubtitleSimulated(NSDictionary *frame);
+BOOL TIONavSubtitleRealtime(NSDictionary *frame);
 @interface TIONavSubtitleHUD:NSObject
 @property(readonly) NSDictionary *status;
 - (BOOL)startWithFrame:(NSDictionary *)frame at:(NSTimeInterval)now;

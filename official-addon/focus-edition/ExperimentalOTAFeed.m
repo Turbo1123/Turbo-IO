@@ -68,6 +68,10 @@ static void Reply(int fd,NSInteger status,NSData *body,NSString *mime,NSDictiona
 #if !TIO_OTA_FEED_ARMING_ENABLED
     (void)url;(void)seconds;if(error)*error=FeedError(@"刷机门禁尚未开放：需先验收官方入口与同版本缓存。");return NO;
 #else
+    // 刷机红线（自启动闸门移入此处，语义更准）：提供实验固件（武装）仅限官方
+    // 包名宿主。自定义包名的日常构建里本机应答器只答「无更新」，无论 UI 操作
+    // 走到哪一步都不能进入武装路径。
+    if(![NSBundle.mainBundle.bundleIdentifier isEqual:@"com.rayneo.venus.pub"]){if(error)*error=FeedError(@"实验升级来源的宿主身份不匹配，拒绝提供实验包。");return NO;}
 #if TARGET_OS_IPHONE
     if(!TIOOTAPreparationProtected()&&!TIOOTAFlashProtected()){if(error)*error=FeedError(@"未确认发送保护，拒绝提供实验包。");return NO;}
 #endif
@@ -174,8 +178,14 @@ void TIOStartExperimentalOTAFeedIfMarked(void){
     static dispatch_once_t once;
     dispatch_once(&once,^{
         NSBundle *bundle=NSBundle.mainBundle;
-        if(![[bundle objectForInfoDictionaryKey:@"TIOExperimentalOTAQueryRouting"] isEqual:@"ios105-tfp1-loopback-disabled"]&&!TIOOTAPreparationBuild()&&!TIOOTAFlashBuild())return;
-        if(![bundle.bundleIdentifier isEqual:@"com.rayneo.venus.pub"]||![[bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] isEqual:@"1.0.5"]||![[bundle objectForInfoDictionaryKey:@"CFBundleVersion"] isEqual:@"201"]){BootstrapFailure=@"实验升级来源的宿主版本不匹配";return;}
+        // IKLAZ2 v2：URL 补丁随 focus 构建进入 merged 日常包（自定义 Bundle ID，
+        // 且该构建 TIO_OTA_FEED_ARMING_ENABLED=1），更新检查会被打到本机回环端口
+        // ——应答器必须常驻，否则官方把连接拒绝渲染成「软件更新检查失败」全屏页。
+        // 610a993 曾按「刷机构建必须官方包名」设门，但日常包本身就是刷机宏构建，
+        // 被该门挡死（真机无效）。改为：启动只要求宿主 1.0.5/201 且 App 内回环
+        // 补丁字节在场（下方校验），未武装时对一切检查只回「无更新」；「官方包名」
+        // 红线移入 armArchive——武装（提供固件）仅限官方宿主，红线保留未删。
+        if(![[bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] isEqual:@"1.0.5"]||![[bundle objectForInfoDictionaryKey:@"CFBundleVersion"] isEqual:@"201"]){BootstrapFailure=@"实验升级来源的宿主版本不匹配";return;}
         // Read only two fixed string records. Code signing is handled by packaging;
         // this check prevents starting a feed with an unpatched/mismatched host.
         NSString *file=[bundle.bundlePath stringByAppendingPathComponent:@"Frameworks/App.framework/App"];

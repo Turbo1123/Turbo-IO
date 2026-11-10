@@ -48,3 +48,13 @@ int tce_native(void *raw){
  for(unsigned i=0;i<s->document.count;i++)if(!add(root,owner,&s->document.items[i])){tio_lv_obj_delete(root);stream_free(s);return -1;}
  stream_free(s);*(void **)((uint8_t *)ctx[1]+0xa8)=root;dc_hints(ctx,root);dc_weight(ctx[1],root);return 0;
 }
+extern int stock_dc_text(void *);
+/* dc_text hook entry: TCE1 dashboard cards render natively here; every other
+ * surface falls through to the stock renderer. The old third branch (the
+ * author's private TDC1 template card) was removed together with dashboard-v1:
+ * its surface literal and icon data were never committed, and no user card
+ * ever matched it. */
+int m8_hook_dc_text(void *raw){
+ if(tce_owns(raw))return tce_native(raw);
+ return stock_dc_text(raw);
+}

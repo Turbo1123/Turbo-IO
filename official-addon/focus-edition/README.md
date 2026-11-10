@@ -4,6 +4,22 @@
 
 [FOCUS-04 固件、风险与升级说明](../../firmware-research/strix-1.0.4.12/native-navigation/focus/README.md) · [完整更新海报](../../docs/screenshots/midautumn-update-20260925.png)
 
+## 2026-10 更新：实时导航投屏修复与 TCE1 卡片
+
+- **实时导航眼镜字幕**：此前字幕直传仅开放模拟导航；现在“实时导航”同样可投眼镜字幕（与 Android GUARD-07 行为对齐）。实时会话为 20 分钟／2400 帧保护（到期可重新开启），定位弱／重新规划时显示安全提示行而不中断会话；模拟会话维持 4 分钟／80 帧验收上限。字幕更新仍要求保持导航页前台，驾车时请勿操作。
+- **TCE1 图形卡片发布（可选构建）**：`TIO_APP_SDK=1` 构建宏下补齐 `dashboard-editor-v1` 参考模块缺失的手机侧实现——草稿校验（EditorModel）、TCE1 编码器（对齐 Android CardCodec，含 16 个内置图标与 6 个模板）、发布通道（读取基线 → 安装/移除 → 回查其他卡片未受影响 → 置顶 → 再回查，全程不重试）与入口页面（模板发布、JSON 草稿粘贴、只读回查、移除本工具卡片）。卡片经既有 A2UI `widget_install` 通道下发，写卡同样需要含 TCE1 运行时的实验固件；旧固件只会拒绝或忽略，不会损坏已有卡片。可视化拖拽编辑仍在研究路线，本入口面向“草稿 → 手机确认 → 眼镜”流程。
+- **高德语音导航升级**：语音选点全链路（触发→周边搜索→流式候选→语音选择→算路→上镜）与 TNV1 HUD 路况扩展（路况柱状图、测速/事件/红绿灯三类标记、红绿灯真距离）详见[高德语音导航文档](../../docs/AMAP_VOICE_NAVIGATION.md)。
+
+构建示例（在原完整实验版基础上加 `TIO_APP_SDK=1`）：
+
+```sh
+TIO_AMAP_ENABLED=1 TIO_AMAP_SDK_ROOT=/absolute/Turbo-IO/official-addon/build/amap-sdk \
+TIO_OTA_FLASH_ENABLED=1 TIO_IMAGE_RX_LAB=1 TIO_IMAGE_RX_WIDE=1 \
+TIO_DISPLAY_PHONE=1 TIO_DISPLAY_FLASH=1 TIO_APP_SDK=1 \
+bash official-addon/focus-edition/build.sh embedded com.rayneo.venus.pub
+```
+
+
 ## 包含什么
 
 - Turbo IO 插件深色新 UI、首页眼镜入场动画、四张功能卡与底部导航；不修改官方原有业务页面。

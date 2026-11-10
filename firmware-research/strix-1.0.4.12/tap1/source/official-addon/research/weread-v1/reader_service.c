@@ -1,5 +1,3 @@
-#include "../app-runtime-v1/app_service.h"
-#include "../didi-v1/ride_service.h"
 #include "reader_service.h"
 #include "reader_view.h"
 #include "reader_input.h"
@@ -62,7 +60,7 @@ static void close_view(Control *c){if(!c)return;c->closing=true;c->opening=false
 static void deleted(void *e){Control *c=stream_event_user(e);if(!c)return;c->view.root=NULL;c->view.open=false;close_view(c);}
 static unsigned entry_guard(Control *c){
  if(c->closing)return 3;if(!owns(c))return 1;if(!paired())return 2;
- TNNavSlot *n=navslot(c->app);if(!n||tap_service_visible(c->app)||dr_slot_visible(n->ride)||tf_slot_visible(n->focus)||tn_slot_visible(n)||tm_slot_visible(n->music)||((M8NativeTail *)((uint8_t *)c->app+0xdc))->page)return 4;
+ TNNavSlot *n=navslot(c->app);if(!n||tf_slot_visible(n->focus)||tn_slot_visible(n)||tm_slot_visible(n->music)||((M8NativeTail *)((uint8_t *)c->app+0xdc))->page)return 4;
  return 0;
 }
 static void advance_open(Control *c){

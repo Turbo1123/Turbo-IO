@@ -24,6 +24,10 @@ if [[ ${TIO_AMAP_ENABLED:-0} == 1 ]]; then
   nav_options+=(-F "$nav_root/search" -framework AMapSearchKit)
 fi
 sdk_path=$(xcrun --sdk iphoneos --show-sdk-path)
+# Embed the pinned OTA candidate descriptor (single source of truth, shared with
+# watch-remote/flash_check.py and the Android assets) as C byte arrays.
+candidate_file=${TIO_OTA_CANDIDATE:-candidates/tfp1-focus-04.json}
+python3 gen_otacandidate.py "$candidate_file" build/OTACandidate.gen.m
 link_options=()
 if [[ ${TIO_OTA_FLASH_ENABLED:-0} == 1 ]]; then
   [[ ${TIO_OTA_PREPARATION_ENABLED:-0} != 1 && "$mode" == embedded ]] || { echo 'Flash gate requires separate embedded build' >&2; exit 2; }
@@ -52,17 +56,27 @@ if [[ ${TIO_DISPLAY_FLASH:-0} == 1 ]]; then
   [[ ${TIO_DISPLAY_PHONE:-0} == 1 && ${TIO_OTA_FLASH_ENABLED:-0} == 1 && "$mode" == embedded ]] || exit 2
   link_options+=(-DTIO_DISPLAY_FLASH=1)
 fi
+# TCE1 dashboard card phone modules. The glasses side needs a matching
+# experimental firmware with the TCE1 surface; older FOCUS-04 stops at
+# the host preview and never sends unknown files.
+app_options=()
+if [[ ${TIO_APP_SDK:-0} == 1 ]]; then
+  [[ "$mode" == embedded ]] || { echo 'App SDK is private embedded only' >&2; exit 2; }
+  app_options+=(-DTIO_APP_SDK=1 AppBridge.m AppPackage.m AppTransport.m app.c app_command.c app_runner.c app_store.c app_view.c EditorModel.m EditorCodec.m EditorBackend.m EditorTransport.m EditorUI.m editor.c)
+fi
 if [[ ${TIO_CLASSIC_BINDINGS:-0} == 1 ]]; then
   link_options+=(-Wl,-no_fixup_chains)
 fi
 xcrun --sdk iphoneos clang -arch arm64 -isysroot "$sdk_path" -miphoneos-version-min=16.0 \
   -fobjc-arc -fmodules -dynamiclib -Wall -Wextra -Wno-unused-parameter -Wno-incompatible-pointer-types \
   -framework Foundation -framework UIKit -framework Security -framework UniformTypeIdentifiers -framework CoreLocation -framework AVFAudio \
-  LocalTranslationEntry.m ExperimentalOTA.m ExperimentalOTAGuard.m ExperimentalOTAFlash.m ExperimentalOTAFeed.m ExperimentalOTAUI.m NavigationModes.m ProtocolContext.m NavigationSubtitleHUD.m NavigationPlaces.m NavigationPlacePicker.m \
+  ExperimentalOTA.m ExperimentalOTAGuard.m ExperimentalOTAFlash.m ExperimentalOTAFeed.m ExperimentalOTAUI.m NavigationModes.m ProtocolContext.m NavigationSubtitleHUD.m NavigationPlaces.m NavigationPlacePicker.m \
+  build/OTACandidate.gen.m \
   ${nav_options[@]+"${nav_options[@]}"} \
   ${image_options[@]+"${image_options[@]}"} \
+  ${app_options[@]+"${app_options[@]}"} \
   "-DTIO_TARGET_BUNDLE_ID=\"$bundle\"" -install_name "$install_name" ${link_options[@]+"${link_options[@]}"} \
-  Core.m Profile.m ProfileUI.m KnowledgeClient.m KnowledgeUI.m HomeTabLayout.m HomeTabBridge.m ResearchCatalog.m ResearchUI.m NewsPresentation.m PrivateBootstrap.m WebSearch.m TodoProtocol.m TodoRuntime.m A2UIProtocol.m A2UIProbe.m NavigationCore.m NavigationTeleHUD.m NavigationTransport.m NavigationUI.m ManualHUD.m SubtitleHUDCore.m SubtitleHUD.m GlassesLogContract.m GlassesLogGate.m GlassesLogProbe.m NewsCore.m NewsArchive.m NewsReader.m NewsTeleprompter.m RecordingExports.m RecordingExportsUI.m RecordingExportsMenu.m RecordingText.m RecordingTextUI.m RecordingTextMenu.m AlwaysOnAudioFiles.m AlwaysOnOgg.m AlwaysOnAudioNative.m AlwaysOnAudioUI.m TDPhoneStore.m TDPhoneRun.m TDPhoneUI.m TDPhoneReply.m TDPhoneBridge.m TDTransport.m diagnostics.c command.c WeReadAPI.m FocusTransport.m FocusBridge.m focus.c ReaderTransport.m ReaderBridge.m ReadingOverview.m ReadingContent.m ReaderUI.m reader.c -lz -lxml2 -I"$(xcrun --sdk iphoneos --show-sdk-path)/usr/include/libxml2" VoiceTTSCore.m VoiceTTS.m MusicAPI.m MusicTransport.m MusicBridge.m MusicPlayer.m MusicUI.m music.c -framework AVFoundation -framework MediaPlayer -framework CoreImage -framework ImageIO Addon.m -o "$output"
+  Core.m Profile.m ProfileUI.m KnowledgeClient.m KnowledgeUI.m HomeTabLayout.m HomeTabBridge.m ResearchCatalog.m ResearchUI.m NewsPresentation.m PrivateBootstrap.m WebSearch.m TodoProtocol.m TodoRuntime.m A2UIProtocol.m A2UIProbe.m NavigationCore.m NavigationTeleHUD.m NavigationTransport.m NavigationUI.m ManualHUD.m SubtitleHUDCore.m SubtitleHUD.m GlassesLogContract.m GlassesLogGate.m GlassesLogProbe.m NewsCore.m NewsArchive.m NewsReader.m NewsTeleprompter.m RecordingExports.m RecordingExportsUI.m RecordingExportsMenu.m RecordingText.m RecordingTextUI.m RecordingTextMenu.m AlwaysOnAudioFiles.m AlwaysOnOgg.m AlwaysOnAudioNative.m AlwaysOnAudioUI.m TDPhoneStore.m TDPhoneRun.m TDPhoneUI.m TDPhoneReply.m TDPhoneBridge.m TDTransport.m diagnostics.c command.c WeReadAPI.m FocusTransport.m FocusBridge.m focus.c ReaderTransport.m ReaderBridge.m ReadingOverview.m ReadingContent.m ReaderUI.m reader.c -lz -lxml2 -I"$(xcrun --sdk iphoneos --show-sdk-path)/usr/include/libxml2" MusicAPI.m MusicTransport.m MusicBridge.m MusicPlayer.m MusicUI.m music.c -framework AVFoundation -framework MediaPlayer -framework CoreImage -framework ImageIO Addon.m -o "$output"
 codesign --force --sign - "$output"
 plutil -lint TurboIOPrivateAddon.plist
 shasum -a 256 "$output"

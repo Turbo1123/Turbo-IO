@@ -8,13 +8,22 @@ static BOOL Text(id v){return [v isKindOfClass:NSString.class]&&[v length]>0&&[v
 void TIOProtocolObserveCall(id plugin,NSString *method,NSDictionary *args){
     if(![args isKindOfClass:NSDictionary.class])return;
     if([method hasPrefix:@"rayneonet_"]&&([method.lowercaseString containsString:@"disconnect"]||[method.lowercaseString containsString:@"unbind"]||[method.lowercaseString containsString:@"unpair"])){if(!args[@"deviceId"]||[args[@"deviceId"] isEqual:CurrentDevice]){CurrentPlugin=nil;CurrentDevice=nil;}return;}
-    if(![@[@"rayneonet_sendMessage",@"rayneonet_sendFile"] containsObject:method]||!plugin||!Text(args[@"deviceId"]))return;
+    // Learn the target from ANY host rayneonet_* call carrying a deviceId, not
+    // just sendMessage/sendFile: connect/status calls fill the cache too, so a
+    // background voice navigation can address the glasses without waiting for
+    // the host to happen to send something.
+    if(![method hasPrefix:@"rayneonet_"]||!plugin||!Text(args[@"deviceId"]))return;
     CurrentPlugin=plugin;CurrentDevice=[args[@"deviceId"] copy];
 }
 void TIOProtocolObserveEvent(NSDictionary *e){
     // Unknown events cannot establish a target or resurrect a dead plugin.
     if(![e isKindOfClass:NSDictionary.class])return;
-    if([e[@"eventType"] isEqual:@"messageReceived"]){id m=e[@"message"];if([m isKindOfClass:NSDictionary.class]&&CurrentDevice&&Text(m[@"deviceId"])&&![m[@"deviceId"] isEqual:CurrentDevice]){CurrentDevice=nil;CurrentPlugin=nil;}}
+    if([e[@"eventType"] isEqual:@"messageReceived"]){id m=e[@"message"];if([m isKindOfClass:NSDictionary.class]){
+        // The glasses' inbound events (which arrive in background too) carry the
+        // deviceId -- use one to fill a MISSING target. Plugin must already be
+        // known from a host call; mismatched ids still invalidate as before.
+        if(CurrentPlugin&&!CurrentDevice&&Text(m[@"deviceId"])){CurrentDevice=[m[@"deviceId"] copy];return;}
+        if(CurrentDevice&&Text(m[@"deviceId"])&&![m[@"deviceId"] isEqual:CurrentDevice]){CurrentDevice=nil;CurrentPlugin=nil;}}}
 }
 id TIOProtocolPlugin(void){return CurrentPlugin;}
 NSString *TIOProtocolDevice(void){return CurrentPlugin?CurrentDevice:nil;}

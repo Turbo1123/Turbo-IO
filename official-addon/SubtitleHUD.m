@@ -72,6 +72,14 @@ NSString *TIOSubtitleNavigationStart(void){
     if(![Trial startNavigationWithPreview:Preview stop:Stop now:Now()])return nil;
     return Trial.sid;
 }
+NSString *TIOSubtitleRealtimeNavigationStart(void){
+    // Real navigation keeps the same foreground/idle-confirm gate as the legacy
+    // simulation session; only the frame/time budget is extended.
+    Ensure();if(!NSThread.isMainThread||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive||!Available()||!ConfirmedIdle||Now()-ConfirmedAt>=120||Trial.active)return nil;
+    ConfirmedIdle=NO;TextPending=NO;
+    if(![Trial startRealtimeNavigationWithPreview:Preview stop:Stop now:Now()])return nil;
+    return Trial.sid;
+}
 BOOL TIOSubtitleNavigationText(NSString *sid,NSString *text){return NSThread.isMainThread&&Trial.navigation&&[Trial.sid isEqual:sid]&&!TextPending&&[Trial sendNavigationText:text now:Now()];}
 void TIOSubtitleNavigationStop(NSString *sid,NSString *reason){if(NSThread.isMainThread&&Trial.navigation&&[Trial.sid isEqual:sid])[Trial stop:reason now:Now()];}
 void TIOSubtitleObserveCall(id plugin,NSString *method,NSDictionary *args){

@@ -12,8 +12,6 @@ typedef struct {void *row,*label,*icon,*dot,*app,*control;
 #endif
  uint32_t back_until;
  void *quad;
- void *ride;
- void *apps;
 } TNNavSlot;
 static inline bool tf_back_blocked(TNNavSlot *s,uint32_t now){return s&&s->back_until&&(int32_t)(s->back_until-now)>0;}
 TNNavSlot *tn_slot_create(void *app);

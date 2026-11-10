@@ -15,6 +15,10 @@
 #import "GlassesLogProbe.h"
 #import "NavigationTransport.h"
 #import "SubtitleHUD.h"
+#if TIO_APP_SDK
+#import "AppBridge.h"
+#import "EditorTransport.h"
+#endif
 #import "ExperimentalOTAGuard.h"
 #import "ExperimentalOTAFlash.h"
 #import <UIKit/UIKit.h>
@@ -71,8 +75,17 @@ static void MethodHook(id self,SEL cmd,id call,id result){
 #endif
     if(otaBlocked){if(result)((void(^)(id))result)(@{@"success":@NO,@"message":@"Turbo IO transfer gate: not authorized or packet mismatch"});return;}
     if(TIOOTABlockPreparationCall(call)){if(result)((void(^)(id))result)(@{@"success":@NO,@"message":@"Turbo IO OTA preparation only: outbound traffic blocked"});return;}
+    // Outbound business-9 frames are counted here but never blocked: a blocked
+    // version read leaves the official BLE request pending until timeout and
+    // jams whatever the app queues behind it. The update prompt is silenced on
+    // the inbound side instead (TIOOTARewriteVersionReply in the Send hook).
+    TIOOTAUpdateCheckBlockCall(call);
     if(TIOGlassesLogBlockCall(call)){if(result)((void(^)(id))result)(@{@"success":@NO,@"message":@"本机日志研究任务隔离中，未重复请求"});return;}
-    {NSString *method=Get(call,@"method");id args=Get(call,@"arguments");if([args isKindOfClass:NSDictionary.class]){void(^work)(void)=^{TIOProtocolObserveCall(self,method,args);TIONewsTeleObserveCall(self,method,args);TIOA2UIObserveCall(self,method,args);TIOGlassesLogObserveCall(self,method,args);TIONavObserveCall(self,method,args);TIOSubtitleObserveCall(self,method,args);};if(NSThread.isMainThread)work();else dispatch_async(dispatch_get_main_queue(),work);}}
+    {NSString *method=Get(call,@"method");id args=Get(call,@"arguments");if([args isKindOfClass:NSDictionary.class]){void(^work)(void)=^{TIOProtocolObserveCall(self,method,args);TIONewsTeleObserveCall(self,method,args);TIOA2UIObserveCall(self,method,args);TIOGlassesLogObserveCall(self,method,args);TIONavObserveCall(self,method,args);TIOSubtitleObserveCall(self,method,args);
+#if TIO_APP_SDK
+        TCECardObserveCall(self,method,args);
+#endif
+        };if(NSThread.isMainThread)work();else dispatch_async(dispatch_get_main_queue(),work);}}
     if([Get(call,@"method") isEqual:@"rayneonet_sendMessage"]){id args=Get(call,@"arguments");if([args isKindOfClass:NSDictionary.class]&&[args[@"businessId"] isEqual:@22]){void (^work)(void)=^{ObserveSnapshot(args);};if(NSThread.isMainThread)work();else dispatch_async(dispatch_get_main_queue(),work);}}
     id args=Get(call,@"arguments");
     if([Get(call,@"method") isEqual:@"rayneonet_sendFile"]&&[args isKindOfClass:NSDictionary.class]&&result){
@@ -81,6 +94,7 @@ static void MethodHook(id self,SEL cmd,id call,id result){
     }else PriorMethod(self,cmd,call,result);
 }
 static void Send(id self,SEL cmd,NSString *channel,NSData *message,id reply){
+    NSData *forwardMessage=message;
     if([channel isKindOfClass:NSString.class]&&[channel.lowercaseString containsString:@"rayneonet"]&&message.length<262144){
         Class cls=NSClassFromString(@"FlutterStandardMethodCodec");
         @try{if([cls respondsToSelector:@selector(sharedInstance)]){id codec=((id(*)(id,SEL))objc_msgSend)(cls,@selector(sharedInstance));id event=((id(*)(id,SEL,id))objc_msgSend)(codec,NSSelectorFromString(@"decodeEnvelope:"),message);
@@ -89,6 +103,11 @@ static void Send(id self,SEL cmd,NSString *channel,NSData *message,id reply){
                 TDPDiagEnvelope(copy);
 #endif
                 if(TIOGlassesLogConsumeEvent(copy)){if(reply)((void(^)(NSData *))reply)(nil);return;}}
+#if TIO_APP_SDK
+            // App SDK observes file results for its own turbo-app.tax tasks and
+            // never consumes the event; the official delivery path is untouched.
+            if([event isKindOfClass:NSDictionary.class]&&([event[@"eventType"] isEqual:@"fileShareSuccess"]||[event[@"eventType"] isEqual:@"fileShareFailed"])){NSDictionary *fileEvent=[event copy];void(^work)(void)=^{TAPObserveEvent(fileEvent);};if(NSThread.isMainThread)work();else dispatch_async(dispatch_get_main_queue(),work);}
+#endif
 #if TIO_IMAGE_RX_LAB
             // File results are siblings of messageReceived, not business messages.
             // Only our exact sender task is consumed; foreign events keep Flutter's path.
@@ -102,6 +121,17 @@ static void Send(id self,SEL cmd,NSString *channel,NSData *message,id reply){
 #endif
             if([event isKindOfClass:NSDictionary.class]&&[event[@"eventType"] isEqual:@"messageReceived"]&&[event[@"message"] isKindOfClass:NSDictionary.class]){
                 NSMutableDictionary *e=[event mutableCopy],*m=[event[@"message"] mutableCopy];NSData *data=Data(m[@"payload"]);if(data)m[@"payload"]=data;e[@"message"]=m;TIOOTAFlashObserveEvent(e);NSDictionary *physical=TIOTodoPhysicalStatus(e);
+                if([m[@"businessId"] isEqual:@9]){
+                    // Inbound update-check silencer: rewrite the version REPLY the
+                    // official side is about to see (OsVersion → 99.99.99). The BLE
+                    // request/reply pair completed normally, so nothing can jam;
+                    // native observers above still saw the real payload. The
+                    // observer first records frame type + JSON key names so a
+                    // surviving prompt is diagnosable from the OTA page.
+                    TIOOTAObserveInboundBizNine(data);
+                    NSData *rewritten=TIOOTARewriteVersionReply(data);
+                    if(rewritten){NSMutableDictionary *fm=[event[@"message"] mutableCopy];fm[@"payload"]=rewritten;NSMutableDictionary *fe=[event mutableCopy];fe[@"message"]=fm;NSData *repacked=((NSData*(*)(id,SEL,id))objc_msgSend)(codec,NSSelectorFromString(@"encodeSuccessEnvelope:"),fe);if(repacked.length)forwardMessage=repacked;}
+                }
 #if TIO_DISPLAY_PHONE
                 if(TDPPhoneRouteReply(e,^(BOOL owned){if(owned){if(reply)((void(^)(NSData *))reply)(nil);}else PriorSend(self,cmd,channel,message,reply);}))return;
 #endif
@@ -113,11 +143,15 @@ static void Send(id self,SEL cmd,NSString *channel,NSData *message,id reply){
                     void(^work)(void)=^{BOOL own=TIONewsTeleOwnsEvent(e);TIOProtocolObserveEvent(e);TIONewsTeleObserveEvent(e);TIOA2UIObserveEvent(e);TIONavObserveEvent(e);TIOSubtitleObserveEvent(e);if(own){if(reply)((void(^)(NSData *))reply)(nil);}else PriorSend(self,cmd,channel,message,reply);};
                     if(NSThread.isMainThread)work();else dispatch_async(dispatch_get_main_queue(),work);return;
                 }
-                dispatch_async(dispatch_get_main_queue(),^{TIOProtocolObserveEvent(e);TIONewsTeleObserveEvent(e);TIOA2UIObserveEvent(e);TIONavObserveEvent(e);TIOSubtitleObserveEvent(e);});
+                dispatch_async(dispatch_get_main_queue(),^{TIOProtocolObserveEvent(e);TIONewsTeleObserveEvent(e);TIOA2UIObserveEvent(e);TIONavObserveEvent(e);TIOSubtitleObserveEvent(e);
+#if TIO_APP_SDK
+                    TAPObserveEvent(e);TCEObserveEvent(e);
+#endif
+                });
                 if(physical)dispatch_async(dispatch_get_main_queue(),^{PhysicalEvents++;if(TestWire.length&&[physical[@"wireId"] isEqual:TestWire]&&[physical[@"deviceId"] isEqual:TestDevice]){PhysicalComplete=[physical[@"status"] isEqual:@1];State=PhysicalComplete?@"收到此测试项的眼镜完成回传，真实ID匹配":@"收到此测试项的眼镜未完成回传";SaveEvidence();}});
             }
         }}@catch(NSException *e){}
-    }PriorSend(self,cmd,channel,message,reply);
+    }PriorSend(self,cmd,channel,forwardMessage,reply);
 }
 void TIOTodoObserveNlp(id listener,id response){
     if(Injecting||!Installed||![Get(response,@"domain") isEqual:@"task"]||![Get(response,@"intent") isEqual:@"create_task"]||![Get(response,@"finished") boolValue]||[Get(response,@"offline") boolValue])return;

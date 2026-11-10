@@ -9,6 +9,10 @@
 #define TN_POINTS_MAX 32u
 #define TN_ROAD_MAX 96u
 #define TN_TURN_MAX 48u
+#define TN_BAR_MAX 24u
+/* Optional scene tail appended after the route points when the phone has any
+ * extension data. An absent tail decodes as a plain legacy scene. */
+#define TN_SCENE_EXT 36u
 #define TN_IDLE_MS 60000u
 #define TN_LINK_MS 30000u
 enum TNOp { TN_START=1,TN_UPDATE=2,TN_HEARTBEAT=3,TN_STOP=4,TN_MODE=5,TN_QUERY=6 };
@@ -17,6 +21,9 @@ enum TNPower { TN_POWER_RELEASE=0,TN_POWER_WAKE_HOLD=1,TN_POWER_SLEEP=2 };
 enum TNMode { TN_SMART=0,TN_ALWAYS=1 };
 enum TNIcon { TN_UNKNOWN=0,TN_STRAIGHT,TN_LEFT,TN_RIGHT,TN_SLIGHT_LEFT,TN_SLIGHT_RIGHT,
  TN_SHARP_LEFT,TN_SHARP_RIGHT,TN_UTURN,TN_ROUNDABOUT,TN_ARRIVE,TN_ICON_COUNT };
+enum TNCamera { TN_CAMERA_NONE=0,TN_CAMERA_SPEED,TN_CAMERA_REDLIGHT,TN_CAMERA_SURVEILLANCE,
+ TN_CAMERA_INTERVAL,TN_CAMERA_OTHER };
+enum TNEvent { TN_EVENT_NONE=0,TN_EVENT_ACCIDENT,TN_EVENT_CONSTRUCTION,TN_EVENT_CLOSED,TN_EVENT_CONTROL };
 typedef struct { uint16_t x,y; } TNPoint; /* normalized 0..1023, not GPS coordinates */
 typedef struct {
  uint32_t distance_m,remaining_m,remaining_s;
@@ -24,6 +31,14 @@ typedef struct {
  uint8_t icon,point_count,mode;
  char road[TN_ROAD_MAX+1],turn[TN_TURN_MAX+1];
  TNPoint points[TN_POINTS_MAX];
+ /* Extension fields; wire tail layout: u8 lights, u8 bar_count, u8 camera_kind,
+  * u8 event_kind, i16 camera_limit, u16 camera_m, u16 event_m, u8 bar[24],
+  * u16 lights_m (nearest-light distance; formerly 2 reserved zero bytes).
+  * Absent tail means: lights=255, camera_limit=-1, camera_m/event_m/lights_m
+  * =65535, no bar/camera/event. Bar levels 0 none..4 severe. */
+ uint8_t bar_count;uint8_t bar[TN_BAR_MAX];
+ uint8_t lights,camera_kind,event_kind;
+ int16_t camera_limit;uint16_t camera_m,event_m,lights_m;
 } TNScene;
 typedef struct {
  void *ctx;

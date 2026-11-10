@@ -17,16 +17,19 @@ typedef struct {
 } TNWidgets;
 #define TN_ICON_W 128u
 #define TN_ICON_H 128u
-#define TN_MAP_W 128u
-#define TN_MAP_H 128u
+#define TN_MAP_W 112u
+#define TN_MAP_H 112u
+#define TN_BAR_W 280u
+#define TN_BAR_H 40u
 typedef struct {
  TNVisual visual;
  _Alignas(64) uint8_t icon[TN_ICON_W*TN_ICON_H];
  _Alignas(64) uint8_t map[TN_MAP_W*TN_MAP_H];
+ _Alignas(64) uint8_t bar[TN_BAR_W*TN_BAR_H];
 } TNViewFrame;
 typedef struct {
  TNWidgets api;
- void *root,*icon,*map,*text[5];
+ void *root,*icon,*map,*bar,*text[7];
  TNViewFrame frames[2];
  char clocks[2][64];
  unsigned clock_bank;

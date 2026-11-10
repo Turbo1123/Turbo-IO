@@ -3,6 +3,7 @@ import java.nio.file.*;import java.io.*;import java.util.zip.*;
 public final class OfficialOtaDirectoryTest {
  static int n;interface Work{void run()throws Exception;}static void bad(Work w)throws Exception{try{w.run();throw new AssertionError("accepted invalid directory");}catch(IOException expected){n++;}}
  public static void main(String[] args)throws Exception{
+  OtaTestSupport.holdCandidate();
   Path root=Files.createTempDirectory("turboio-ota-directory-");
   try{
    try(ZipInputStream z=new ZipInputStream(Files.newInputStream(Paths.get(args[0])))){ZipEntry e;while((e=z.getNextEntry())!=null){if(!e.getName().matches("[A-Za-z0-9_.]+"))throw new IOException();Files.copy(z,root.resolve(e.getName()));}}

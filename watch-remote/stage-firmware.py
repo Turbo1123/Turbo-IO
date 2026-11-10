@@ -7,7 +7,7 @@ root=Path(__file__).resolve().parent
 shutil.copytree(a.base,a.out,ignore=shutil.ignore_patterns('__pycache__'))
 src=a.out/'official-addon/research';dst=src/'global-remote-v1';assert not dst.exists();shutil.copytree(root/'Firmware',dst)
 def replace(path,old,new):
- text=path.read_text();assert text.count(old)==1,(str(path),old);path.write_text(text.replace(old,new))
+ text=path.read_text(encoding='utf-8');assert text.count(old)==1,(str(path),old);path.write_text(text.replace(old,new),encoding='utf-8')
 replace(src/'music-runtime-v1/menu10.c','void m8_hook_message(void *handler,const TIONativeMessage *message){',
  'extern void tgr_native_message(const TIONativeMessage *);\nvoid m8_hook_message(void *handler,const TIONativeMessage *message){\n  tgr_native_message(message); /* borrowed bytes; stock handler still disposes */')
 aliases={
@@ -24,7 +24,7 @@ aliases={
 replace(src/'build-image-rx-candidate.py','ALIASES={','ALIASES={\n'+''.join(f' {k!r}: {v!r},\n' for k,v in aliases.items()))
 replace(src/'build-image-rx-candidate.py','    animation_units=[]',"    units+=['global-remote-v1/remote','global-remote-v1/remote_native']\n    animation_units=[]")
 def sha(f):return hashlib.sha256(f.read_bytes()).hexdigest()
-changed=[str(f.relative_to(a.out)) for f in a.out.rglob('*') if f.is_file() and (a.base/f.relative_to(a.out)).is_file() and sha(f)!=sha(a.base/f.relative_to(a.out))]
+changed=[f.relative_to(a.out).as_posix() for f in a.out.rglob('*') if f.is_file() and (a.base/f.relative_to(a.out)).is_file() and sha(f)!=sha(a.base/f.relative_to(a.out))]
 assert sorted(changed)==['official-addon/research/build-image-rx-candidate.py','official-addon/research/music-runtime-v1/menu10.c']
 record={'base':str(a.base.resolve()),'changed':changed,'aliases':aliases,'sources':{f.name:sha(f) for f in dst.iterdir()},'flashed':False,'extraBinaryHooks':0}
-(a.out/'global-remote-stage.json').write_text(json.dumps(record,indent=2)+'\n');print(json.dumps(record))
+(a.out/'global-remote-stage.json').write_text(json.dumps(record,indent=2)+'\n',encoding='utf-8');print(json.dumps(record))

@@ -31,16 +31,48 @@ NSDictionary *TNVNormalizeCoordinates(NSArray *coords){
   double lat=[p[0] doubleValue],lon=[p[1] doubleValue];if(!isfinite(lat)||!isfinite(lon)||fabs(lat)>85||fabs(lon)>180)return @{};
   double ref=[coords[0][0] doubleValue];xs[i]=(lon-[coords[0][1] doubleValue])*cos(ref*M_PI/180);ys[i]=-(lat-ref);loX=MIN(loX,xs[i]);hiX=MAX(hiX,xs[i]);loY=MIN(loY,ys[i]);hiY=MAX(hiY,ys[i]);
  }
+ // Heading-up mini-map: rotate every point around the current position by the
+ // travel bearing so the user's direction always points UP on the lens, no
+ // matter how the firmware interprets the heading field (north-up renderer
+ // gets an already-rotated frame).
+ double h=0;
+ if(coords.count>=2){h=atan2(xs[1]-xs[0],-(ys[1]-ys[0]));if(h<0)h+=2*M_PI;}
+ double ch=cos(-h),sh=sin(-h);
+ loX=loY=DBL_MAX;hiX=hiY=-DBL_MAX; // recompute bounds on the rotated frame
+ for(NSUInteger i=0;i<coords.count;i++){double rx=xs[i]*ch-ys[i]*sh,ry=xs[i]*sh+ys[i]*ch;xs[i]=rx;ys[i]=ry;loX=MIN(loX,xs[i]);hiX=MAX(hiX,xs[i]);loY=MIN(loY,ys[i]);hiY=MAX(hiY,ys[i]);}
  double span=MAX(hiX-loX,hiY-loY);if(span<1e-10)return @{};NSMutableArray *out=[NSMutableArray new];NSUInteger count=MIN(coords.count,32);
- for(NSUInteger i=0;i<count;i++){NSUInteger at=i*(coords.count-1)/(count-1);double x=511.5+(xs[at]-(loX+hiX)*.5)*900/span,y=511.5+(ys[at]-(loY+hiY)*.5)*900/span;[out addObject:@[@((unsigned)lround(x)),@((unsigned)lround(y))]];}
- double h=atan2(xs[1]-xs[0],-(ys[1]-ys[0]))*180/M_PI;if(h<0)h+=360;return @{@"navPoints":out,@"navHeading":@((unsigned)lround(h)%360)};
+ // Perspective sampling: the 32-point protocol budget goes where detail pays
+ // off -- dense near the user (exact shape of the next turns), sparse far away
+ // (still visible). t^2.2 concentrates half the points in the first ~20% of
+ // the covered distance; uniform sampling wasted the budget far away.
+ double arc[512];arc[0]=0;for(NSUInteger i=1;i<coords.count;i++)arc[i]=arc[i-1]+hypot(xs[i]-xs[i-1],ys[i]-ys[i-1]);
+ double total=arc[coords.count-1];NSUInteger cursor=0;
+ for(NSUInteger i=0;i<count;i++){double t=count>1?(double)i/(count-1):0;double target=total*pow(t,2.2);
+  while(cursor+1<coords.count&&arc[cursor+1]<target)cursor++;
+  double x=511.5+(xs[cursor]-(loX+hiX)*.5)*900/span,y=511.5+(ys[cursor]-(loY+hiY)*.5)*900/span;[out addObject:@[@((unsigned)lround(x)),@((unsigned)lround(y))]];}
+ return @{@"navPoints":out,@"navHeading":@((unsigned)lround(h*180/M_PI)%360)};
 }
 BOOL TNVScene(NSDictionary *d,BOOL always,TNScene *s){
  if(!s||![d isKindOfClass:NSDictionary.class]||![d[@"phase"] isEqual:@"navigating"]||!Number(d[@"meters"],1000000)||!Number(d[@"remainingMeters"],10000000)||!Number(d[@"remainingSeconds"],604800)||!Number(d[@"icon"],255))return NO;
- memset(s,0,sizeof *s);NSInteger i=[d[@"icon"] integerValue];switch(i){case 2:s->icon=TN_LEFT;break;case 3:s->icon=TN_RIGHT;break;case 4:s->icon=TN_SLIGHT_LEFT;break;case 5:s->icon=TN_SLIGHT_RIGHT;break;case 6:s->icon=TN_SHARP_LEFT;break;case 7:s->icon=TN_SHARP_RIGHT;break;case 8:case 19:s->icon=TN_UTURN;break;case 9:case 20:s->icon=TN_STRAIGHT;break;case 11:case 12:case 17:case 18:s->icon=TN_ROUNDABOUT;break;case 15:s->icon=TN_ARRIVE;break;default:s->icon=TN_UNKNOWN;}
+ memset(s,0,sizeof *s);s->lights=255;s->camera_limit=-1;s->camera_m=65535;s->event_m=65535;s->lights_m=65535; /* absent extension data must not encode as real zeros */NSInteger i=[d[@"icon"] integerValue];switch(i){case 2:s->icon=TN_LEFT;break;case 3:s->icon=TN_RIGHT;break;case 4:s->icon=TN_SLIGHT_LEFT;break;case 5:s->icon=TN_SLIGHT_RIGHT;break;case 6:s->icon=TN_SHARP_LEFT;break;case 7:s->icon=TN_SHARP_RIGHT;break;case 8:case 19:s->icon=TN_UTURN;break;case 9:case 20:s->icon=TN_STRAIGHT;break;case 11:case 12:case 17:case 18:s->icon=TN_ROUNDABOUT;break;case 15:s->icon=TN_ARRIVE;break;default:s->icon=TN_UNKNOWN;}
  s->mode=always?TN_ALWAYS:TN_SMART;s->distance_m=[d[@"meters"] unsignedIntValue];s->remaining_m=[d[@"remainingMeters"] unsignedIntValue];s->remaining_s=[d[@"remainingSeconds"] unsignedIntValue];Clip(s->road,sizeof s->road,d[@"road"]);Clip(s->turn,sizeof s->turn,d[@"turn"]);
  NSArray *points=d[@"navPoints"];if(points){if(![points isKindOfClass:NSArray.class]||points.count>32)return NO;for(id pair in points){if(![pair isKindOfClass:NSArray.class]||[pair count]!=2||!Number(pair[0],1023)||!Number(pair[1],1023))return NO;s->points[s->point_count++]=(TNPoint){[pair[0] unsignedIntValue],[pair[1] unsignedIntValue]};}}
- if(s->point_count)s->position=s->points[0];if(Number(d[@"navHeading"],359))s->heading=[d[@"navHeading"] unsignedIntValue];return YES;
+ if(s->point_count)s->position=s->points[0];if(Number(d[@"navHeading"],359))s->heading=[d[@"navHeading"] unsignedIntValue];
+ /* Extension fields default to documented unknowns; malformed values reject
+  * the frame, which the session treats as transient and keeps rendering. */
+ s->lights=255;s->camera_limit=-1;s->camera_m=65535;s->event_m=65535;s->lights_m=65535;
+ id lights=d[@"lights"];if(lights){if(![lights isKindOfClass:NSNumber.class])return NO;long v=[lights longValue];if(v<0||v>255)v=255;s->lights=(uint8_t)v;} /* clamp: an SDK unknown must never reject the whole turn frame */
+ id lm=d[@"lightsMeters"];if(lm){if(![lm isKindOfClass:NSNumber.class])return NO;long v=[lm longValue];if(v<0||v>65534)return NO;s->lights_m=(uint16_t)v;}
+ id bar=d[@"barLevels"];if(bar){if(![bar isKindOfClass:NSArray.class]||[bar count]>TN_BAR_MAX)return NO;
+  unsigned n=0;for(id level in bar){if(![level isKindOfClass:NSNumber.class])return NO;long x=[level longValue];if(x<0||x>4)return NO;s->bar[n++]=(uint8_t)x;}s->bar_count=(uint8_t)n;}
+ id cam=d[@"camera"];if(cam){if(![cam isKindOfClass:NSDictionary.class])return NO;id k=cam[@"kind"];id lim=cam[@"limit"];id mtr=cam[@"m"];
+  if(![k isKindOfClass:NSNumber.class]||[k longValue]<1||[k longValue]>TN_CAMERA_OTHER)return NO;s->camera_kind=(uint8_t)[k longValue];
+  if(lim){if(![lim isKindOfClass:NSNumber.class])return NO;long v=[lim longValue];if(v!=-1&&(v<0||v>500))return NO;s->camera_limit=(int16_t)v;}
+  if(mtr){if(![mtr isKindOfClass:NSNumber.class])return NO;long v=[mtr longValue];if(v<0||v>65534)return NO;s->camera_m=(uint16_t)v;}}
+ id ev=d[@"event"];if(ev){if(![ev isKindOfClass:NSDictionary.class])return NO;id k=ev[@"kind"];id mtr=ev[@"m"];
+  if(![k isKindOfClass:NSNumber.class]||[k longValue]<1||[k longValue]>TN_EVENT_CONTROL)return NO;s->event_kind=(uint8_t)[k longValue];
+  if(mtr){if(![mtr isKindOfClass:NSNumber.class])return NO;long v=[mtr longValue];if(v<0||v>65534)return NO;s->event_m=(uint16_t)v;}}
+ return YES;
 }
 @implementation TNVSession{
  NSString *_device,*_task,*_nativeTask,*_note;uint32_t _sid,_seq;NSTimeInterval(^_clock)(void);void(^_sender)(NSData *,NSString *,TNVSubmitted);void(^_cleanup)(NSString *);
@@ -50,7 +82,7 @@ BOOL TNVScene(NSDictionary *d,BOOL always,TNScene *s){
 - (instancetype)initWithDevice:(NSString *)device session:(uint32_t)sid clock:(NSTimeInterval(^)(void))clock sender:(void(^)(NSData *,NSString *,TNVSubmitted))sender cleanup:(void(^)(NSString *))cleanup{if(!device.length||!sid||!clock||!sender)return nil;if((self=[super init])){_device=[device copy];_sid=sid;_clock=[clock copy];_sender=[sender copy];_cleanup=[cleanup copy];_note=@"尚未开始";}return self;}
 - (BOOL)active{return _active;}- (BOOL)busy{return _packet||_fileBusy;}
 - (NSDictionary *)status{return @{@"active":@(_active),@"busy":@(self.busy),@"note":_note?:@"",@"snapshots":@(_count),@"session":@(_sid),@"sequence":@(_seq),@"always":@(_always),@"failed":@(_failed)};}
-- (void)fail:(NSString *)note{_active=NO;_failed=YES;_packet=nil;_note=note;/* preserve uncertain native file ownership */}
+- (void)fail:(NSString *)note{_active=NO;_failed=YES;_packet=nil;_fileBusy=NO;_note=note;/* file ownership at the transport stays with the abandoned transport; unlatching busy lets a fresh TNVStart session retry */}
 - (void)finish{if(!_packet||!_ack||_fileBusy||!_submitted)return;unsigned op=_op;_packet=nil;_nativeTask=nil;_early=nil;if(_cleanup)_cleanup(_task);_task=nil;_next=_clock()+1;
  if(op==TN_START||op==TN_UPDATE){_committed=_sending;_lastCommit=_clock();_count++;}_sending=nil;
  if(op==TN_STOP){_active=NO;_stopping=NO;_note=@"眼镜已确认退出导航";}else _note=@"原生导航已提交 · 镜片效果待确认";
@@ -63,7 +95,7 @@ BOOL TNVScene(NSDictionary *d,BOOL always,TNScene *s){
   s->_submitted=YES;s->_nativeTask=[native copy];NSArray *early=[s->_early copy];s->_early=nil;for(NSDictionary *e in early)[s consume:e];[s finish];});return YES;
 }
 - (BOOL)start:(NSDictionary *)frame always:(BOOL)always{if(_seq||_active||self.busy||_failed)return NO;TNScene s;if(!TNVScene(frame,always,&s))return NO;_always=always;_latest=[NSData dataWithBytes:&s length:sizeof s];_lastOffer=_clock();_active=YES;_note=@"正在请求自动打开原生导航";if(![self send:TN_START scene:_latest]){_active=NO;return NO;}return YES;}
-- (void)offer:(NSDictionary *)frame{if(!_active||_stopping)return;TNScene s;if(!TNVScene(frame,_always,&s)){[self stop];return;}_latest=[NSData dataWithBytes:&s length:sizeof s];_lastOffer=_clock();}
+- (void)offer:(NSDictionary *)frame{if(!_active||_stopping)return;TNScene s;if(!TNVScene(frame,_always,&s)){/* Only terminal phases stop the session; transient non-navigating frames (planning/reroute transitions) must not kill a live render. */if([frame[@"phase"] isEqual:@"arrived"]||[frame[@"phase"] isEqual:@"stopped"])[self stop];return;}_latest=[NSData dataWithBytes:&s length:sizeof s];_lastOffer=_clock();}
 - (void)setAlways:(BOOL)always{_always=always;if(_latest){NSMutableData *d=[_latest mutableCopy];((TNScene *)d.mutableBytes)->mode=always?TN_ALWAYS:TN_SMART;_latest=d;}}
 - (void)stop{if(!_active)return;_stopping=YES;_note=@"等待在途包结束后退出导航";[self pump];}
 - (void)disconnect{[self fail:@"连接中断；已停止。眼镜按60秒策略退出常亮，请查看手机。"];}

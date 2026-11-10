@@ -93,7 +93,13 @@ static void SaveNavStatus(void){
  [[NSJSONSerialization dataWithJSONObject:d options:NSJSONWritingSortedKeys error:nil] writeToFile:path options:NSDataWritingAtomic error:nil];[NSFileManager.defaultManager setAttributes:@{NSFilePosixPermissions:@0600} ofItemAtPath:path error:nil];
 }
 BOOL TDPPhoneNavigationStart(NSDictionary *frame){
- if(NavFeed.active||Session.busy||UIApplication.sharedApplication.applicationState!=UIApplicationStateActive)return NO;
+ // No applicationState gate: TNV nav is a low-rate file send and the glasses
+ // BLE link stays live in background (voice events and lifelog prove it).
+ // Background degradation is handled by the session's 8s deadline plus the
+ // caller's retry/verify loop, instead of a hard foreground-only refusal that
+ // made hands-free voice navigation need a manual phone unlock.
+ if(NavFeed.active){TNVSetRefusal(@"旧手机镜像导航流(NavFeed)仍活跃");return NO;}
+ if(Session.busy){TNVSetRefusal(@"TDP显示会话有在途传输(busy)");return NO;}
  [Session setForegroundActive:NO];return TNVStart(frame);
 }
 void TDPPhoneNavigationOffer(NSDictionary *frame){TNVOffer(frame);}

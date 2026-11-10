@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="180" viewBox="0 0 540 180">
+  <title>TNV1 导航 HUD 概念预览（非实机截图）：布局沿用固件 nav_view.c 骨架，路况区为 24 柱增强设计稿</title>
+  <defs>
+    <pattern id="hatchDark" width="3.5" height="3.5" patternUnits="userSpaceOnUse">
+      <path d="M0,3.5 L3.5,0" stroke="#041204" stroke-width="0.8"/>
+    </pattern>
+  </defs>
+
+  <rect width="540" height="180" fill="#000000"/>
+  <rect x="1" y="1" width="538" height="178" rx="10" fill="none" stroke="#123f17" stroke-width="1"/>
+
+  <!-- 转向徽章：箭头轨迹与固件 nav_visual.c right[] 逐点一致 -->
+  <rect x="8" y="4" width="96" height="96" rx="14" fill="#061806" stroke="#1e4620"/>
+  <polyline points="26,88 26,40 84,40" fill="none" stroke="#4fff54" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="60,16 84,40 60,64" fill="none" stroke="#4fff54" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- 中部信息列 -->
+  <text x="112" y="42" font-family="system-ui,'PingFang SC','Microsoft YaHei',sans-serif" font-size="36" font-weight="700" fill="#4fff54">350<tspan font-size="16" font-weight="400" fill="#8fd99a"> m</tspan></text>
+  <text x="112" y="62" font-family="system-ui,'PingFang SC','Microsoft YaHei',sans-serif" font-size="13" fill="#8fd99a">右转进入</text>
+  <text x="112" y="87" font-family="system-ui,'PingFang SC','Microsoft YaHei',sans-serif" font-size="19" font-weight="600" fill="#c6ffcb">中关村大街</text>
+  <text x="112" y="104" font-family="system-ui,'PingFang SC','Microsoft YaHei',sans-serif" font-size="11.5" fill="#7cc786">剩余 12.4 km · 约 18 min · 路况 +6 min</text>
+
+  <!-- 路况光柱面板：24 柱（高度×亮度双编码）+ 图标标记 + 整公里刻度 -->
+  <rect x="112" y="112" width="282" height="62" rx="10" fill="#041204" stroke="#15401a"/>
+  <text x="120" y="122.5" font-family="system-ui,'PingFang SC','Microsoft YaHei',sans-serif" font-size="9.5" fill="#8fd99a">前方 5 km 路况</text>
+  <!-- 图例 -->
+  <g font-family="system-ui,'PingFang SC','Microsoft YaHei',sans-serif" font-size="7" fill="#6fbf7b">
+    <rect x="196" y="117.5" width="5" height="5" rx="1" fill="#1b5e23"/><text x="204" y="122">畅通</text>
+    <rect x="226" y="117.5" width="5" height="5" rx="1" fill="#2e9e3a"/><text x="234" y="122">缓行</text>
+    <rect x="256" y="117.5" width="5" height="5" rx="1" fill="#4fff54"/><text x="264" y="122">拥堵</text>
+    <rect x="286" y="117.5" width="5" height="5" rx="1" fill="#b6ffbc"/><text x="294" y="122">严重</text>
+  </g>
+
+  <!-- 标记位茎线（先画，柱子压其上） -->
+  <g stroke="#9fe6a8" stroke-width="0.7" opacity="0.55">
+    <line x1="136" y1="136" x2="136" y2="162"/>
+    <line x1="183" y1="132" x2="183" y2="162"/>
+    <line x1="303.5" y1="136" x2="303.5" y2="162"/>
+  </g>
+
+  <!-- 光柱：畅通 h5 #1b5e23 / 缓行 h9 #2e9e3a / 拥堵 h14 #4fff54 / 严重 h19 #b6ffbc+暗斜纹 -->
+  <g>
+    <rect x="120" y="157" width="8" height="5" rx="1.5" fill="#1b5e23"/>
+    <rect x="131" y="157" width="8" height="5" rx="1.5" fill="#1b5e23"/>
+    <rect x="142" y="157" width="8" height="5" rx="1.5" fill="#1b5e23"/>
+    <rect x="153" y="157" width="8" height="5" rx="1.5" fill="#1b5e23"/>
+    <rect x="164" y="157" width="8" height="5" rx="1.5" fill="#1b5e23"/>
+    <rect x="175" y="153" width="8" height="9" rx="1.5" fill="#2e9e3a"/>
+    <rect x="186" y="153" width="8" height="9" rx="1.5" fill="#2e9e3a"/>
+    <rect x="197" y="153" width="8" height="9" rx="1.5" fill="#2e9e3a"/>
+    <rect x="208" y="148" width="8" height="14" rx="1.5" fill="#4fff54"/>
+    <rect x="219" y="148" width="8" height="14" rx="1.5" fill="#4fff54"/>
+    <rect x="230" y="148" width="8" height="14" rx="1.5" fill="#4fff54"/>
+    <rect x="241" y="143" width="8" height="19" rx="1.5" fill="#b6ffbc"/>
+    <rect x="241" y="143" width="8" height="19" rx="1.5" fill="url(#hatchDark)"/>
+    <rect x="252" y="143" width="8" height="19" rx="1.5" fill="#b6ffbc"/>
+    <rect x="252" y="143" width="8" height="19" rx="1.5" fill="url(#hatchDark)"/>
+    <rect x="263" y="148" width="8" height="14" rx="1.5" fill="#4fff54"/>
+    <rect x="274" y="148" width="8" height="14" rx="1.5" fill="#4fff54"/>
+    <rect x="285" y="153" width="8" height="9" rx="1.5" fill="#2e9e3a"/>
+    <rect x="296" y="153" width="8" height="9" rx="1.5" fill="#2e9e3a"/>
+    <rect x="307" y="153" width="8" height="9" rx="1.5" fill="#2e9e3a"/>
+    <rect x="318" y="157" width="8" height="5" rx="1.5" fill="#1b5e23"/>
+    <rect x="329" y="157" width="8" height="5" rx="1.5" fill="#1b5e23"/>
+    <rect x="340" y="157" width="8" height="5" rx="1.5" fill="#1b5e23"/>
+    <rect x="351" y="157" width="8" height="5" rx="1.5" fill="#1b5e23"/>
+    <rect x="362" y="157" width="8" height="5" rx="1.5" fill="#1b5e23"/>
+    <rect x="373" y="157" width="8" height="5" rx="1.5" fill="#1b5e23"/>
+  </g>
+  <line x1="114" y1="162" x2="388" y2="162" stroke="#1a3d1f" stroke-width="1"/>
+
+  <!-- 限速牌标记（300 m 处） -->
+  <g>
+    <circle cx="136" cy="130" r="6.5" fill="#061806" stroke="#4fff54" stroke-width="1.3"/>
+    <text x="136" y="132.5" font-family="system-ui,sans-serif" font-size="6.5" font-weight="700" fill="#c6ffcb" text-anchor="middle">80</text>
+    <text x="145" y="132.5" font-family="system-ui,'PingFang SC','Microsoft YaHei',sans-serif" font-size="8" fill="#9fe6a8">300 m</text>
+  </g>
+  <!-- 事故标记（1.2 km 处） -->
+  <g>
+    <path d="M183,124 L187.5,131.5 L178.5,131.5 Z" fill="#061806" stroke="#9fe6a8" stroke-width="0.9"/>
+    <text x="183" y="130" font-family="system-ui,sans-serif" font-size="6.5" font-weight="700" fill="#9fe6a8" text-anchor="middle">!</text>
+    <text x="190" y="132" font-family="system-ui,'PingFang SC','Microsoft YaHei',sans-serif" font-size="8" fill="#9fe6a8">事故 · 1.2 km</text>
+  </g>
+  <!-- 信号灯标记（3.5 km 处，与固件 lights_m 锚点一致） -->
+  <g>
+    <rect x="299" y="123" width="9" height="13" rx="2.5" fill="#061806" stroke="#9fe6a8" stroke-width="0.9"/>
+    <circle cx="303.5" cy="126.5" r="1.4" fill="#4fff54"/>
+    <circle cx="303.5" cy="129.5" r="1.3" fill="#2aa233"/>
+    <circle cx="303.5" cy="132.5" r="1.3" fill="#123f17" stroke="#2aa233" stroke-width="0.4"/>
+    <text x="311" y="133" font-family="system-ui,'PingFang SC','Microsoft YaHei',sans-serif" font-size="8" fill="#9fe6a8">×2</text>
+  </g>
+
+  <!-- 整公里刻度 -->
+  <g stroke="#2c4a31" stroke-width="1">
+    <line x1="120" y1="163.5" x2="120" y2="166.5"/>
+    <line x1="172" y1="163.5" x2="172" y2="166.5"/>
+    <line x1="224" y1="163.5" x2="224" y2="166.5"/>
+    <line x1="277" y1="163.5" x2="277" y2="166.5"/>
+    <line x1="329" y1="163.5" x2="329" y2="166.5"/>
+    <line x1="381" y1="163.5" x2="381" y2="166.5"/>
+  </g>
+  <g font-family="system-ui,sans-serif" font-size="7" fill="#4a7a50">
+    <text x="120" y="171" text-anchor="middle">0</text>
+    <text x="172" y="171" text-anchor="middle">1</text>
+    <text x="224" y="171" text-anchor="middle">2</text>
+    <text x="277" y="171" text-anchor="middle">3</text>
+    <text x="329" y="171" text-anchor="middle">4</text>
+    <text x="381" y="171" text-anchor="end">5 km</text>
+  </g>
+
+  <!-- ETA / 状态行 -->
+  <text x="8" y="174" font-family="system-ui,'PingFang SC','Microsoft YaHei',sans-serif" font-size="17" font-weight="600" fill="#4fff54">14:32<tspan font-size="10" font-weight="400" fill="#7cc786"> 到达 · 常亮</tspan></text>
+
+  <!-- 右侧迷你地图（112x112，与固件 TN_MAP_W/H 一致）：路线按路况分段着色 -->
+  <rect x="400" y="4" width="112" height="112" rx="10" fill="#030d03" stroke="#15401a"/>
+  <g stroke="#0a1f0c" stroke-width="1">
+    <line x1="428" y1="6" x2="428" y2="113"/>
+    <line x1="456" y1="6" x2="456" y2="113"/>
+    <line x1="484" y1="6" x2="484" y2="113"/>
+    <line x1="402" y1="32" x2="510" y2="32"/>
+    <line x1="402" y1="60" x2="510" y2="60"/>
+    <line x1="402" y1="88" x2="510" y2="88"/>
+  </g>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="425,97 447,82" stroke="#2e9e3a" stroke-width="4"/>
+    <polyline points="447,82 461,83" stroke="#2e9e3a" stroke-width="4"/>
+    <polyline points="461,83 473,65" stroke="#4fff54" stroke-width="4"/>
+    <polyline points="473,65 467,44" stroke="#b6ffbc" stroke-width="4"/>
+    <polyline points="467,44 484,30" stroke="#4fff54" stroke-width="4"/>
+    <polyline points="484,30 495,27" stroke="#2e9e3a" stroke-width="4"/>
+  </g>
+  <polygon points="451,77 447,88 440,82" fill="#eaffea"/>
+  <circle cx="495" cy="27" r="2.4" fill="none" stroke="#eaffea" stroke-width="1.2"/>
+  <text x="505" y="14" font-family="system-ui,'PingFang SC','Microsoft YaHei',sans-serif" font-size="8" fill="#3f6b46">北</text>
+
+  <!-- 地图下方警示双卡（y=122/146，对齐固件 text[5]/text[6] 槽位） -->
+  <rect x="400" y="122" width="128" height="20" rx="5" fill="#061806" stroke="#1a3d1f"/>
+  <circle cx="411" cy="132" r="5.5" fill="none" stroke="#4fff54" stroke-width="1.1"/>
+  <text x="411" y="134.5" font-family="system-ui,sans-serif" font-size="6" font-weight="700" fill="#c6ffcb" text-anchor="middle">80</text>
+  <text x="420" y="136" font-family="system-ui,'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#9fe6a8">测速 · 300 m</text>
+  <rect x="400" y="146" width="128" height="20" rx="5" fill="#061806" stroke="#1a3d1f"/>
+  <rect x="405.5" y="149.5" width="7" height="11" rx="2" fill="none" stroke="#9fe6a8" stroke-width="0.8"/>
+  <circle cx="409" cy="152.5" r="1.1" fill="#4fff54"/>
+  <circle cx="409" cy="155.5" r="1" fill="#2aa233"/>
+  <circle cx="409" cy="158" r="1" fill="#123f17" stroke="#2aa233" stroke-width="0.3"/>
+  <text x="416" y="159" font-family="system-ui,'PingFang SC','Microsoft YaHei',sans-serif" font-size="9" fill="#9fe6a8">红绿灯 ×2 · 3.5 km</text>
+</svg>

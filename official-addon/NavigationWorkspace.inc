@@ -61,7 +61,7 @@
     self.lensStatus.text=on?[NSString stringWithFormat:@"%@ · 已提交 %@ 帧（非镜片回执）",s[@"note"],s[@"frames"]]:[NSString stringWithFormat:@"%@\n%@",s[@"note"]?:@"尚未开启",[runtime[@"available"] boolValue]?@"字幕格式已就绪 · 需确认眼镜空闲":@"等待当前眼镜连接或兼容配置；无需每次预览"];
     if(!running)self.hudLabel.text=self.planning?@"正在规划路线…":self.routeReady?@"路线已就绪\n点击开始后产生指引":@"等待导航指引\n\n转向 · 距离 · 道路";
 }
-- (void)modeChanged{if(![self prepareForSelection])return;self.mapPickRole.selectedSegmentIndex=0;self.routeSummary.text=@"尚未规划路线";self.note=self.travelMode.selectedSegmentIndex==0?@"模拟起点单独保存：切换“选模拟起点”后点地图。":@"实时导航使用手机位置；眼镜字幕暂仅开放模拟。请勿边驾驶边操作。";[self refresh];}
+- (void)modeChanged{if(![self prepareForSelection])return;self.mapPickRole.selectedSegmentIndex=0;self.routeSummary.text=@"尚未规划路线";self.note=self.travelMode.selectedSegmentIndex==0?@"模拟起点单独保存：切换“选模拟起点”后点地图。":@"实时导航使用手机定位；模拟与实时均可投眼镜字幕（实时为20分钟保护会话）。请勿边驾驶边操作。";[self refresh];}
 - (void)transportModeChanged{
     NSInteger mode=self.transportMode.selectedSegmentIndex;if(!TIONavigationModeTitle(mode)||!TIONavigationMayChangeMode(self.active,self.routeReady)){self.transportMode.selectedSegmentIndex=self.selectedTransport;[self alert:@"请先结束当前导航" message:@"结束后再切换出行方式，不会使用旧模式路线。"] ;return;}
     if(![self prepareForSelection])return;self.selectedTransport=mode;self.routeReady=NO;self.routeSummary.text=@"出行方式已更改，请重新规划";

@@ -25,15 +25,16 @@ NSDictionary *TIOSubtitleStopContract(NSDictionary *j,NSString *sid){
     if(![reason isKindOfClass:NSNumber.class]||CFGetTypeID((__bridge CFTypeRef)reason)==CFBooleanGetTypeID()||![reason isEqual:@10]||![j[@"text"] isEqual:@""])return nil;
     return @{@"sid":sid,@"reason_code":@10,@"text":@""};
 }
-@implementation TIOSubtitleTrial { NSDictionary *_stop; BOOL _navigation; BOOL _liveCaption; }
+@implementation TIOSubtitleTrial { NSDictionary *_stop; BOOL _navigation; BOOL _liveCaption; BOOL _realtimeNavigation; }
 - (BOOL)navigation{return _navigation;}
 - (BOOL)liveCaption{return _liveCaption;}
+- (BOOL)realtimeNavigation{return _realtimeNavigation;}
 - (instancetype)init{if((self=[super init])){_phase=@"idle";_note=@"等待官方预览与退出样本";}return self;}
 - (BOOL)active{return [@[@"starting",@"ready",@"stopping",@"uncertain"] containsObject:self.phase];}
 - (void)mark:(NSString *)phase note:(NSString *)note{self.phase=phase;self.note=note;if(self.changed)self.changed();}
 - (BOOL)startWithPreview:(NSDictionary *)preview stop:(NSDictionary *)stop now:(NSTimeInterval)now{
     if(self.active||!self.send||![preview isKindOfClass:NSDictionary.class]||![stop isKindOfClass:NSDictionary.class]||![preview[@"scope"] isEqual:@"temporary"]||![preview[@"config"] isKindOfClass:NSDictionary.class]||![preview[@"config"][@"is_display"] isEqual:@YES]||[preview[@"force"] boolValue]||![preview[@"sid"] isKindOfClass:NSString.class]||![stop[@"sid"] isEqual:preview[@"sid"]])return NO;
-    _navigation=NO;_liveCaption=NO;_stop=[stop copy];self.sid=[NSUUID.UUID.UUIDString.lowercaseString stringByReplacingOccurrencesOfString:@"-" withString:@""];self.began=now;self.deadline=now+10;self.frame=0;self.audioPackets=0;self.lastText=0;
+    _navigation=NO;_liveCaption=NO;_realtimeNavigation=NO;_stop=[stop copy];self.sid=[NSUUID.UUID.UUIDString.lowercaseString stringByReplacingOccurrencesOfString:@"-" withString:@""];self.began=now;self.deadline=now+10;self.frame=0;self.audioPackets=0;self.lastText=0;
     NSMutableDictionary *j=[preview mutableCopy];j[@"sid"]=self.sid;j[@"scope"]=@"temporary";j[@"force"]=@NO;
     [self mark:@"starting" note:@"已提交临时预览，等待同 SID 回执；尚未发导航文字"];
     if(!self.send(7,j)){[self stop:@"预览提交失败，结果未知" now:now];return NO;}return YES;
@@ -51,8 +52,11 @@ NSDictionary *TIOSubtitleStopContract(NSDictionary *j,NSString *sid){
 - (BOOL)startNavigationWithPreview:(NSDictionary *)p stop:(NSDictionary *)s now:(NSTimeInterval)now{
     if(![self startWithPreview:p stop:s now:now])return NO;_navigation=YES;return YES;
 }
+- (BOOL)startRealtimeNavigationWithPreview:(NSDictionary *)p stop:(NSDictionary *)s now:(NSTimeInterval)now{
+    if(![self startNavigationWithPreview:p stop:s now:now])return NO;_realtimeNavigation=YES;return YES;
+}
 - (BOOL)sendNavigationText:(NSString *)text now:(NSTimeInterval)now{
-    if(!_navigation||![self.phase isEqual:@"ready"]||self.frame>=(_liveCaption?2400:80)||now-self.began>=(_liveCaption?1200:240)||(self.frame&&now-self.lastText<(_liveCaption?0.5:3))||![text isKindOfClass:NSString.class]||!text.length||[text lengthOfBytesUsingEncoding:NSUTF8StringEncoding]>384)return NO;
+    if(!_navigation||![self.phase isEqual:@"ready"]||self.frame>=(_liveCaption||_realtimeNavigation?2400:80)||now-self.began>=(_liveCaption||_realtimeNavigation?1200:240)||(self.frame&&now-self.lastText<(_liveCaption?0.5:3))||![text isKindOfClass:NSString.class]||!text.length||[text lengthOfBytesUsingEncoding:NSUTF8StringEncoding]>384)return NO;
     self.lastText=now;self.frame++;
     if(!self.send(5,@{@"sid":self.sid,@"mode":@3,@"status":@0,@"content":@{@"source_transcript":text}})){[self stop:@"导航文字提交失败" now:now];return NO;}
     [self mark:@"ready" note:@"导航文字已提交，非镜片渲染确认"];return YES;
@@ -81,7 +85,10 @@ NSDictionary *TIOSubtitleStopContract(NSDictionary *j,NSString *sid){
 }
 - (void)tick:(NSTimeInterval)now{
     if([self.phase isEqual:@"starting"]&&now>=self.deadline)[self stop:@"10秒无匹配设置回执" now:now];
-    if([self.phase isEqual:@"ready"]&&now-self.began>=(_liveCaption?1200:240))[self stop:_liveCaption?@"20分钟字幕保护到期":@"4分钟保护到期" now:now];
-    if([self.phase isEqual:@"stopping"]&&now>=self.deadline)[self mark:@"uncertain" note:@"退出效果待确认；请用实体按钮退出，并在页面确认后再试"];
+    if([self.phase isEqual:@"ready"]&&now-self.began>=(_liveCaption||_realtimeNavigation?1200:240))[self stop:_liveCaption?@"20分钟字幕保护到期":_realtimeNavigation?@"20分钟实时导航保护到期":@"4分钟保护到期" now:now];
+    // Stop request was submitted; the protocol has no terminal ack, so after the
+    // deadline the session self-recovers to idle instead of parking in a state
+    // that only a manual check-page confirmation could clear. Honest note kept.
+    if([self.phase isEqual:@"stopping"]&&now>=self.deadline){self.sid=nil;[self mark:@"idle" note:@"已请求退出（超时无回执，协议无终止确认）；镜片若仍有字幕请用实体键退出"];}
 }
 @end

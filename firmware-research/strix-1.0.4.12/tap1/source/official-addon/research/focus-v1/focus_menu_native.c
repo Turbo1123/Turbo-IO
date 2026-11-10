@@ -1,5 +1,3 @@
-#include "../app-runtime-v1/app_service.h"
-#include "../didi-v1/ride_service.h"
 /* UI-thread-only launcher decoration. Allocation failure retains native menu.
  * Detach before app destruction, retire after renderer idle, no flash writes. */
 #include "focus_menu.h"
@@ -25,13 +23,13 @@ extern int fm_battery_level(void *);
 typedef struct {FMView view;void *app,*timer;uint32_t refreshed;int selection;bool enabled,closing;} FMControl;
 _Static_assert(sizeof(FMControl)<=49152,"quad menu retained storage capped at 48 KiB");
 _Static_assert(offsetof(TNNavSlot,quad)==44,"never overlap existing slot fields");
-_Static_assert(sizeof(TNNavSlot)==56,"quad extends only separately allocated slot");
+_Static_assert(sizeof(TNNavSlot)==48,"quad extends only separately allocated slot");
 static void *ptr(void *p,unsigned o){return p?*(void **)((uint8_t *)p+o):NULL;}
 static TNNavSlot *slot(void *a){return a?((M8NativeTail *)((uint8_t *)a+0xdc))->navigation:NULL;}
-static bool detail(void *app){TNNavSlot *s=slot(app);return tap_service_visible(app)||(s&&(dr_slot_visible(s->ride)||tn_slot_visible(s)||tm_slot_visible(s->music)||wr_slot_visible(s->reader)||tf_slot_visible(s->focus)||((M8NativeTail *)((uint8_t *)app+0xdc))->page));}
+static bool detail(void *app){TNNavSlot *s=slot(app);return (s&&(tn_slot_visible(s)||tm_slot_visible(s->music)||wr_slot_visible(s->reader)||tf_slot_visible(s->focus)||((M8NativeTail *)((uint8_t *)app+0xdc))->page));}
 static void hide_legacy(void *app){
  M8NativeTail *t=(M8NativeTail *)((uint8_t *)app+0xdc);TNNavSlot *s=slot(app);TMMusicSlot *music=s?s->music:NULL;WRSlot *reader=s?s->reader:NULL;TFSlot *focus=s?s->focus:NULL;
- void *old[]={ptr(app,8),t->row,t->icon,s?s->row:NULL,s?s->icon:NULL,music?music->row:NULL,music?music->icon:NULL,reader?reader->row:NULL,reader?reader->icon:NULL,focus?focus->row:NULL,focus?focus->icon:NULL,s&&s->ride?((DRSlot *)s->ride)->row:NULL,s&&s->ride?((DRSlot *)s->ride)->icon:NULL,s&&s->apps?((TAPMenu *)s->apps)->row:NULL,s&&s->apps?((TAPMenu *)s->apps)->icon:NULL};
+ void *old[]={ptr(app,8),t->row,t->icon,s?s->row:NULL,s?s->icon:NULL,music?music->row:NULL,music?music->icon:NULL,reader?reader->row:NULL,reader?reader->icon:NULL,focus?focus->row:NULL,focus?focus->icon:NULL};
  for(unsigned i=0;i<7;i++){void *row=ptr(app,0xc+4*i);if(row)m8_native_api.hidden(row,true);}
  for(unsigned i=0;i<sizeof old/sizeof *old;i++)if(old[i])m8_native_api.hidden(old[i],true);
 }

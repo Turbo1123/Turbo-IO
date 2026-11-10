@@ -35,7 +35,7 @@ NSString *TIOWebSearchQuery(NSString *arguments){
     if(!q.length||[q containsString:@"sk-"]||[q.lowercaseString containsString:@"bearer "])return nil;return q;
 }
 static NSDictionary *SearchResults(NSData *data,NSUInteger count,NSUInteger chars){
-    if(data.length>1024*1024)return nil;id j=[NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+    if(!data||data.length>1024*1024)return nil;id j=[NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
     if(![j isKindOfClass:NSDictionary.class]||![j[@"results"] isKindOfClass:NSArray.class])return nil;
     NSMutableArray *rows=[NSMutableArray new];for(id row in j[@"results"]){
         if(![row isKindOfClass:NSDictionary.class])return nil;

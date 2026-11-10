@@ -1,5 +1,3 @@
-#include "../app-runtime-v1/app_service.h"
-#include "../didi-v1/ride_service.h"
 /* One bounded service owns time. Page/launcher destruction does NOT own time.
  * No writable globals: discover our singleton through LVGL's public timer list,
  * checking the pinned callback field before touching userdata. All calls are on
@@ -44,7 +42,7 @@ static void release(TFControl *c){if(c->token){nav_release_always_on("turbo_focu
 static void hide(TFControl *c){if(!c)return;c->closing=true;release(c);}
 static void deleted(void *e){TFControl *c=stream_event_user(e);if(!c||!c->view)return;c->view->root=NULL;c->view->open=false;c->closing=true;release(c);}
 static void *root(void *surface,void *parent){void *o=m8_native_api.create_root(parent);if(!o)return NULL;m8_native_api.hidden(o,true);if(!m8_native_api.configure_root(o,surface)){m8_native_api.delete_root(o);return NULL;}return o;}
-static bool available(TFSlot *s){if(!s||!home()||ptr(manager(),0x10)!=s->app)return false;TNNavSlot *n=navslot(s->app);return n&&!tap_service_visible(s->app)&&!dr_slot_visible(n->ride)&&!tn_slot_visible(n)&&!tm_slot_visible(n->music)&&!wr_slot_visible(n->reader)&&!((M8NativeTail *)((uint8_t *)s->app+0xdc))->page;}
+static bool available(TFSlot *s){if(!s||!home()||ptr(manager(),0x10)!=s->app)return false;TNNavSlot *n=navslot(s->app);return n&&!tn_slot_visible(n)&&!tm_slot_visible(n->music)&&!wr_slot_visible(n->reader)&&!((M8NativeTail *)((uint8_t *)s->app+0xdc))->page;}
 static bool enter(TFControl *c,TFSlot *s,uint32_t now){if(!c||c->closing||!available(s))return false;TNWidgets api=tn_lvgl_widgets();if(!api.idle(NULL))return false;
  if(c->view&&c->app!=s->app)return false;c->slot=s;c->app=s->app;c->transitioning=true;nav_set_state(manager(),1);c->transitioning=false;if(!owns(c))return false;
  api.ctx=ptr(s->app,4);api.root=root;

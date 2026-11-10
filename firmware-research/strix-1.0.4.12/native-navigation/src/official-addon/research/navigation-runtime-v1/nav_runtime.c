@@ -22,15 +22,25 @@ static bool valid(const TNScene *s){
  s->position.x>1023||s->position.y>1023||s->distance_m>1000000||s->remaining_m>10000000||s->remaining_s>604800)return false;
  size_t a=bounded(s->road,TN_ROAD_MAX),b=bounded(s->turn,TN_TURN_MAX);
  if(a>TN_ROAD_MAX||b>TN_TURN_MAX||!text_ok((const uint8_t *)s->road,a)||!text_ok((const uint8_t *)s->turn,b))return false;
- for(unsigned i=0;i<s->point_count;i++)if(s->points[i].x>1023||s->points[i].y>1023)return false;return true;
+ for(unsigned i=0;i<s->point_count;i++)if(s->points[i].x>1023||s->points[i].y>1023)return false;
+ if(s->camera_kind>TN_CAMERA_OTHER||s->event_kind>TN_EVENT_CONTROL||s->bar_count>TN_BAR_MAX)return false;
+ for(unsigned i=0;i<s->bar_count;i++)if(s->bar[i]>4)return false;return true;
 }
 static bool decode_scene(TNScene *s,const uint8_t *p,size_t n){
- if(n<24||p[3]||p[1]>TN_POINTS_MAX||p[22]>TN_ROAD_MAX||p[23]>TN_TURN_MAX||n!=24u+p[22]+p[23]+4u*p[1])return false;
+ if(n<24||p[3]||p[1]>TN_POINTS_MAX||p[22]>TN_ROAD_MAX||p[23]>TN_TURN_MAX)return false;
+ size_t base=24u+p[22]+p[23]+4u*p[1];
+ if(n!=base&&n!=base+TN_SCENE_EXT)return false;
  memset(s,0,sizeof *s);s->icon=p[0];s->point_count=p[1];s->mode=p[2];s->distance_m=u32(p+4);s->remaining_m=u32(p+8);s->remaining_s=u32(p+12);
  s->heading=u16(p+16);s->position=(TNPoint){u16(p+18),u16(p+20)};
  if(!text_ok(p+24,p[22])||!text_ok(p+24+p[22],p[23]))return false;
  memcpy(s->road,p+24,p[22]);memcpy(s->turn,p+24+p[22],p[23]);p+=24+p[22]+p[23];
- for(unsigned i=0;i<s->point_count;i++)s->points[i]=(TNPoint){u16(p+4*i),u16(p+4*i+2)};return valid(s);
+ for(unsigned i=0;i<s->point_count;i++)s->points[i]=(TNPoint){u16(p+4*i),u16(p+4*i+2)};
+ s->lights=255;s->camera_limit=-1;s->camera_m=65535;s->event_m=65535;s->lights_m=65535;
+ if(n==base+TN_SCENE_EXT){const uint8_t *e=p+4u*s->point_count;
+  s->lights=e[0];s->bar_count=e[1];s->camera_kind=e[2];s->event_kind=e[3];
+  unsigned lim=u16(e+4);s->camera_limit=lim>32767?(int)(lim)-65536:(int)lim;
+  s->camera_m=u16(e+6);s->event_m=u16(e+8);memcpy(s->bar,e+10,TN_BAR_MAX);s->lights_m=u16(e+34);}
+ return valid(s);
 }
 bool tn_packet_valid(const uint8_t *p,size_t n){
  if(!p||n<32||n>TN_PACKET_MAX||memcmp(p,"TNV1",4)||p[4]!=1||p[6]||p[7]||u32(p+24)||u32(p+28)||!u32(p+8)||!u32(p+12)||u32(p+16)!=n-32||u32(p+20)!=wire_crc(p,n))return false;
@@ -39,15 +49,20 @@ bool tn_packet_valid(const uint8_t *p,size_t n){
  return op==TN_MODE?n==33&&p[32]<=TN_ALWAYS:n==32;
 }
 size_t tn_encode(uint8_t *p,size_t cap,enum TNOp op,uint32_t sid,uint32_t seq,const TNScene *s){
- if(!p||cap<32||op<TN_START||op>TN_QUERY||!sid||!seq)return 0;size_t a=0,b=0,n=32;
- if(op==TN_START||op==TN_UPDATE){if(!valid(s))return 0;a=bounded(s->road,TN_ROAD_MAX);b=bounded(s->turn,TN_TURN_MAX);n+=24+a+b+4*s->point_count;}
+ if(!p||cap<32||op<TN_START||op>TN_QUERY||!sid||!seq)return 0;size_t a=0,b=0,n=32;bool ext=false;
+ if(op==TN_START||op==TN_UPDATE){if(!valid(s))return 0;a=bounded(s->road,TN_ROAD_MAX);b=bounded(s->turn,TN_TURN_MAX);n+=24+a+b+4*s->point_count;
+  /* The tail rides only when there is extension data, so packets for a legacy
+   * firmware stay byte-identical to the old encoder. */
+  ext=s->bar_count||s->lights!=255||s->camera_kind||s->event_kind;if(ext)n+=TN_SCENE_EXT;}
  if(op==TN_MODE){if(!s||s->mode>TN_ALWAYS)return 0;n++;}if(n>cap||n>TN_PACKET_MAX)return 0;
  memset(p,0,n);memcpy(p,"TNV1",4);p[4]=1;p[5]=(uint8_t)op;p32(p+8,sid);p32(p+12,seq);p32(p+16,(uint32_t)n-32);
  if(op==TN_MODE)p[32]=s->mode;
  if(op==TN_START||op==TN_UPDATE){uint8_t *q=p+32;q[0]=s->icon;q[1]=s->point_count;q[2]=s->mode;
- p32(q+4,s->distance_m);p32(q+8,s->remaining_m);p32(q+12,s->remaining_s);p16(q+16,s->heading);p16(q+18,s->position.x);p16(q+20,s->position.y);q[22]=(uint8_t)a;q[23]=(uint8_t)b;
- memcpy(q+24,s->road,a);memcpy(q+24+a,s->turn,b);q+=24+a+b;
- for(unsigned i=0;i<s->point_count;i++){p16(q+4*i,s->points[i].x);p16(q+4*i+2,s->points[i].y);}}
+  p32(q+4,s->distance_m);p32(q+8,s->remaining_m);p32(q+12,s->remaining_s);p16(q+16,s->heading);p16(q+18,s->position.x);p16(q+20,s->position.y);q[22]=(uint8_t)a;q[23]=(uint8_t)b;
+  memcpy(q+24,s->road,a);memcpy(q+24+a,s->turn,b);q+=24+a+b;
+  for(unsigned i=0;i<s->point_count;i++){p16(q+4*i,s->points[i].x);p16(q+4*i+2,s->points[i].y);}
+  if(ext){uint8_t *e=q+4u*s->point_count;e[0]=s->lights;e[1]=s->bar_count;e[2]=s->camera_kind;e[3]=s->event_kind;
+   p16(e+4,(uint16_t)s->camera_limit);p16(e+6,s->camera_m);p16(e+8,s->event_m);memcpy(e+10,s->bar,TN_BAR_MAX);p16(e+34,s->lights_m);}}
  p32(p+20,wire_crc(p,n));return n;
 }
 static TNReply reply(const TNRuntime *r,enum TNResult e){return (TNReply){e,r->sid,r->sequence,r->active,r->awake,r->stale,r->scene.mode};}
